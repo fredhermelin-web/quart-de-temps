@@ -999,6 +999,29 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var
 }
 .meter-bar { width: 26px; height: 2px; border-radius: 1px; background: linear-gradient(90deg, #9C7434, #F6E1AE, #9C7434); }
 
+/* Figure de note : même fenêtre laiton que la mesure ; un toucher ouvre le petit menu des 4 figures */
+.fig-wrap { flex: none; margin-left: -2px; }
+.metro-head { position: relative; }
+.figure .fig-ic { display: flex; align-items: center; justify-content: center; }
+.figure .fig-ic svg { width: 34px; height: auto; fill: #E6C27A; filter: drop-shadow(0 0 4px rgba(242, 208, 138, .35)); }
+.figure[aria-expanded="true"] { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 2px rgba(242, 208, 138, .35), 0 6px 14px -6px rgba(0, 0, 0, .8); }
+.fig-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  padding: 4px;
+  border-radius: 18px;
+  background-color: #1A1F45;
+  animation: fig-in .22s ease-out both;
+}
+.fig-menu[hidden] { display: none; }
+.fig-menu .sub { height: 58px; }
+@keyframes fig-in { from { opacity: 0; transform: translateY(-6px); } }
+@media (max-width: 380px) { .fig-menu { grid-template-columns: repeat(4, 58px); } }
+
 /* Panneau « Mesure » qui monte du bas de l'écran */
 .sheet { position: fixed; inset: 0; z-index: 40; }
 .sheet-backdrop {
@@ -1201,6 +1224,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var
   .devise { font-size: 13px; }
   .rpm { width: 62px; }
   .meter { width: 48px; }
+  .figure { width: 44px; }
+  .figure .fig-ic svg { width: 30px; }
 }
 
 /* Sons du métronome : quatre pastilles cerclées de laiton */
@@ -1996,4 +2021,14 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+/* En-tête du métronome sur téléphone : titre · 33/45 · mesure · figure tiennent sur une ligne */
+@media (max-width: 430px) {
+  .metro-head { gap: 4px; }
+  .metro .metro-title { gap: 5px; }
+  .metro .rpm { width: 56px; }
+  .metro .meter { width: 44px; }
+  .fig-wrap { margin-left: 0; }
+  .figure .fig-ic svg { width: 30px; }
 }

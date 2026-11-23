@@ -233,6 +233,13 @@
         <span class="meter-bar" aria-hidden="true"></span>
         <span class="meter-num" id="meterD">4</span>
       </button>
+      <!-- Figure de note (clics par temps), à portée de main en haut ; synchronisée avec la rangée du bas -->
+      <span class="fig-wrap">
+        <button type="button" class="meter figure" id="figBtn" aria-haspopup="true" aria-expanded="false" aria-controls="figMenu" aria-label="Figure : noire. Touche pour changer.">
+          <span class="fig-ic" id="figIc" aria-hidden="true"></span>
+        </button>
+        <div class="fig-menu glass" id="figMenu" role="radiogroup" aria-label="Clics par temps" hidden></div>
+      </span>
     </div>
 
     <!-- Étincelle qui suit la spirale du sillon -->

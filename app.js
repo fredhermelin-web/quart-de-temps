@@ -57,7 +57,16 @@
       try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* iOS ancien */ }
       metroGain = ctx.createGain();
       metroGain.gain.value = volToGain(metro.vol);
-      metroGain.connect(ctx.destination);
+      // Garde-fou : linéaire jusqu'à 0,85, puis arrondi doux vers 1 (jamais d'écrêtage brutal si deux sons se chevauchent)
+      const guard = ctx.createWaveShaper();
+      const curve = new Float32Array(2049);
+      for (let i = 0; i < curve.length; i++) {
+        const x = (i / 1024) - 1, a = Math.abs(x), knee = 0.85;
+        curve[i] = Math.sign(x) * (a <= knee ? a : knee + (1 - knee) * Math.tanh((a - knee) / (1 - knee)));
+      }
+      guard.curve = curve;
+      metroGain.connect(guard);
+      guard.connect(ctx.destination);
       clickBufs = makeClicks(ctx);
       loadSamples(ctx);
     }
@@ -73,6 +82,20 @@
     for (let i = 0; i < n; i++) u[i] = bin.charCodeAt(i);
     return u.buffer;
   }
+  /* Les sons enregistrés au même volume perçu (attaque des 120 premières ms), sans dépasser 0,95 en crête.
+     La cloche et la conga étaient enregistrées 8 à 9 dB plus bas que la clave. */
+  function normalize(ab) {
+    const d0 = ab.getChannelData(0), n = Math.min(d0.length, Math.floor(ab.sampleRate * 0.12));
+    let peak = 0, e = 0;
+    for (let ch = 0; ch < ab.numberOfChannels; ch++) { const d = ab.getChannelData(ch); for (let i = 0; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; } }
+    for (let i = 0; i < n; i++) e += d0[i] * d0[i];
+    const rms = Math.sqrt(e / (n || 1));
+    if (peak > 0 && rms > 0) {
+      const k = Math.min(0.95 / peak, 0.18 / rms);
+      for (let ch = 0; ch < ab.numberOfChannels; ch++) { const d = ab.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] *= k; }
+    }
+    return ab;
+  }
   function loadSamples(c) {
     Object.keys(SAMPLE_FILES).forEach((k) => {
       // D'abord la copie intégrée (sounds.js) : marche aussi en ouverture locale (file://) et hors ligne
@@ -82,7 +105,7 @@
         : fetch(SAMPLE_FILES[k]).then((r) => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); });
       source
         .then((buf) => new Promise((res, rej) => { const p = c.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); }))
-        .then((ab) => { samples[k] = ab; })
+        .then((ab) => { samples[k] = normalize(ab); })
         .catch(() => { /* le clic d'origine sera utilisé */ });
     });
   }
@@ -92,8 +115,8 @@
     const smp = metro.sound !== 'clic' && samples[metro.sound];
     const src = ctx.createBufferSource();
     if (smp) {
-      let rate = 1, lvl = 0.78;
-      if (!isBeat) lvl = 0.42;
+      let rate = 1, lvl = 0.88;
+      if (!isBeat) lvl = 0.52;
       else if (st === 2) { rate = first ? 1.12 : 1.05; lvl = 1; }
       src.buffer = smp;
       src.playbackRate.value = rate;
@@ -980,7 +1003,7 @@
     queue: []
   };
   // Le bouton Mute coupe le son du métronome (fondu court) sans arrêter l'animation des temps
-  function volToGain(v) { return metro.muted ? 0 : Math.pow(v / 100, 2) * 0.95; }
+  function volToGain(v) { return metro.muted ? 0 : Math.pow(v / 100, 2); }
 
   /* Clics synthétisés une fois pour toutes : accent (aigu, brillant), temps (franc), subdivision (plus doux). */
   function makeClicks(c) {
@@ -1005,10 +1028,10 @@
     }
     return {
       one: synth(1760, 2.76, 38, 1.0, 0.9, 0.12),
-      beat: synth(1240, 2.76, 52, 0.78, 0.6, 0.09),
-      sub: synth(1240, 2.76, 64, 0.48, 0.35, 0.07),
+      beat: synth(1240, 2.76, 52, 0.88, 0.6, 0.09),
+      sub: synth(1240, 2.76, 64, 0.56, 0.35, 0.07),
       // accent d'un autre temps que le 1 : marqué, mais distinct du 1
-      acc: synth(1480, 2.76, 44, 0.92, 0.75, 0.11)
+      acc: synth(1480, 2.76, 44, 0.95, 0.75, 0.11)
     };
   }
 
@@ -1369,10 +1392,30 @@
     $('mBpm').value = metro.bpm;
   }
 
+  const SUB_NAMES = { 1: 'noire', 2: 'croche', 3: 'triolet', 4: 'double croche' };
   function setSub(n) {
     if (metro.running) metro.pendingSub = n; else metro.sub = n;
     document.querySelectorAll('.sub').forEach((b) => b.setAttribute('aria-checked', String(+b.dataset.sub === n)));
+    // Bouton du haut : la figure en cours
+    const src = document.querySelector('.subdiv .sub[data-sub="' + n + '"] svg');
+    if (src) $('figIc').innerHTML = src.outerHTML;
+    $('figBtn').setAttribute('aria-label', 'Figure : ' + SUB_NAMES[n] + '. Touche pour changer.');
   }
+
+  /* Petit menu des figures sous le bouton du haut (copie des 4 boutons du bas, toujours synchronisés) */
+  const figBtn = $('figBtn'), figMenu = $('figMenu');
+  document.querySelectorAll('.subdiv .sub').forEach((b) => {
+    const c = b.cloneNode(true);
+    figMenu.appendChild(c);
+    c.addEventListener('click', () => { setSub(+c.dataset.sub); setFigMenu(false); });
+  });
+  function setFigMenu(open) {
+    figMenu.hidden = !open;
+    figBtn.setAttribute('aria-expanded', String(open));
+  }
+  figBtn.addEventListener('click', (e) => { e.stopPropagation(); setFigMenu(figMenu.hidden); });
+  document.addEventListener('pointerdown', (e) => { if (!figMenu.hidden && !e.target.closest('.fig-wrap')) setFigMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !figMenu.hidden) { setFigMenu(false); figBtn.focus(); } });
 
   function setVol(v) {
     metro.vol = clamp(Math.round(v), 0, 100);
