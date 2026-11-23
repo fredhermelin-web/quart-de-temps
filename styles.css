@@ -1700,12 +1700,12 @@ body.lite .wave-empty .deco i { animation-duration: 3.2s; }
 .record-disc, .record-sheen { position: absolute; inset: 0; border-radius: 50%; }
 .record-disc {
   background:
-    repeating-radial-gradient(circle, rgba(255, 255, 255, 0) 0 2.6px, rgba(255, 255, 255, .075) 2.6px 3.4px),
-    radial-gradient(circle, rgba(255, 255, 255, 0) 0 118px, rgba(255, 255, 255, .06) 119px 121px, rgba(255, 255, 255, 0) 122px 168px, rgba(255, 255, 255, .06) 169px 171px, rgba(255, 255, 255, 0) 172px),
+    repeating-radial-gradient(circle, rgba(255, 255, 255, 0) 0 2.6px, rgba(255, 255, 255, .1) 2.6px 3.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0) 0 118px, rgba(255, 255, 255, .09) 119px 121px, rgba(255, 255, 255, 0) 122px),
     conic-gradient(from 0deg,
-      rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, .07) 30deg, rgba(255, 255, 255, 0) 60deg,
-      rgba(255, 255, 255, 0) 180deg, rgba(255, 255, 255, .05) 210deg, rgba(255, 255, 255, 0) 240deg),
-    radial-gradient(circle, rgba(6, 8, 22, .55) 0, rgba(6, 8, 22, .35) 60%, rgba(6, 8, 22, 0) 72%);
+      rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, .09) 30deg, rgba(255, 255, 255, 0) 60deg,
+      rgba(255, 255, 255, 0) 180deg, rgba(255, 255, 255, .065) 210deg, rgba(255, 255, 255, 0) 240deg),
+    radial-gradient(circle, rgba(6, 8, 22, .64) 0, rgba(6, 8, 22, .42) 60%, rgba(6, 8, 22, 0) 72%);
   will-change: transform;
 }
 /* Lumière de scène fixe posée sur le disque : couchant d'un côté, bleu de l'autre */
@@ -2072,13 +2072,56 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
 body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none; }
 .metro[data-rpm="45"].running .go { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 6px rgba(12, 15, 36, .62), 0 0 0 7px rgba(255, 170, 80, .5), 0 0 26px -2px rgba(255, 150, 70, .5); }
 
-/* Mouvement d'horlogerie sous le tempo : à peine deviné à l'arrêt, révélé en marche */
-.tempo-win > .tw-mech { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .13; transition: opacity .8s ease; }
-.tw-mech #twEsc, .tw-mech #twBig, .tw-mech #twPin { transform-box: view-box; }
-.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transition: opacity .8s ease, text-shadow .3s, color .3s; }
-.metro.running .tw-mech { opacity: .42; }
-.metro.running .tempo-win .bpm-input { opacity: .8; }
-.metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { opacity: .7; }
-/* ±1 / ±5 pendant la marche : le chiffre se rallume le temps de le lire */
-.metro.running .tempo-win.peek .bpm-input, .metro.running .tempo-win.peek .eyebrow, .metro.running .tempo-win.peek .unit { opacity: 1; transition-duration: .15s; }
-.metro.running .tempo-win.peek .tw-mech { opacity: .22; transition-duration: .2s; }
+/* Le petit batteur de l'étiquette : caché à l'arrêt, il apparaît quand le métronome tourne */
+.tempo-win > .tw-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.tw-art .tw-dr-pos { opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .7s cubic-bezier(.3, 1.2, .4, 1); }
+.metro.running .tw-art .tw-dr-pos { opacity: .55; transform: none; }
+.dr .star { fill: #FFD58A; }
+.dr .body { fill: #E9DDC0; }
+.dr .head, .dr .hand { fill: #F6ECD5; }
+.dr .arm { fill: none; stroke: #E9DDC0; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.dr .stick { fill: none; stroke: #F2D08A; stroke-width: .7; stroke-linecap: round; }
+.dr .shell { fill: #C98B4A; }
+.dr .lug { stroke: #F2D08A; stroke-width: .35; }
+.dr .drumhead { fill: #FFF6E0; }
+.dr .stand { fill: none; stroke: #B9A27A; stroke-width: .55; stroke-linecap: round; }
+.dr .hitfx { fill: none; stroke: #FFD38A; stroke-width: .55; stroke-linecap: round; display: none; }
+.dr .star { fill: #FFC56E; display: none; }
+.dr.hit .hitfx, .dr.one .star { display: inline; }
+.dr [class^="aL"], .dr [class^="aR"] { display: none; }
+.dr.L0 .aL0, .dr.L1 .aL1, .dr.L2 .aL2, .dr.L3 .aL3, .dr.R0 .aR0, .dr.R1 .aR1, .dr.R2 .aR2, .dr.R3 .aR3 { display: inline; }
+/* En marche : le chiffre glisse en haut de l'étiquette pour laisser la place au batteur */
+.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transition: transform .7s cubic-bezier(.3, 1.2, .4, 1), opacity .5s ease, text-shadow .3s, color .3s; }
+.metro.running .tempo-win .bpm-input { transform: translateY(-27px) scale(.66); }
+.metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { opacity: 0; }
+/* ±1 / ±5 ou saisie pendant la marche : le chiffre revient au centre le temps de le lire */
+.metro.running .tempo-win.peek .bpm-input, .metro.running .tempo-win.editing .bpm-input { transform: none; transition-duration: .25s; }
+.metro.running .tempo-win.peek .eyebrow, .metro.running .tempo-win.peek .unit, .metro.running .tempo-win.editing .eyebrow, .metro.running .tempo-win.editing .unit { opacity: 1; transition-duration: .2s; }
+.metro.running .tempo-win.peek .tw-dr-pos, .metro.running .tempo-win.editing .tw-dr-pos { opacity: .12; transition-duration: .25s; }
+/* En marche, le petit anneau central de l'étiquette s'efface (il passerait derrière la tête du batteur) */
+.metro.running .tempo-win {
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 170, 90, .22), rgba(255, 170, 90, 0) 60%),
+    radial-gradient(110% 90% at 80% 110%, rgba(255, 79, 123, .22), rgba(255, 79, 123, 0) 60%),
+    radial-gradient(circle, #252B5C 0%, #171B3A 100%);
+}
+
+/* Second gros sillon : anneau de laiton brossé, comme le bord d'un plateau de platine, avec ses points stroboscopiques */
+.record-ring, .record-strobe { position: absolute; left: 50%; top: 50%; border-radius: 50%; pointer-events: none; }
+.record-ring {
+  width: 344px; height: 344px; margin: -172px 0 0 -172px;
+  border: 2.5px solid transparent;
+  background: conic-gradient(from 210deg, #7A5A2A, #F3D9A0, #A87A36, #FFF0C8, #8C6A32, #E8C27C, #7A5A2A) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0);
+  opacity: .62;
+  box-shadow: 0 0 6px rgba(255, 200, 120, .12);
+}
+.record-strobe {
+  width: 330px; height: 330px; margin: -165px 0 0 -165px;
+  background: repeating-conic-gradient(rgba(255, 228, 170, .55) 0 .7deg, rgba(255, 228, 170, 0) .7deg 3deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 161px, #000 161.5px 164px, transparent 164.5px);
+  mask: radial-gradient(circle, transparent 0 161px, #000 161.5px 164px, transparent 164.5px);
+  opacity: .5;
+}

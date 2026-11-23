@@ -1153,7 +1153,7 @@
     if (ev.st === 0) return;
     const p = sparkPos(sparkProgress(now)), P = pal();
     const first = ev.beat === 0, accent = ev.st === 2;
-    const n = first ? 24 : accent ? 10 : 6;
+    const n = first ? 12 : accent ? 6 : 3;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, sp = (first ? 72 : 34) * (0.35 + Math.random());
       SPARK.parts.push({
@@ -1185,7 +1185,7 @@
       const u = sparkProgress(ctx.currentTime - lat), P = pal(), T = sparkTurns();
       const fade = Math.min(1, (u + 0.3) / 0.8) * Math.min(1, Math.max(0, T - u) / 1.5);
       // La traînée reste dans le sillon : un arc de spirale qui s'allonge avec le tempo
-      const trail = 0.35 + 0.45 * (metro.bpm - 30) / 210;
+      const trail = 0.25 + 0.3 * (metro.bpm - 30) / 210;
       const steps = 90;
       c.lineCap = 'round';
       let prev = null;
@@ -1196,8 +1196,8 @@
         if (prev) {
           const grow = 0.8 + 0.6 * (p[2] - g.r0) / Math.max(1, g.r1 - g.r0);
           const col = k < 0.5 ? lerp3(P.tail, P.mid, k * 2) : lerp3(P.mid, P.head, (k - 0.5) * 2);
-          c.strokeStyle = rgbaS(col, 0.75 * k * k * fade);
-          c.lineWidth = (0.6 + 2.8 * k) * grow;
+          c.strokeStyle = rgbaS(col, 0.55 * k * k * fade);
+          c.lineWidth = (0.4 + 1.4 * k) * grow;
           c.beginPath();
           c.moveTo(prev[0], prev[1]);
           c.lineTo(p[0], p[1]);
@@ -1208,10 +1208,10 @@
       // Tête : halo, qui prend la couleur du 1 juste après le premier temps
       const p = sparkPos(u), grow = 0.85 + 0.7 * (p[2] - g.r0) / Math.max(1, g.r1 - g.r0);
       const hc = lerp3(P.head, P.first, SPARK.burst);
-      const rad = (12 + 10 * SPARK.burst) * grow;
+      const rad = (7 + 6 * SPARK.burst) * grow;
       const gr = c.createRadialGradient(p[0], p[1], 0, p[0], p[1], rad);
-      gr.addColorStop(0, 'rgba(255,255,255,' + (0.95 * fade).toFixed(3) + ')');
-      gr.addColorStop(0.25, rgbaS(hc, 0.75 * fade));
+      gr.addColorStop(0, 'rgba(255,255,255,' + (0.8 * fade).toFixed(3) + ')');
+      gr.addColorStop(0.3, rgbaS(hc, 0.55 * fade));
       gr.addColorStop(1, rgbaS(hc, 0));
       c.fillStyle = gr;
       c.beginPath();
@@ -1219,10 +1219,10 @@
       c.fill();
       // Onde qui s'élargit sur le 1
       if (SPARK.burst > 0) {
-        c.strokeStyle = rgbaS(P.first, 0.7 * SPARK.burst * fade);
-        c.lineWidth = 2;
+        c.strokeStyle = rgbaS(P.first, 0.45 * SPARK.burst * fade);
+        c.lineWidth = 1.2;
         c.beginPath();
-        c.arc(p[0], p[1], 6 + (1 - SPARK.burst) * 46, 0, Math.PI * 2);
+        c.arc(p[0], p[1], 5 + (1 - SPARK.burst) * 30, 0, Math.PI * 2);
         c.stroke();
         SPARK.burst = Math.max(0, SPARK.burst - dt * 2.4);
       }
@@ -1234,7 +1234,7 @@
       if (q.life <= 0) { SPARK.parts.splice(i, 1); continue; }
       q.vx *= 0.96; q.vy *= 0.96;
       q.x += q.vx * dt; q.y += q.vy * dt;
-      c.fillStyle = 'rgba(' + q.col[0] + ',' + q.col[1] + ',' + q.col[2] + ',' + (q.life * 0.9).toFixed(3) + ')';
+      c.fillStyle = 'rgba(' + q.col[0] + ',' + q.col[1] + ',' + q.col[2] + ',' + (q.life * 0.6).toFixed(3) + ')';
       c.beginPath();
       c.arc(q.x, q.y, q.size * (0.5 + q.life * 0.6), 0, Math.PI * 2);
       c.fill();
@@ -1246,80 +1246,83 @@
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
 
-  /* Mouvement d'horlogerie vu à travers l'étiquette du tempo (montre squelette).
-     À l'arrêt : à peine deviné, le chiffre domine. En marche : le mécanisme apparaît et la roue
-     d'échappement avance d'une dent à chaque temps, avec l'à-coup d'une vraie horloge. */
-  const MECH = { esc: 0, big: 0, pin: 0, gEsc: null, gBig: null, gPin: null };
-  const mp = (cx, cy, t, r) => (cx + r * Math.cos(t)).toFixed(2) + ' ' + (cy + r * Math.sin(t)).toFixed(2);
-  function gearPath(cx, cy, n, rIn, rOut, tipFrac) {
-    const pts = [], st = (Math.PI * 2) / n, w = st * tipFrac;
-    for (let i = 0; i < n; i++) {
-      const a = i * st;
-      pts.push(mp(cx, cy, a, rIn), mp(cx, cy, a + st * 0.5 - w / 2, rOut), mp(cx, cy, a + st * 0.5 + w / 2, rOut), mp(cx, cy, a + st, rIn));
-    }
-    return 'M' + pts.join(' L') + 'Z';
+  /* Le petit batteur de l'étiquette (disque animé).
+     À l'arrêt : le 121 au centre, le batteur caché. En marche : le chiffre glisse vers le haut et le batteur
+     apparaît dessous ; il frappe sa caisse claire pile sur chaque temps (mains alternées), les deux baguettes
+     et une petite étoile sur le 1 et sur les accents. Les temps muets : il attend, baguettes prêtes. */
+  const DR_ARM = {
+    // [épaule, coude, main, bout de baguette], bras droit ; le gauche est en miroir
+    0: [[3.0, -4.4], [6.2, -4.8], [6.7, -8.6], [8.8, -13.8]],  // levé
+    1: [[3.0, -4.4], [6.1, -2.9], [5.5, -5.3], [1.9, -8.9]],   // descend
+    2: [[3.0, -4.4], [5.7, -1.5], [4.7, 0.5], [1.2, 2.8]],     // frappe
+    3: [[3.0, -4.4], [5.9, -2.3], [5.2, -1.2], [2.3, -5.0]]    // prêt
+  };
+  function drArm(pose, side) {
+    const m = (q) => (side * q[0]).toFixed(2) + ' ' + q[1].toFixed(2), a = DR_ARM[pose];
+    return '<path class="arm" d="M' + m(a[0]) + ' L' + m(a[1]) + ' L' + m(a[2]) + '"/>' +
+      '<path class="stick" d="M' + m(a[2]) + ' L' + m(a[3]) + '"/>' +
+      '<circle class="hand" cx="' + (side * a[2][0]).toFixed(2) + '" cy="' + a[2][1] + '" r=".8"/>';
   }
-  function escapePath(cx, cy, n, rIn, rOut) {
-    // Dents d'échappement en dent de scie, inclinées, comme sur les horloges
-    const st = (Math.PI * 2) / n;
-    let d = '';
-    for (let i = 0; i < n; i++) {
-      const a = i * st;
-      d += (i ? ' L' : 'M') + mp(cx, cy, a, rIn) + ' L' + mp(cx, cy, a + st * 0.62, rOut) + ' L' + mp(cx, cy, a + st * 0.7, rOut - 1.6) + ' L' + mp(cx, cy, a + st * 0.66, rIn);
-    }
-    return d + 'Z';
-  }
-  function spokes(cx, cy, n, r0, r1) {
-    let d = '';
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2 + 0.3;
-      d += 'M' + mp(cx, cy, a, r0) + ' Q' + mp(cx, cy, a + 0.35, (r0 + r1) / 2) + ' ' + mp(cx, cy, a + 0.2, r1) + ' ';
-    }
-    return d;
-  }
-  function buildMech() {
-    if (!tempoWinEl || $('twMech')) return;
+  const DR = { el: null, t: 0, beat: 0, st: 1, started: false, cls: '' };
+  function buildDrummer() {
+    if (!tempoWinEl || $('twArt')) return;
+    let arms = '';
+    [-1, 1].forEach((side) => [0, 1, 2, 3].forEach((p) => { arms += '<g class="a' + (side < 0 ? 'L' : 'R') + p + '">' + drArm(p, side) + '</g>'; }));
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'tw-mech');
-    svg.setAttribute('id', 'twMech');
+    svg.setAttribute('class', 'tw-art');
+    svg.setAttribute('id', 'twArt');
     svg.setAttribute('viewBox', '-68 -68 136 136');
     svg.setAttribute('aria-hidden', 'true');
-    const E = { x: 15, y: 17 }, B = { x: -27, y: -23 }, P = { x: 33, y: -33 };
-    svg.innerHTML =
-      '<defs><clipPath id="twClip"><circle r="64"/></clipPath>' +
-      '<filter id="twBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1"/></filter>' +
-      '<radialGradient id="twShade"><stop offset="0" stop-color="#0C0F26" stop-opacity=".55"/><stop offset="1" stop-color="#0C0F26" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="twRuby" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#FF9AAE"/><stop offset=".45" stop-color="#C2304F"/><stop offset="1" stop-color="#5E0F22"/></radialGradient></defs>' +
-      '<g clip-path="url(#twClip)" fill="none" stroke-linejoin="round">' +
-        '<g id="twBig" filter="url(#twBlur)" style="transform-origin:' + B.x + 'px ' + B.y + 'px" stroke="#C9A25A" stroke-width="1.1" opacity=".7">' +
-          '<path d="' + gearPath(B.x, B.y, 32, 44, 48, 0.45) + '"/><circle cx="' + B.x + '" cy="' + B.y + '" r="37"/><circle cx="' + B.x + '" cy="' + B.y + '" r="8"/>' +
-          '<path d="' + spokes(B.x, B.y, 5, 8, 37) + '" stroke-width="2.2"/></g>' +
-        '<g id="twPin" style="transform-origin:' + P.x + 'px ' + P.y + 'px" stroke="#E3C27F" stroke-width=".9">' +
-          '<path d="' + gearPath(P.x, P.y, 10, 9.5, 12.5, 0.4) + '"/><circle cx="' + P.x + '" cy="' + P.y + '" r="3.2"/></g>' +
-        '<g id="twEsc" style="transform-origin:' + E.x + 'px ' + E.y + 'px" stroke="#F0D08E" stroke-width="1">' +
-          '<path d="' + escapePath(E.x, E.y, 15, 27, 35) + '"/><circle cx="' + E.x + '" cy="' + E.y + '" r="22"/><circle cx="' + E.x + '" cy="' + E.y + '" r="5.5"/>' +
-          '<path d="' + spokes(E.x, E.y, 4, 5.5, 22) + '" stroke-width="1.8"/></g>' +
-        '<g stroke="none"><circle cx="' + E.x + '" cy="' + E.y + '" r="2.4" fill="url(#twRuby)"/><circle cx="' + P.x + '" cy="' + P.y + '" r="1.7" fill="url(#twRuby)"/><circle cx="' + B.x + '" cy="' + B.y + '" r="2.6" fill="url(#twRuby)" opacity=".75"/></g>' +
-        '<ellipse rx="50" ry="26" fill="url(#twShade)" stroke="none"/>' +
-      '</g>';
+    svg.innerHTML = '<defs><clipPath id="twClip"><circle r="64"/></clipPath>' +
+      '<filter id="twVeil" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".5"/><feColorMatrix type="saturate" values=".55"/></filter></defs>' +
+      '<g clip-path="url(#twClip)"><g class="tw-dr-pos"><g filter="url(#twVeil)" transform="translate(0 28) scale(1.95)"><g class="dr L3 R3" id="twDr">' +
+        '<path class="stand" d="M-4.2 6.4 L-6 10.6 M4.2 6.4 L6 10.6 M0 6.6 L0 10.6"/>' +
+        '<path class="body" d="M-3.4 -4.6 Q0 -5.9 3.4 -4.6 L2.7 2.4 L-2.7 2.4 Z"/>' +
+        '<circle class="head" cx="0" cy="-8.3" r="2.5"/>' +
+        '<rect class="shell" x="-6.3" y="2.9" width="12.6" height="3.6" rx=".6"/>' +
+        '<path class="lug" d="M-4.2 3.3 V6.1 M-1.4 3.3 V6.1 M1.4 3.3 V6.1 M4.2 3.3 V6.1"/>' +
+        '<ellipse class="drumhead" cx="0" cy="2.9" rx="6.3" ry="1.5"/>' +
+        '<path class="hitfx" d="M-3.4 0.4 L-4.9 -1.3 M3.4 0.4 L4.9 -1.3 M0 -0.3 V-2.2"/>' +
+        '<path class="star" d="M0 -16.6 L.8 -14.7 L2.7 -13.9 L.8 -13.1 L0 -11.2 L-.8 -13.1 L-2.7 -13.9 L-.8 -14.7 Z"/>' +
+        arms + '</g></g></g></g>';
     tempoWinEl.insertBefore(svg, tempoWinEl.firstChild);
-    MECH.gEsc = svg.querySelector('#twEsc');
-    MECH.gBig = svg.querySelector('#twBig');
-    MECH.gPin = svg.querySelector('#twPin');
+    DR.el = svg.querySelector('#twDr');
   }
-  function mechTick() {
-    if (!MECH.gEsc || reduceMotion || document.body.classList.contains('lite') || !MECH.gEsc.animate) return;
-    const beat = 60000 / metro.bpm, snap = Math.min(150, beat * 0.4);
-    const step = (g, key, deg, dur, ease) => {
-      const a0 = MECH[key];
-      MECH[key] += deg;
-      g.animate([{ transform: 'rotate(' + a0 + 'deg)' }, { transform: 'rotate(' + MECH[key] + 'deg)' }], { duration: dur, easing: ease, fill: 'forwards' });
+  function setDrummer(cls) {
+    if (!DR.el || cls === DR.cls) return;
+    DR.cls = cls;
+    DR.el.setAttribute('class', 'dr ' + cls);
+  }
+  // Mains qui frappent sur un temps : les deux sur le 1 et les accents, sinon une main sur deux ; rien sur un temps muet
+  function drHands(beat, st) {
+    if (st === 0) return '';
+    if (beat === 0 || st === 2) return 'LR';
+    return beat % 2 ? 'L' : 'R';
+  }
+  function drumBeat(ev) {
+    DR.t = ev.t;
+    DR.beat = ev.beat;
+    DR.st = ev.st;
+    DR.started = true;
+  }
+  function drawDrummer() {
+    if (!DR.el) return;
+    if (!metro.running || !ctx || !DR.started) { setDrummer('L3 R3'); return; }
+    if (reduceMotion || document.body.classList.contains('lite')) { setDrummer('L3 R3'); return; }
+    const lat = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
+    const f = (ctx.currentTime - lat - DR.t) / (60 / metro.bpm);
+    const len = metro.pattern.length || 4, nb = (DR.beat + 1) % len;
+    const now = drHands(DR.beat, DR.st), next = drHands(nb, metro.pattern[nb]);
+    const pose = (h) => {
+      if (now.includes(h) && f < 0.14) return 2;          // frappe, pile sur le temps
+      if (next.includes(h) && f > 0.8) return 1;          // redescend juste avant le temps suivant
+      if (next.includes(h) && f > 0.42) return 0;         // se lève pour le temps suivant
+      return 3;                                           // prêt
     };
-    step(MECH.gEsc, 'esc', 24, snap, 'cubic-bezier(.25,1.7,.45,1)');
-    step(MECH.gPin, 'pin', -36, snap, 'cubic-bezier(.25,1.7,.45,1)');
-    step(MECH.gBig, 'big', 7.5, Math.min(260, beat * 0.6), 'ease-out');
+    const hit = now && f < 0.14;
+    setDrummer('L' + pose('L') + ' R' + pose('R') + (hit ? ' hit' : '') + (hit && now === 'LR' && DR.beat === 0 ? ' one' : ''));
   }
-  buildMech();
+  buildDrummer();
   // Pendant la marche, toucher ±1 / ±5 rallume le chiffre le temps de le lire
   let peekTimer = 0;
   function peekTempo() {
@@ -1857,7 +1860,7 @@
         lightBeat(ev.beat, ev.st);
         sparkBeat(ev, now);
         cradleBeat(ev);
-        mechTick();
+        drumBeat(ev);
         // La lueur derrière le A de l'en-tête respire doucement à chaque temps
         if (ev.st !== 0 && !reduceMotion && wmHalo.animate) {
           wmHalo.animate([{ opacity: ev.beat === 0 ? 1.6 : 1.3, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }], { duration: Math.min(420, 60000 / metro.bpm * 0.8), easing: 'ease-out' });
@@ -1899,6 +1902,7 @@
     drawSpark();
     drawSig();
     drawCradle();
+    drawDrummer();
   }
 
   /* ===================================================================== */
