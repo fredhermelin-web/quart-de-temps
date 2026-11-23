@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v39';
+const CACHE = 'atelier-v40';
 const SHARE = 'atelier-share';
 const SHELL = [
   './',
@@ -19,9 +19,10 @@ const SHELL = [
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'Sound/Clave.mp3',
+  'Sound/Clave.wav',
   'Sound/Conga.mp3',
-  'Sound/Cowbell.mp3'
+  'Sound/Cowbell.wav',
+  'Sound/Wood.wav'
 ];
 
 self.addEventListener('install', (e) => {

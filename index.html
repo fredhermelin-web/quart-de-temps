@@ -41,8 +41,171 @@
     <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a" hidden>
   </header>
 
+  <!-- ============ MÉTRONOME ============ -->
+  <section class="deck metro" id="metro" aria-label="Métronome">
+    <span class="metro-glow" id="metroGlow" aria-hidden="true"></span>
+    <span class="record" id="record" aria-hidden="true"><span class="record-disc" id="recordDisc"></span><span class="record-sheen"></span><span class="record-ring"></span><span class="record-strobe"></span></span>
+    <!-- Titre de la section, plein centre, entre deux filets à losange (écho du logo) -->
+    <h2 class="metro-plaque"><i aria-hidden="true"></i><b aria-hidden="true"></b><span>Métronome</span><b aria-hidden="true"></b><i aria-hidden="true"></i></h2>
+    <p class="deck-sub metro-sub">La mesure du temps</p>
+    <div class="metro-head">
+      <span class="metro-title">
+        <span class="cradle-col">
+          <!-- Pendule de Newton à deux billes : le choc a lieu au centre, en bas, sur chaque clic -->
+          <svg class="cradle" viewBox="-3 -25 54 83" aria-hidden="true">
+            <defs>
+              <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E1AE"/><stop offset=".5" stop-color="#D4A658"/><stop offset="1" stop-color="#8E6A2E"/></linearGradient>
+              <radialGradient id="ball" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF6DC"/><stop offset=".35" stop-color="#E2BE76"/><stop offset="1" stop-color="#7C5A22"/></radialGradient>
+            </defs>
+            <!-- Portique en A, comme le A de QUART : la traverse porte les deux billes (suspension inchangée) -->
+            <ellipse cx="24" cy="54.4" rx="25" ry="2.4" fill="#8E6A2E"/>
+            <ellipse cx="24" cy="53.8" rx="25" ry="1.8" fill="url(#brass)"/>
+            <path d="M3 52 L24 -21 L45 52" fill="none" stroke="url(#brass)" stroke-width="2.3" stroke-linejoin="miter"/>
+            <path d="M-1 52 H8 M40 52 H49" stroke="url(#brass)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M17 6.4 H31" stroke="url(#brass)" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="24" cy="-22.5" r="1.9" fill="url(#ball)"/>
+            <g id="cbL"><path d="M20 6.4 20 37" class="cb-thread"/><circle cx="20" cy="41" r="4" fill="url(#ball)"/></g>
+            <g id="cbR"><path d="M28 6.4 28 37" class="cb-thread"/><circle cx="28" cy="41" r="4" fill="url(#ball)"/></g>
+            <circle id="cbFlash" class="cb-flash" cx="24" cy="41" r="5"/>
+          </svg>
+          <button type="button" class="mute" id="muteBtn" aria-pressed="false" aria-label="Couper le son du métronome (l'animation continue)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"/><path class="wv" d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path class="x" d="M15.5 9.5l5 5m0-5-5 5"/></svg>
+          </button>
+        </span>
+      </span>
+      <button type="button" class="meter" id="meterBtn" aria-haspopup="dialog" aria-label="Mesure 4/4. Touche pour changer.">
+        <span class="meter-num" id="meterN">4</span>
+        <span class="meter-bar" aria-hidden="true"></span>
+        <span class="meter-num" id="meterD">4</span>
+      </button>
+      <!-- Figure de note (clics par temps), à portée de main en haut ; synchronisée avec la rangée du bas -->
+      <span class="fig-wrap">
+        <button type="button" class="meter figure" id="figBtn" aria-haspopup="true" aria-expanded="false" aria-controls="figMenu" aria-label="Figure : noire. Touche pour changer.">
+          <span class="fig-ic" id="figIc" aria-hidden="true"></span>
+        </button>
+        <div class="fig-menu glass" id="figMenu" role="radiogroup" aria-label="Clics par temps" hidden></div>
+      </span>
+      <!-- Tap tempo : tape en rythme, le tempo se règle tout seul -->
+      <button type="button" class="meter tap" id="tapBtn" aria-label="Tap tempo : tape au moins deux fois en rythme pour régler le tempo">TAP<span>tempo</span></button>
+    </div>
+
+    <!-- Étincelle qui suit la spirale du sillon -->
+    <canvas class="spark" id="spark" aria-hidden="true"></canvas>
+
+    <!-- Bras de la platine : se pose sur le disque quand le métronome tourne -->
+    <div class="tonearm" id="tonearm" aria-hidden="true">
+      <div class="ta-arm" id="taArm">
+        <svg id="taSvg" viewBox="-22 -38 44 210" width="44" height="210">
+          <defs><linearGradient id="taMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7C7F90"/><stop offset=".45" stop-color="#F4EEE1"/><stop offset="1" stop-color="#8A8D9C"/></linearGradient></defs>
+          <rect x="-7.5" y="-36" width="15" height="19" rx="4.5" fill="url(#taMetal)"/>
+          <rect x="-7.5" y="-28" width="15" height="2" fill="#5D6070" opacity=".6"/>
+          <path id="taPath" d="M0 -17V160Q0 170-7 177" fill="none" stroke="url(#taMetal)" stroke-width="3.4" stroke-linecap="round"/>
+          <g id="taHead" transform="translate(-10 183) rotate(30)">
+            <rect x="-6.5" y="-7" width="13" height="17" rx="2.4" fill="url(#taMetal)"/>
+            <circle class="ta-led" id="taLed" cx="0" cy="4" r="2.4"/>
+          </g>
+        </svg>
+      </div>
+      <span class="ta-base"></span>
+    </div>
+    <span class="ta-rest" id="taRest" aria-hidden="true"></span>
+
+    <div class="beats" id="beats"></div>
+    <p class="beats-hint" aria-hidden="true"></p>
+
+    <div class="mctl">
+      <div class="tempo-win glass" id="tempoWin" title="Touche pour démarrer ou arrêter · appui long pour saisir le tempo">
+        <span class="eyebrow">Tempo</span>
+        <input id="mBpm" class="bpm-input" type="text" inputmode="numeric" autocomplete="off" maxlength="3" value="121" readonly aria-label="Tempo du métronome en BPM. Touche pour démarrer ou arrêter, appui long pour saisir.">
+        <span class="unit">BPM</span>
+      </div>
+      <!-- Commandes groupées sous le disque : −5 −1 ▶ +1 +5 -->
+      <button type="button" class="step" data-step="-5" aria-label="Moins 5 BPM">−5</button>
+      <button type="button" class="step" data-step="-1" aria-label="Moins 1 BPM">−1</button>
+      <button type="button" id="mToggle" class="go glass" aria-pressed="false" aria-label="Démarrer le métronome">
+        <span class="go-ic" aria-hidden="true">
+          <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>
+          <svg class="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
+        </span>
+        <span id="mToggleLbl" class="vh">Démarrer</span>
+      </button>
+      <button type="button" class="step" data-step="1" aria-label="Plus 1 BPM">+1</button>
+      <button type="button" class="step" data-step="5" aria-label="Plus 5 BPM">+5</button>
+    </div>
+
+    <div class="mslider-row">
+      <span aria-hidden="true">30</span>
+      <input type="range" id="mSlider" class="metro-slider" min="30" max="240" step="1" value="121" aria-label="Tempo du métronome, de 30 à 240 BPM">
+      <span aria-hidden="true">240</span>
+    </div>
+
+    <div class="subdiv glass" role="radiogroup" aria-label="Clics par temps">
+      <button type="button" class="sub" role="radio" data-sub="1" aria-checked="true" aria-label="Noire : 1 clic par temps">
+        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="17" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 17 22)"/><rect x="20.4" y="3" width="1.8" height="19"/></svg>
+        <span>Noire</span>
+      </button>
+      <button type="button" class="sub" role="radio" data-sub="2" aria-checked="false" aria-label="Croche : 2 clics par temps">
+        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="10" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 10 22)"/><ellipse cx="28" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 28 22)"/><rect x="13.4" y="4" width="1.8" height="18"/><rect x="31.4" y="4" width="1.8" height="18"/><rect x="13.4" y="3" width="19.8" height="3.6"/></svg>
+        <span>Croche</span>
+      </button>
+      <button type="button" class="sub" role="radio" data-sub="3" aria-checked="false" aria-label="Triolet : 3 clics par temps">
+        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="6" cy="23" rx="4" ry="3" transform="rotate(-22 6 23)"/><ellipse cx="19" cy="23" rx="4" ry="3" transform="rotate(-22 19 23)"/><ellipse cx="32" cy="23" rx="4" ry="3" transform="rotate(-22 32 23)"/><rect x="9" y="9" width="1.7" height="14"/><rect x="22" y="9" width="1.7" height="14"/><rect x="35" y="9" width="1.7" height="14"/><rect x="9" y="8" width="27.7" height="3.2"/><text x="22.8" y="6.2" font-size="7.5" font-weight="800" text-anchor="middle" font-family="Manrope, system-ui, sans-serif">3</text></svg>
+        <span>Triolet</span>
+      </button>
+      <button type="button" class="sub" role="radio" data-sub="4" aria-checked="false" aria-label="Double croche : 4 clics par temps">
+        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="5" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 5 23)"/><ellipse cx="15" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 15 23)"/><ellipse cx="25" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 25 23)"/><ellipse cx="35" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 35 23)"/><rect x="7.6" y="4" width="1.6" height="19"/><rect x="17.6" y="4" width="1.6" height="19"/><rect x="27.6" y="4" width="1.6" height="19"/><rect x="37.6" y="4" width="1.6" height="19"/><rect x="7.6" y="3.4" width="31.6" height="3"/><rect x="7.6" y="9" width="31.6" height="3"/></svg>
+        <span>Double croche</span>
+      </button>
+    </div>
+
+    <div class="sounds" role="radiogroup" aria-label="Son du métronome">
+      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
+        <span>Clave</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5h7l3 14h-13z"/><path d="M10.5 5V2.5h3V5"/><path d="M6.2 15.5h11.6"/></svg>
+        <span>Cloche</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="wood" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="2.5"/><path d="M7.5 12h9"/></svg>
+        <span>Wood</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="conga" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="4.5" rx="5" ry="1.8"/><path d="M7 4.5 8.6 20.5h6.8L17 4.5"/><path d="M7.8 12h8.4"/></svg>
+        <span>Conga</span>
+      </button>
+    </div>
+
+    <!-- Ambiance du disque et volume, ensemble en bas -->
+    <div class="vol-line">
+      <div class="rpm" id="rpm" role="radiogroup" aria-label="Vitesse du disque : change l'ambiance lumineuse">
+        <span class="rpm-knob" aria-hidden="true"></span>
+        <button type="button" class="rpm-opt" data-rpm="33" role="radio" aria-checked="true">33</button>
+        <button type="button" class="rpm-opt" data-rpm="45" role="radio" aria-checked="false">45</button>
+      </div>
+      <div class="vol">
+        <svg id="volIcon" class="vol-ic v3" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="spk" d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"/>
+          <path class="w1" d="M15 9.6a3.4 3.4 0 0 1 0 4.8"/>
+          <path class="w2" d="M17.4 7.4a6.6 6.6 0 0 1 0 9.2"/>
+          <path class="w3" d="M19.8 5.2a9.8 9.8 0 0 1 0 13.6"/>
+          <path class="mute" d="M16 9.5l5 5m0-5-5 5"/>
+        </svg>
+        <div class="vol-wrap">
+          <span class="vol-meter" id="volMeter" aria-hidden="true"></span>
+          <input type="range" id="mVol" min="0" max="100" step="1" value="80" aria-label="Volume du métronome">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pied de page discret : installation (si l'appli n'est pas installée) et mentions légales -->
+
   <!-- ============ LECTEUR ============ -->
-  <section class="deck player" id="player" data-state="empty" aria-label="Lecteur">
+  <section class="deck player" id="player" data-state="empty" aria-label="Ralentisseur">
+    <h2 class="metro-plaque player-plaque"><i aria-hidden="true"></i><b aria-hidden="true"></b><span>Ralentisseur</span><b aria-hidden="true"></b><i aria-hidden="true"></i></h2>
+    <p class="deck-sub"><span aria-hidden="true">‹</span> moins vite <span class="dot" aria-hidden="true">·</span> plus vite <span aria-hidden="true">›</span></p>
     <!-- Deux boutons de poste TSF, gravés de la spirale : gauche ouvre la vitesse, droite la referme -->
     <!-- Façade du poste : trois ronds alignés, même taille — bouton gauche · logo · bouton droit -->
     <div class="radio-top">
@@ -190,164 +353,6 @@
     </div></div>
   </section>
 
-  <!-- ============ MÉTRONOME ============ -->
-  <section class="deck metro" id="metro" aria-label="Métronome">
-    <span class="metro-glow" id="metroGlow" aria-hidden="true"></span>
-    <span class="record" id="record" aria-hidden="true"><span class="record-disc" id="recordDisc"></span><span class="record-sheen"></span><span class="record-ring"></span><span class="record-strobe"></span></span>
-    <!-- Devise gravée en arc dans le vinyle, sous le bouton Démarrer (fixe, comme une inscription de platine) -->
-    <svg class="record-label" id="recordLabel" viewBox="-320 -320 640 640" aria-hidden="true">
-      <path id="recordArc" d="M -180 0 A 180 180 0 0 0 180 0" fill="none"/>
-      <text><textPath href="#recordArc" startOffset="50%" text-anchor="middle">La mesure du temps</textPath></text>
-    </svg>
-    <!-- Titre de la section, plein centre, entre deux filets à losange (écho du logo) -->
-    <h2 class="metro-plaque"><i aria-hidden="true"></i><b aria-hidden="true"></b><span>Métronome</span><b aria-hidden="true"></b><i aria-hidden="true"></i></h2>
-    <div class="metro-head">
-      <span class="metro-title">
-        <span class="cradle-col">
-          <!-- Pendule de Newton à deux billes : le choc a lieu au centre, en bas, sur chaque clic -->
-          <svg class="cradle" viewBox="-3 -25 54 83" aria-hidden="true">
-            <defs>
-              <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E1AE"/><stop offset=".5" stop-color="#D4A658"/><stop offset="1" stop-color="#8E6A2E"/></linearGradient>
-              <radialGradient id="ball" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF6DC"/><stop offset=".35" stop-color="#E2BE76"/><stop offset="1" stop-color="#7C5A22"/></radialGradient>
-            </defs>
-            <!-- Portique en A, comme le A de QUART : la traverse porte les deux billes (suspension inchangée) -->
-            <ellipse cx="24" cy="54.4" rx="25" ry="2.4" fill="#8E6A2E"/>
-            <ellipse cx="24" cy="53.8" rx="25" ry="1.8" fill="url(#brass)"/>
-            <path d="M3 52 L24 -21 L45 52" fill="none" stroke="url(#brass)" stroke-width="2.3" stroke-linejoin="miter"/>
-            <path d="M-1 52 H8 M40 52 H49" stroke="url(#brass)" stroke-width="1.4" stroke-linecap="round"/>
-            <path d="M17 6.4 H31" stroke="url(#brass)" stroke-width="1.6" stroke-linecap="round"/>
-            <circle cx="24" cy="-22.5" r="1.9" fill="url(#ball)"/>
-            <g id="cbL"><path d="M20 6.4 20 37" class="cb-thread"/><circle cx="20" cy="41" r="4" fill="url(#ball)"/></g>
-            <g id="cbR"><path d="M28 6.4 28 37" class="cb-thread"/><circle cx="28" cy="41" r="4" fill="url(#ball)"/></g>
-            <circle id="cbFlash" class="cb-flash" cx="24" cy="41" r="5"/>
-          </svg>
-          <button type="button" class="mute" id="muteBtn" aria-pressed="false" aria-label="Couper le son du métronome (l'animation continue)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"/><path class="wv" d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path class="x" d="M15.5 9.5l5 5m0-5-5 5"/></svg>
-          </button>
-        </span>
-      </span>
-      <div class="rpm" id="rpm" role="radiogroup" aria-label="Vitesse du disque : change l'ambiance lumineuse">
-        <span class="rpm-knob" aria-hidden="true"></span>
-        <button type="button" class="rpm-opt" data-rpm="33" role="radio" aria-checked="true">33</button>
-        <button type="button" class="rpm-opt" data-rpm="45" role="radio" aria-checked="false">45</button>
-      </div>
-      <button type="button" class="meter" id="meterBtn" aria-haspopup="dialog" aria-label="Mesure 4/4. Touche pour changer.">
-        <span class="meter-num" id="meterN">4</span>
-        <span class="meter-bar" aria-hidden="true"></span>
-        <span class="meter-num" id="meterD">4</span>
-      </button>
-      <!-- Figure de note (clics par temps), à portée de main en haut ; synchronisée avec la rangée du bas -->
-      <span class="fig-wrap">
-        <button type="button" class="meter figure" id="figBtn" aria-haspopup="true" aria-expanded="false" aria-controls="figMenu" aria-label="Figure : noire. Touche pour changer.">
-          <span class="fig-ic" id="figIc" aria-hidden="true"></span>
-        </button>
-        <div class="fig-menu glass" id="figMenu" role="radiogroup" aria-label="Clics par temps" hidden></div>
-      </span>
-    </div>
-
-    <!-- Étincelle qui suit la spirale du sillon -->
-    <canvas class="spark" id="spark" aria-hidden="true"></canvas>
-
-    <!-- Bras de la platine : se pose sur le disque quand le métronome tourne -->
-    <div class="tonearm" id="tonearm" aria-hidden="true">
-      <div class="ta-arm" id="taArm">
-        <svg id="taSvg" viewBox="-22 -38 44 210" width="44" height="210">
-          <defs><linearGradient id="taMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7C7F90"/><stop offset=".45" stop-color="#F4EEE1"/><stop offset="1" stop-color="#8A8D9C"/></linearGradient></defs>
-          <rect x="-7.5" y="-36" width="15" height="19" rx="4.5" fill="url(#taMetal)"/>
-          <rect x="-7.5" y="-28" width="15" height="2" fill="#5D6070" opacity=".6"/>
-          <path id="taPath" d="M0 -17V160Q0 170-7 177" fill="none" stroke="url(#taMetal)" stroke-width="3.4" stroke-linecap="round"/>
-          <g id="taHead" transform="translate(-10 183) rotate(30)">
-            <rect x="-6.5" y="-7" width="13" height="17" rx="2.4" fill="url(#taMetal)"/>
-            <circle class="ta-led" id="taLed" cx="0" cy="4" r="2.4"/>
-          </g>
-        </svg>
-      </div>
-      <span class="ta-base"></span>
-    </div>
-    <span class="ta-rest" id="taRest" aria-hidden="true"></span>
-
-    <div class="beats" id="beats"></div>
-    <p class="beats-hint" aria-hidden="true"></p>
-
-    <div class="mctl">
-      <button type="button" class="step s1" data-step="-1" aria-label="Moins 1 BPM">−1</button>
-      <div class="tempo-win glass" id="tempoWin" title="Glisse pour régler · double-tape pour saisir">
-        <span class="eyebrow">Tempo</span>
-        <input id="mBpm" class="bpm-input" type="text" inputmode="numeric" autocomplete="off" maxlength="3" value="121" readonly aria-label="Tempo du métronome en BPM. Glisse pour régler, double-tape pour saisir.">
-        <span class="unit">BPM</span>
-      </div>
-      <button type="button" class="step s1" data-step="1" aria-label="Plus 1 BPM">+1</button>
-      <button type="button" class="step s5" data-step="-5" aria-label="Moins 5 BPM">−5</button>
-      <button type="button" id="mToggle" class="go glass" aria-pressed="false">
-        <span class="go-ic" aria-hidden="true">
-          <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>
-          <svg class="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
-        </span>
-        <span id="mToggleLbl">Démarrer</span>
-      </button>
-      <button type="button" class="step s5" data-step="5" aria-label="Plus 5 BPM">+5</button>
-    </div>
-
-    <div class="mslider-row">
-      <span aria-hidden="true">30</span>
-      <input type="range" id="mSlider" class="metro-slider" min="30" max="240" step="1" value="121" aria-label="Tempo du métronome, de 30 à 240 BPM">
-      <span aria-hidden="true">240</span>
-    </div>
-
-    <div class="subdiv glass" role="radiogroup" aria-label="Clics par temps">
-      <button type="button" class="sub" role="radio" data-sub="1" aria-checked="true" aria-label="Noire : 1 clic par temps">
-        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="17" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 17 22)"/><rect x="20.4" y="3" width="1.8" height="19"/></svg>
-        <span>Noire</span>
-      </button>
-      <button type="button" class="sub" role="radio" data-sub="2" aria-checked="false" aria-label="Croche : 2 clics par temps">
-        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="10" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 10 22)"/><ellipse cx="28" cy="22" rx="4.6" ry="3.4" transform="rotate(-22 28 22)"/><rect x="13.4" y="4" width="1.8" height="18"/><rect x="31.4" y="4" width="1.8" height="18"/><rect x="13.4" y="3" width="19.8" height="3.6"/></svg>
-        <span>Croche</span>
-      </button>
-      <button type="button" class="sub" role="radio" data-sub="3" aria-checked="false" aria-label="Triolet : 3 clics par temps">
-        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="6" cy="23" rx="4" ry="3" transform="rotate(-22 6 23)"/><ellipse cx="19" cy="23" rx="4" ry="3" transform="rotate(-22 19 23)"/><ellipse cx="32" cy="23" rx="4" ry="3" transform="rotate(-22 32 23)"/><rect x="9" y="9" width="1.7" height="14"/><rect x="22" y="9" width="1.7" height="14"/><rect x="35" y="9" width="1.7" height="14"/><rect x="9" y="8" width="27.7" height="3.2"/><text x="22.8" y="6.2" font-size="7.5" font-weight="800" text-anchor="middle" font-family="Manrope, system-ui, sans-serif">3</text></svg>
-        <span>Triolet</span>
-      </button>
-      <button type="button" class="sub" role="radio" data-sub="4" aria-checked="false" aria-label="Double croche : 4 clics par temps">
-        <svg viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="5" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 5 23)"/><ellipse cx="15" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 15 23)"/><ellipse cx="25" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 25 23)"/><ellipse cx="35" cy="23" rx="3.6" ry="2.8" transform="rotate(-22 35 23)"/><rect x="7.6" y="4" width="1.6" height="19"/><rect x="17.6" y="4" width="1.6" height="19"/><rect x="27.6" y="4" width="1.6" height="19"/><rect x="37.6" y="4" width="1.6" height="19"/><rect x="7.6" y="3.4" width="31.6" height="3"/><rect x="7.6" y="9" width="31.6" height="3"/></svg>
-        <span>Double croche</span>
-      </button>
-    </div>
-
-    <div class="sounds" role="radiogroup" aria-label="Son du métronome">
-      <button type="button" class="snd" role="radio" data-snd="clic" aria-checked="true">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h5l2.2-6 4.4 12 2.2-6H22"/></svg>
-        <span>Clic</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
-        <span>Clave</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5h7l3 14h-13z"/><path d="M10.5 5V2.5h3V5"/><path d="M6.2 15.5h11.6"/></svg>
-        <span>Cloche</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="conga" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="4.5" rx="5" ry="1.8"/><path d="M7 4.5 8.6 20.5h6.8L17 4.5"/><path d="M7.8 12h8.4"/></svg>
-        <span>Conga</span>
-      </button>
-    </div>
-
-    <div class="vol">
-      <svg id="volIcon" class="vol-ic v3" viewBox="0 0 24 24" aria-hidden="true">
-        <path class="spk" d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"/>
-        <path class="w1" d="M15 9.6a3.4 3.4 0 0 1 0 4.8"/>
-        <path class="w2" d="M17.4 7.4a6.6 6.6 0 0 1 0 9.2"/>
-        <path class="w3" d="M19.8 5.2a9.8 9.8 0 0 1 0 13.6"/>
-        <path class="mute" d="M16 9.5l5 5m0-5-5 5"/>
-      </svg>
-      <div class="vol-wrap">
-        <span class="vol-meter" id="volMeter" aria-hidden="true"></span>
-        <input type="range" id="mVol" min="0" max="100" step="1" value="80" aria-label="Volume du métronome">
-      </div>
-    </div>
-  </section>
-
-  <!-- Pied de page discret : installation (si l'appli n'est pas installée) et mentions légales -->
   <footer class="site-foot">
     <p class="foot-sign">Une création de Frédéric Hermelin</p>
     <button type="button" id="installLink" class="foot-link" hidden>Installer l'application</button>

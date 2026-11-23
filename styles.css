@@ -2045,7 +2045,7 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
 .metro-plaque b { width: 5px; height: 5px; background: #E3C27F; transform: rotate(45deg); flex: none; }
 /* En-tête : pendule et Mute à gauche ; 33/45 · mesure · figure groupés à droite */
 .metro-head { justify-content: flex-start; }
-.metro-head .rpm { margin-left: auto; }
+.metro-head #meterBtn { margin-left: auto; }
 /* Devise gravée sur le vinyle */
 .record-label { position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 640px; height: 640px; margin: -320px 0 0 -320px; z-index: -1; pointer-events: none; overflow: visible; }
 .record-label text { font: italic 500 14px "EB Garamond", Garamond, serif; letter-spacing: .14em; fill: rgba(241, 226, 191, .5); transition: fill .9s ease, filter .9s ease; }
@@ -2129,3 +2129,64 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 
 /* BPM d'origine en lecture seule : pas de curseur de saisie tant qu'on n'a pas double-touché */
 #origBpm[readonly] { cursor: default; -webkit-user-select: none; user-select: none; caret-color: transparent; }
+
+/* =================== Nouvelle organisation (métronome en premier) =================== */
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.metro { margin-top: 4px; }
+.player { margin-top: 10px; }
+/* Cadres : on exploite mieux la largeur, la délimitation est renforcée par un fin second filet laiton */
+.deck { border-radius: 26px; outline: 1px solid rgba(217, 178, 106, .17); outline-offset: -6px; }
+@media (max-width: 430px) {
+  .app { padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+  .deck { padding: 14px 12px; }
+}
+/* Sous-titres des deux outils, sous leur plaque */
+.deck-sub { margin: -2px 0 2px; text-align: center; font: italic 500 15px/1.2 "EB Garamond", Garamond, serif; letter-spacing: .03em; color: #E3C27F; opacity: .9; }
+.deck-sub .dot { margin: 0 .35em; opacity: .7; }
+.metro-sub { transition: color .9s ease, text-shadow .9s ease; }
+.metro.running .metro-sub { color: #FFE3B0; text-shadow: 0 0 8px rgba(255, 196, 110, .45); }
+.player-plaque { margin-top: 2px; }
+/* Disque un peu plus petit : les temps au-dessus, les commandes dessous, rien ne mord sur les sillons */
+.metro .record { transform: scale(.85); }
+.metro .beats { margin-bottom: 6px; }
+/* Rangée de commandes : −5 −1 ▶ +1 +5, mêmes boutons ronds ; le Play au centre, seul en or */
+.mctl { grid-template-columns: repeat(5, auto) !important; grid-template-rows: auto auto; column-gap: 12px !important; row-gap: 46px !important; justify-content: center; padding: 4px 0 0 !important; }
+.mctl .tempo-win { grid-column: 1 / -1; grid-row: 1; }
+.mctl .step, .mctl .go { grid-row: 2; }
+.mctl .step {
+  width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid transparent;
+  background: radial-gradient(circle at 40% 30%, #2A3060 0%, #191D3D 70%) padding-box,
+    conic-gradient(from 210deg, #6E7183, #E9E2D2, #8C7A5C, #F4EBDA, #6E7183, #CDBB98, #6E7183) border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 10px -4px rgba(0, 0, 0, .7);
+  color: var(--ice);
+}
+.mctl .go {
+  width: 62px; height: 62px; padding: 0; border-radius: 50%; justify-content: center; gap: 0;
+  background: radial-gradient(circle at 38% 28%, #FFF1CC 0%, #F2C46E 45%, #C98A2E 100%) padding-box,
+    conic-gradient(from 210deg, #8A6F3E, #F4E3B8, #B08A47, #F7EBCB, #8A6F3E) border-box;
+  box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(242, 208, 138, .35), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 26px -6px rgba(255, 190, 100, .5);
+}
+.mctl .go .go-ic { width: 62px; height: 62px; background: none; box-shadow: none; color: #2A1A06; }
+.mctl .go .go-ic svg { width: 24px; height: 24px; }
+.mctl .go .i-play { margin-left: 3px; }
+.mctl .go.running { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(255, 220, 150, .6), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 30px -2px rgba(255, 190, 100, .75); }
+.metro[data-rpm="45"] .mctl .go .go-ic { background: none; color: #2A1406; box-shadow: none; }
+.metro[data-rpm="45"].running .mctl .go { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(255, 220, 150, .6), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 30px -2px rgba(255, 170, 80, .75); }
+@media (max-width: 380px) { .mctl { column-gap: 8px !important; } .mctl .step { width: 42px; height: 42px; } }
+/* Le disque se touche : il démarre ou arrête le métronome */
+.tempo-win { cursor: pointer; }
+/* TAP tempo, dans le style de la mesure et de la figure */
+.tap { width: 46px; font: 800 12px/1 var(--f-ui); letter-spacing: .12em; color: #E6C27A; transition: box-shadow .12s, transform .08s; }
+.tap span { display: block; margin-top: 5px; font-size: 8.5px; font-weight: 700; letter-spacing: .1em; color: var(--dim); }
+.tap.flash { transform: scale(.94); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 2px rgba(242, 208, 138, .55), 0 0 16px rgba(255, 190, 100, .5); }
+/* 33/45 et volume sur une même ligne, en bas */
+.vol-line { display: flex; align-items: center; gap: 12px; }
+.vol-line .vol { flex: 1; min-width: 0; }
+.vol-line .rpm { flex: none; margin: 0; }
+/* Lecteur compact tant qu'aucun morceau n'est chargé */
+.player[data-state="empty"] .wave-wrap { height: 128px; }
+.player[data-state="empty"] .wave-empty { justify-content: center; gap: 10px; }
+.player[data-state="empty"] .wave-empty .deco,
+.player[data-state="empty"] .tsf-plate,
+.player[data-state="empty"] .tsf-cloth,
+.player[data-state="empty"] .empty-note { display: none; }

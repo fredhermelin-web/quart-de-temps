@@ -75,7 +75,7 @@
 
   /* Sons enregistrés (dossier Sound, fichiers intacts) : chargés une seule fois.
      Si un fichier manque, le clic d'origine prend le relais. */
-  const SAMPLE_FILES = { clave: 'Sound/Clave.mp3', conga: 'Sound/Conga.mp3', cowbell: 'Sound/Cowbell.mp3' };
+  const SAMPLE_FILES = { clave: 'Sound/Clave.wav', cowbell: 'Sound/Cowbell.wav', wood: 'Sound/Wood.wav', conga: 'Sound/Conga.mp3' };
   const samples = {};
   function b64ToBuffer(b64) {
     const bin = atob(b64), n = bin.length, u = new Uint8Array(n);
@@ -96,6 +96,20 @@
     }
     return ab;
   }
+  // Conga : attaque renforcée et résonance raccourcie (plus de claquant, moins de grave qui traîne)
+  function punch(ab) {
+    const sr = ab.sampleRate, nA = Math.floor(sr * 0.012), t0 = Math.floor(sr * 0.09);
+    for (let ch = 0; ch < ab.numberOfChannels; ch++) {
+      const d = ab.getChannelData(ch);
+      for (let i = 0; i < d.length; i++) {
+        let g = 1;
+        if (i < nA) g = 2.2 - 1.2 * (i / nA);
+        else if (i > t0) g = Math.exp(-(i - t0) / (sr * 0.07));
+        d[i] *= g;
+      }
+    }
+    return ab;
+  }
   function loadSamples(c) {
     Object.keys(SAMPLE_FILES).forEach((k) => {
       // D'abord la copie intégrée (sounds.js) : marche aussi en ouverture locale (file://) et hors ligne
@@ -105,14 +119,14 @@
         : fetch(SAMPLE_FILES[k]).then((r) => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); });
       source
         .then((buf) => new Promise((res, rej) => { const p = c.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); }))
-        .then((ab) => { samples[k] = normalize(ab); })
+        .then((ab) => { samples[k] = normalize(k === 'conga' ? punch(ab) : ab); })
         .catch(() => { /* le clic d'origine sera utilisé */ });
     });
   }
   /* Joue une note du métronome à l'instant t : le 1 plus fort et un peu plus aigu,
      les accents marqués, les subdivisions plus douces */
   function playMetroNote(t, isBeat, st, first) {
-    const smp = metro.sound !== 'clic' && samples[metro.sound];
+    const smp = samples[metro.sound];
     const src = ctx.createBufferSource();
     if (smp) {
       let rate = 1, lvl = 0.88;
@@ -1129,7 +1143,7 @@
   }
   // Réglages de travail : toujours les mêmes à l'ouverture (121 BPM, 4/4, noire, sans accent, arrêté).
   // Seules les préférences personnelles (volume, 33/45 tours, son) sont gardées en mémoire.
-  const SOUNDS = ['clic', 'clave', 'cowbell', 'conga'];
+  const SOUNDS = ['clave', 'cowbell', 'wood', 'conga'];
   const metro = {
     bpm: 121,
     sub: 1,
@@ -1137,7 +1151,7 @@
     n: 4,
     d: 4,
     rpm: +store.get('rpm', 33) === 45 ? 45 : 33,
-    sound: SOUNDS.indexOf(store.get('sound', 'clic')) >= 0 ? store.get('sound', 'clic') : 'clic',
+    sound: SOUNDS.indexOf(store.get('sound', 'clave')) >= 0 ? store.get('sound', 'clave') : 'clave',
     muted: false, // temporaire : jamais gardé en mémoire
     pattern: defaultPattern(4, 4),
     running: false,
@@ -1509,13 +1523,9 @@
     const lab = tempoWinEl.getBoundingClientRect();
     const rel = (r) => ({ l: r.left - m.left, r: r.right - m.left, t: r.top - m.top, b: r.bottom - m.top, cx: r.left + r.width / 2 - m.left });
     const R = rel(row), P1 = rel(p1), P5 = rel(p5), L = rel(lab);
-    // Pivot au-dessus de la colonne +1/+5 ; s'il touche les voyants, il descend juste sous leur rangée
-    let px = P1.cx + 4, py = R.t + 30;
-    if (R.r > px - 22) { px = m.width - 26; py = R.b + 24; }
-    // Tête : dans l'espace entre +1 et +5, côté étiquette
-    const hx = (L.r + P1.l) / 2 - 4, hy = (P1.b + P5.t) / 2;
-    // Bras raccourci d'environ 10 % : le pivot descend d'autant, la tête reste au même endroit
-    py += Math.hypot(hx - px, hy - py) * 0.1;
+    // Pivot en haut à droite, juste sous la rangée des temps ; tête posée sur les sillons à droite de l'étiquette
+    let px = m.width - 24, py = R.b + 18;
+    const hx = L.r + 20, hy = (L.t + L.b) / 2 + 8;
     const tx = hx - px, ty = hy - py;
     // La tête est à (-10, len + 12) du pivot dans le dessin du bras
     const len = Math.max(60, Math.sqrt(Math.max(0, tx * tx + ty * ty - 100)) - 12);
@@ -1524,8 +1534,8 @@
     taSvg.setAttribute('viewBox', '-22 -38 44 ' + (len + 70));
     taSvg.setAttribute('height', String(len + 70));
     const play = deg(Math.atan2(ty, tx) - Math.atan2(len + 12, -10));
-    // Repos : bras rangé le long du bord droit ; le repose-bras est placé exactement sous la tête
-    const aimX = (P1.r + m.width) / 2 - 1, aimY = py + len;
+    // Repos : bras rangé le long du bord droit, au-dessus de la rangée de commandes
+    const aimX = m.width - 22, aimY = py + len;
     const rest = deg(Math.atan2(aimY - py, aimX - px) - Math.atan2(len + 12, -10));
     const rr = rest * Math.PI / 180, hlx = -10, hly = len + 19;
     const restX = px + hlx * Math.cos(rr) - hly * Math.sin(rr);
@@ -1538,7 +1548,7 @@
     taRest.style.setProperty('--rest-y', (restY + 9) + 'px');
     if (!armEl.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => armEl.classList.add('ready')));
     sparkGeom.cx = rx; sparkGeom.cy = ry; sparkGeom.w = m.width; sparkGeom.h = m.height;
-    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 156); // reste sur le disque, à l'intérieur de l'anneau de laiton
+    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 132); // reste sur le disque (réduit à 85 %), à l'intérieur de l'anneau de laiton
     sizeSpark();
   }
   if (window.ResizeObserver) new ResizeObserver(placeRecord).observe(metroEl);
@@ -1582,7 +1592,7 @@
   }
   /* Choix du son : un toucher le sélectionne et le fait entendre */
   function setSound(s, preview) {
-    metro.sound = SOUNDS.indexOf(s) >= 0 ? s : 'clic';
+    metro.sound = SOUNDS.indexOf(s) >= 0 ? s : 'clave';
     document.querySelectorAll('.snd').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.snd === metro.sound)));
     store.set('sound', metro.sound);
     if (preview) {
@@ -1610,6 +1620,7 @@
     $('metro').classList.toggle('running', metro.running);
     b.setAttribute('aria-pressed', String(metro.running));
     $('mToggleLbl').textContent = metro.running ? 'Arrêter' : 'Démarrer';
+    b.setAttribute('aria-label', metro.running ? 'Arrêter le métronome' : 'Démarrer le métronome');
   }
 
   function setMetroBpm(v) {
@@ -2154,35 +2165,55 @@
   const mb = $('mBpm');
   const tw = $('tempoWin');
   // Glisser sur la fenêtre Tempo règle le BPM (haut/droite = plus vite) ; double-tape ouvre le clavier.
-  const TW = { id: null, x0: 0, y0: 0, bpm0: 0, moved: false, lastTap: 0 };
+  const TW = { id: null, x0: 0, y0: 0, moved: false, long: false, timer: 0 };
   function startEditBpm() {
     tw.classList.add('editing');
     mb.readOnly = false;
     mb.focus();
     mb.select();
   }
-  // La fenêtre Tempo ne change plus le BPM au glissement (le doigt fait défiler la page).
-  // Seul un double-tap ouvre le clavier ; le tempo se règle avec ±1 / ±5 et la réglette.
+  // Toucher l'étiquette du disque démarre ou arrête le métronome (le réflexe des élèves) ;
+  // un appui long ouvre le clavier pour saisir le tempo. Glisser fait défiler la page.
   tw.addEventListener('pointerdown', (e) => {
     if (tw.classList.contains('editing') || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    TW.id = e.pointerId; TW.x0 = e.clientX; TW.y0 = e.clientY; TW.moved = false;
+    TW.id = e.pointerId; TW.x0 = e.clientX; TW.y0 = e.clientY; TW.moved = false; TW.long = false;
+    clearTimeout(TW.timer);
+    TW.timer = setTimeout(() => { if (TW.id !== null && !TW.moved) { TW.long = true; startEditBpm(); } }, 550);
   });
   tw.addEventListener('pointermove', (e) => {
     if (e.pointerId !== TW.id) return;
-    if (Math.abs(e.clientY - TW.y0) + Math.abs(e.clientX - TW.x0) > 8) TW.moved = true;
+    if (Math.abs(e.clientY - TW.y0) + Math.abs(e.clientX - TW.x0) > 8) { TW.moved = true; clearTimeout(TW.timer); }
   });
   function twEnd(e) {
     if (e.pointerId !== TW.id) return;
     TW.id = null;
+    clearTimeout(TW.timer);
     tw.classList.remove('dragging');
-    if (TW.moved) { TW.lastTap = 0; return; }
-    const now = performance.now();
-    if (now - TW.lastTap < 350) { TW.lastTap = 0; startEditBpm(); }
-    else TW.lastTap = now;
+    if (TW.moved || TW.long || tw.classList.contains('editing')) return;
+    toggleMetro();
   }
   tw.addEventListener('pointerup', twEnd);
-  tw.addEventListener('pointercancel', (e) => { if (e.pointerId === TW.id) { TW.id = null; tw.classList.remove('dragging'); } });
-  tw.addEventListener('dblclick', (e) => { e.preventDefault(); if (!tw.classList.contains('editing')) startEditBpm(); });
+  tw.addEventListener('pointercancel', (e) => { if (e.pointerId === TW.id) { TW.id = null; clearTimeout(TW.timer); tw.classList.remove('dragging'); } });
+  tw.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  /* TAP tempo : tape au moins deux fois en rythme ; moyenne des derniers écarts, remise à zéro après 2 s de pause */
+  const tapBtn = $('tapBtn'), taps = [];
+  tapBtn.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const now = performance.now();
+    if (taps.length && now - taps[taps.length - 1] > 2000) taps.length = 0;
+    taps.push(now);
+    if (taps.length > 6) taps.shift();
+    tapBtn.classList.remove('flash'); void tapBtn.offsetWidth; tapBtn.classList.add('flash');
+    setTimeout(() => tapBtn.classList.remove('flash'), 120);
+    if (taps.length >= 2) {
+      const gaps = taps.slice(1).map((t, i) => t - taps[i]);
+      const avg = gaps.reduce((x, y) => x + y, 0) / gaps.length;
+      setMetroBpm(60000 / avg);
+    }
+  });
+  tapBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tapBtn.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'keyboard' })); } });
   mb.addEventListener('keydown', (e) => {
     if (mb.readOnly && (e.key === 'Enter' || /^\d$/.test(e.key))) {
       if (e.key === 'Enter') e.preventDefault();
