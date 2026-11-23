@@ -1316,6 +1316,7 @@ body.spinning .sig-dot { opacity: 1; }
 
 /* Pied de page discret */
 .site-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; padding: 18px 0 6px; }
+.foot-sign { flex-basis: 100%; margin: 0 0 4px; text-align: center; font: italic 500 15px/1.2 "EB Garamond", Garamond, serif; letter-spacing: .02em; color: #E3C27F; opacity: .85; }
 .foot-link {
   border: 0;
   background: none;
