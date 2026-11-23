@@ -1651,7 +1651,7 @@
     let alive = 0;
     const age = now - (DUST.t0 || now), settle = age > 2300, tf = settle ? Math.max(0, 1 - (age - 2300) / 1100) : 1;
     if (DUST.mode === 'on' && settle && tf <= 0 && DUST.ps.length) DUST.ps = [];
-    if (DUST.mode === 'on' && !COMET.fired && now - COMET.playT0 > 60000) { COMET.fired = true; cometFire(now); }
+    if (DUST.mode === 'on' && now - COMET.playT0 > 60000) { COMET.playT0 = now; cometFire(now); }   // une comète à chaque minute de jeu
     for (const p of DUST.ps) {
       if (DUST.mode === 'on' && !settle) {
         p.h += p.v * dt * (0.8 + metro.bpm / 240);
