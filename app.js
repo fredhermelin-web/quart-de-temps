@@ -1143,7 +1143,7 @@
   }
   // Réglages de travail : toujours les mêmes à l'ouverture (121 BPM, 4/4, noire, sans accent, arrêté).
   // Seules les préférences personnelles (volume, 33/45 tours, son) sont gardées en mémoire.
-  const SOUNDS = ['clave', 'cowbell', 'wood', 'conga'];
+  const SOUNDS = ['cowbell', 'clave', 'wood', 'conga'];
   const metro = {
     bpm: 121,
     sub: 1,
@@ -1151,7 +1151,8 @@
     n: 4,
     d: 4,
     rpm: +store.get('rpm', 33) === 45 ? 45 : 33,
-    sound: SOUNDS.indexOf(store.get('sound', 'clave')) >= 0 ? store.get('sound', 'clave') : 'clave',
+    // Nouvel ordre (Cloche en premier) : une fois pour tous, on repart sur la Cloche
+    sound: (store.get('soundOrder', 0) >= 2 && SOUNDS.indexOf(store.get('sound', 'cowbell')) >= 0) ? store.get('sound', 'cowbell') : 'cowbell',
     muted: false, // temporaire : jamais gardé en mémoire
     pattern: defaultPattern(4, 4),
     running: false,
@@ -1280,7 +1281,7 @@
   const GROOVE = 3.4;
   const sparkCv = $('spark'), sparkCtx = sparkCv.getContext('2d');
   const sparkGeom = { cx: 0, cy: 0, w: 1, h: 1, r0: 80, r1: 200, dpr: 1 };
-  const SPARK = { lastT: 0, k: -1, bar: 0, parts: [], burst: 0, drawn: false, last: 0 };
+  const SPARK = { lastT: 0, k: -1, bar: 0, parts: [], burst: 0, drawn: false, last: 0, stars: [], nextStar: 3 };
   // Palettes de lumière : 33 tours (couchant et bleu nuit) / 45 tours (lampe d'ampli : cuivre, ambre, champagne)
   const PAL = {
     33: { tail: [255, 95, 140], mid: [255, 180, 90], head: [140, 215, 255], first: [255, 175, 70], beat: [120, 205, 255], alt: [255, 130, 160] },
@@ -1293,6 +1294,8 @@
     sparkGeom.dpr = dpr;
     const w = Math.max(1, Math.round(sparkGeom.w * dpr)), h = Math.max(1, Math.round(sparkGeom.h * dpr));
     if (sparkCv.width !== w || sparkCv.height !== h) { sparkCv.width = w; sparkCv.height = h; }
+    const nc = $('leoNotes');
+    if (nc && (nc.width !== w || nc.height !== h)) { nc.width = w; nc.height = h; }
   }
   function sparkPos(u) {
     const g = sparkGeom;
@@ -1311,18 +1314,23 @@
     SPARK.k = SPARK.k + 1 >= sparkTurns() ? 0 : SPARK.k + 1;
     SPARK.bar = 1;
     if (ev.st === 0) return;
-    const p = sparkPos(sparkProgress(now)), P = pal();
-    const first = ev.beat === 0, accent = ev.st === 2;
-    const n = first ? 12 : accent ? 6 : 3;
-    for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2, sp = (first ? 72 : 34) * (0.35 + Math.random());
-      SPARK.parts.push({
-        x: p[0], y: p[1], vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1,
-        decay: first ? 1.3 : 2.2, size: first ? 2.6 : 1.7,
-        col: first ? P.first : (Math.random() < 0.3 ? P.alt : P.beat)
-      });
+    if (ev.beat === 0) leoNote(0);                       // une note s'échappe du tourbillon à chaque mesure
+    if (--SPARK.nextStar <= 0) {                         // une étoile filante toutes les 2 ou 3 mesures
+      spawnStar();
+      SPARK.nextStar = (metro.pattern.length || 4) * (Math.random() < 0.5 ? 2 : 3);
     }
-    if (first) SPARK.burst = 1;
+  }
+  /* Étoile filante : file sur un seul sillon, sur environ un quart de tour, plus vite quand le tempo monte */
+  function spawnStar() {
+    const g = sparkGeom;
+    const span = Math.max(6, g.r1 - g.r0 - 12);
+    SPARK.stars.push({
+      r: g.r0 + 8 + Math.random() * span,
+      a0: Math.random() * Math.PI * 2,
+      arc: (Math.PI / 2) * (0.85 + Math.random() * 0.4),
+      t0: performance.now(),
+      dur: Math.min(900, Math.max(260, 60000 / metro.bpm * 0.85))
+    });
   }
   const lerp3 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
   const rgbaS = (c, a) => 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a.toFixed(3) + ')';
@@ -1341,52 +1349,34 @@
     c.globalCompositeOperation = 'lighter';
     SPARK.drawn = true;
     if (running) {
-      const lat = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
-      const u = sparkProgress(ctx.currentTime - lat), P = pal(), T = sparkTurns();
-      const fade = Math.min(1, (u + 0.3) / 0.8) * Math.min(1, Math.max(0, T - u) / 1.5);
-      // La traînée reste dans le sillon : un arc de spirale qui s'allonge avec le tempo
-      const trail = 0.25 + 0.3 * (metro.bpm - 30) / 210;
-      const steps = 90;
-      c.lineCap = 'round';
-      let prev = null;
-      for (let i = steps; i >= 0; i--) {
-        const uu = u - trail * i / steps;
-        if (uu < 0) { prev = null; continue; }
-        const p = sparkPos(uu), k = 1 - i / steps;
-        if (prev) {
-          const grow = 0.8 + 0.6 * (p[2] - g.r0) / Math.max(1, g.r1 - g.r0);
-          const col = k < 0.5 ? lerp3(P.tail, P.mid, k * 2) : lerp3(P.mid, P.head, (k - 0.5) * 2);
-          c.strokeStyle = rgbaS(col, 0.55 * k * k * fade);
-          c.lineWidth = (0.4 + 1.4 * k) * grow;
+      const P = pal();
+      for (let i = SPARK.stars.length - 1; i >= 0; i--) {
+        const st = SPARK.stars[i], p = (tms - st.t0) / st.dur;
+        if (p < 0) continue;
+        if (p > 1.45) { SPARK.stars.splice(i, 1); continue; }
+        const k = Math.min(1, p), ease = 1 - Math.pow(1 - k, 2);
+        const head = st.a0 + st.arc * ease;
+        const fade = p > 1 ? 1 - (p - 1) / 0.45 : 1;
+        const tail = Math.max(st.a0, head - st.arc * 0.55);
+        const N = 26;
+        c.lineCap = 'round';
+        for (let j = 0; j < N; j++) {
+          const t1 = tail + (head - tail) * (j / N), t2 = tail + (head - tail) * ((j + 1) / N), q = (j + 1) / N;
+          c.strokeStyle = rgbaS(lerp3(P.tail, P.head, q), 0.85 * q * q * fade);
+          c.lineWidth = 0.4 + 1.5 * q;
           c.beginPath();
-          c.moveTo(prev[0], prev[1]);
-          c.lineTo(p[0], p[1]);
+          c.arc(g.cx, g.cy, st.r, t1, t2);
           c.stroke();
         }
-        prev = p;
+        const hx = g.cx + st.r * Math.cos(head), hy = g.cy + st.r * Math.sin(head);
+        const gr = c.createRadialGradient(hx, hy, 0, hx, hy, 6);
+        gr.addColorStop(0, 'rgba(255,255,255,' + (0.9 * fade).toFixed(3) + ')');
+        gr.addColorStop(0.35, rgbaS(P.head, 0.6 * fade));
+        gr.addColorStop(1, rgbaS(P.head, 0));
+        c.fillStyle = gr;
+        c.beginPath(); c.arc(hx, hy, 6, 0, Math.PI * 2); c.fill();
       }
-      // Tête : halo, qui prend la couleur du 1 juste après le premier temps
-      const p = sparkPos(u), grow = 0.85 + 0.7 * (p[2] - g.r0) / Math.max(1, g.r1 - g.r0);
-      const hc = lerp3(P.head, P.first, SPARK.burst);
-      const rad = (7 + 6 * SPARK.burst) * grow;
-      const gr = c.createRadialGradient(p[0], p[1], 0, p[0], p[1], rad);
-      gr.addColorStop(0, 'rgba(255,255,255,' + (0.8 * fade).toFixed(3) + ')');
-      gr.addColorStop(0.3, rgbaS(hc, 0.55 * fade));
-      gr.addColorStop(1, rgbaS(hc, 0));
-      c.fillStyle = gr;
-      c.beginPath();
-      c.arc(p[0], p[1], rad, 0, Math.PI * 2);
-      c.fill();
-      // Onde qui s'élargit sur le 1
-      if (SPARK.burst > 0) {
-        c.strokeStyle = rgbaS(P.first, 0.45 * SPARK.burst * fade);
-        c.lineWidth = 1.2;
-        c.beginPath();
-        c.arc(p[0], p[1], 5 + (1 - SPARK.burst) * 30, 0, Math.PI * 2);
-        c.stroke();
-        SPARK.burst = Math.max(0, SPARK.burst - dt * 2.4);
-      }
-    }
+    } else if (SPARK.stars.length) SPARK.stars.length = 0;
     // Particules
     for (let i = SPARK.parts.length - 1; i >= 0; i--) {
       const q = SPARK.parts[i];
@@ -1406,83 +1396,120 @@
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
 
-  /* Le petit batteur de l'étiquette (disque animé).
-     À l'arrêt : le 121 au centre, le batteur caché. En marche : le chiffre glisse vers le haut et le batteur
-     apparaît dessous ; il frappe sa caisse claire pile sur chaque temps (mains alternées), les deux baguettes
-     et une petite étoile sur le 1 et sur les accents. Les temps muets : il attend, baguettes prêtes. */
-  const DR_ARM = {
-    // [épaule, coude, main, bout de baguette], bras droit ; le gauche est en miroir
-    0: [[3.0, -4.4], [6.2, -4.8], [6.7, -8.6], [8.8, -13.8]],  // levé
-    1: [[3.0, -4.4], [6.1, -2.9], [5.5, -5.3], [1.9, -8.9]],   // descend
-    2: [[3.0, -4.4], [5.7, -1.5], [4.7, 0.5], [1.2, 2.8]],     // frappe
-    3: [[3.0, -4.4], [5.9, -2.3], [5.2, -1.2], [2.3, -5.0]]    // prêt
-  };
-  function drArm(pose, side) {
-    const m = (q) => (side * q[0]).toFixed(2) + ' ' + q[1].toFixed(2), a = DR_ARM[pose];
-    return '<path class="arm" d="M' + m(a[0]) + ' L' + m(a[1]) + ' L' + m(a[2]) + '"/>' +
-      '<path class="stick" d="M' + m(a[2]) + ' L' + m(a[3]) + '"/>' +
-      '<circle class="hand" cx="' + (side * a[2][0]).toFixed(2) + '" cy="' + a[2][1] + '" r=".8"/>';
-  }
-  const DR = { el: null, t: 0, beat: 0, st: 1, started: false, cls: '' };
-  function buildDrummer() {
-    if (!tempoWinEl || $('twArt')) return;
-    let arms = '';
-    [-1, 1].forEach((side) => [0, 1, 2, 3].forEach((p) => { arms += '<g class="a' + (side < 0 ? 'L' : 'R') + p + '">' + drArm(p, side) + '</g>'; }));
+  /* Le tourbillon de Léonard. Au départ, le plateau bascule : le chiffre s'enfonce, la spirale à quatre centres
+     monte et se trace à l'encre d'or, puis quelques notes s'en échappent en suivant sa courbe et s'évaporent
+     au-dessus du disque. En marche, la spirale tourne doucement et une note s'envole à chaque mesure.
+     À l'arrêt, la spirale se « désécrit » et le chiffre remonte. */
+  const LEO = { svg: null, path: null, len: 0, notes: [], cv: null, cx: null, drawn: false, was: false };
+  function buildSwirl() {
+    if (!tempoWinEl || $('twSwirl')) return;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'tw-art');
-    svg.setAttribute('id', 'twArt');
+    svg.setAttribute('class', 'tw-swirl');
+    svg.setAttribute('id', 'twSwirl');
     svg.setAttribute('viewBox', '-68 -68 136 136');
     svg.setAttribute('aria-hidden', 'true');
-    svg.innerHTML = '<defs><clipPath id="twClip"><circle r="64"/></clipPath>' +
-      '<filter id="twVeil" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".5"/><feColorMatrix type="saturate" values=".55"/></filter></defs>' +
-      '<g clip-path="url(#twClip)"><g class="tw-dr-pos"><g filter="url(#twVeil)" transform="translate(0 28) scale(1.95)"><g class="dr L3 R3" id="twDr">' +
-        '<path class="stand" d="M-4.2 6.4 L-6 10.6 M4.2 6.4 L6 10.6 M0 6.6 L0 10.6"/>' +
-        '<path class="body" d="M-3.4 -4.6 Q0 -5.9 3.4 -4.6 L2.7 2.4 L-2.7 2.4 Z"/>' +
-        '<circle class="head" cx="0" cy="-8.3" r="2.5"/>' +
-        '<rect class="shell" x="-6.3" y="2.9" width="12.6" height="3.6" rx=".6"/>' +
-        '<path class="lug" d="M-4.2 3.3 V6.1 M-1.4 3.3 V6.1 M1.4 3.3 V6.1 M4.2 3.3 V6.1"/>' +
-        '<ellipse class="drumhead" cx="0" cy="2.9" rx="6.3" ry="1.5"/>' +
-        '<path class="hitfx" d="M-3.4 0.4 L-4.9 -1.3 M3.4 0.4 L4.9 -1.3 M0 -0.3 V-2.2"/>' +
-        '<path class="star" d="M0 -16.6 L.8 -14.7 L2.7 -13.9 L.8 -13.1 L0 -11.2 L-.8 -13.1 L-2.7 -13.9 L-.8 -14.7 Z"/>' +
-        arms + '</g></g></g></g>';
+    svg.innerHTML = '<defs><filter id="leoGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+      '<g class="swirl-rot"><g transform="scale(.66) translate(-4 -4)" filter="url(#leoGlow)">' +
+      '<rect x="0" y="0" width="8" height="8" fill="none" stroke="#E3C27F" stroke-width="2.6"/>' +
+      '<path class="swirl-ink" d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72" fill="none" stroke="#F2D08A" stroke-width="4.2" stroke-linecap="round"/>' +
+      '</g></g>';
     tempoWinEl.insertBefore(svg, tempoWinEl.firstChild);
-    DR.el = svg.querySelector('#twDr');
+    LEO.svg = svg;
+    LEO.path = svg.querySelector('.swirl-ink');
+    try { LEO.len = LEO.path.getTotalLength(); } catch (e) { LEO.len = 900; }
+    LEO.path.style.strokeDasharray = LEO.len + ' ' + LEO.len;
+    LEO.path.style.strokeDashoffset = String(LEO.len);
+    LEO.cv = $('leoNotes');
+    LEO.cx = LEO.cv ? LEO.cv.getContext('2d') : null;
   }
-  function setDrummer(cls) {
-    if (!DR.el || cls === DR.cls) return;
-    DR.cls = cls;
-    DR.el.setAttribute('class', 'dr ' + cls);
+  function leoDraw(on) {
+    if (!LEO.path) return;
+    const L = LEO.len;
+    const from = on ? L : 0, to = on ? 0 : L;
+    LEO.path.getAnimations().forEach((a) => a.cancel());
+    if (reduceMotion || !LEO.path.animate) { LEO.path.style.strokeDashoffset = String(to); return; }
+    const an = LEO.path.animate([{ strokeDashoffset: from }, { strokeDashoffset: to }],
+      { duration: on ? 950 : 520, delay: on ? 220 : 0, easing: on ? 'cubic-bezier(.45,.05,.3,1)' : 'ease-in', fill: 'both' });
+    an.onfinish = () => { LEO.path.style.strokeDashoffset = String(to); };
   }
-  // Mains qui frappent sur un temps : les deux sur le 1 et les accents, sinon une main sur deux ; rien sur un temps muet
-  function drHands(beat, st) {
-    if (st === 0) return '';
-    if (beat === 0 || st === 2) return 'LR';
-    return beat % 2 ? 'L' : 'R';
+  // Une note qui s'échappe du tourbillon ; delay en ms
+  function leoNote(delay) {
+    if (reduceMotion || document.body.classList.contains('lite') || !LEO.cx) return;
+    const kinds = ['8', '8', '16', 'pair'];
+    LEO.notes.push({
+      t0: performance.now() + (delay || 0),
+      a0: -Math.PI / 2 + (Math.random() - 0.5) * 1.6,
+      kind: kinds[(Math.random() * kinds.length) | 0],
+      sway: (Math.random() - 0.5) * 30,
+      dur: 2300 + Math.random() * 500
+    });
   }
-  function drumBeat(ev) {
-    DR.t = ev.t;
-    DR.beat = ev.beat;
-    DR.st = ev.st;
-    DR.started = true;
+  function leoBurst() { for (let i = 0; i < 5; i++) leoNote(1050 + i * 150); }
+  // Une note dessinée à la plume (tête penchée, hampe, crochet ou ligature)
+  function inkNote(c, kind) {
+    const head = (x, y) => { c.beginPath(); c.ellipse(x, y, 3.5, 2.5, -0.38, 0, Math.PI * 2); c.fill(); };
+    c.lineWidth = 1.25; c.lineCap = 'round';
+    if (kind === 'pair') {
+      head(-4.5, 4); head(4.5, 2.2);
+      c.beginPath(); c.moveTo(-1.6, 3.2); c.lineTo(-1.6, -9); c.moveTo(7.4, 1.4); c.lineTo(7.4, -10.8); c.stroke();
+      c.beginPath(); c.moveTo(-1.6, -9); c.lineTo(7.4, -10.8); c.lineTo(7.4, -8.6); c.lineTo(-1.6, -6.8); c.closePath(); c.fill();
+      return;
+    }
+    head(0, 3);
+    c.beginPath(); c.moveTo(2.9, 2.2); c.lineTo(2.9, -11); c.stroke();
+    const flag = (y) => { c.beginPath(); c.moveTo(2.9, y); c.quadraticCurveTo(8.5, y + 3, 6.8, y + 8); c.stroke(); };
+    flag(-11);
+    if (kind === '16') flag(-7.2);
   }
-  function drawDrummer() {
-    if (!DR.el) return;
-    if (!metro.running || !ctx || !DR.started) { setDrummer('L3 R3'); return; }
-    if (reduceMotion || document.body.classList.contains('lite')) { setDrummer('L3 R3'); return; }
-    const lat = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
-    const f = (ctx.currentTime - lat - DR.t) / (60 / metro.bpm);
-    const len = metro.pattern.length || 4, nb = (DR.beat + 1) % len;
-    const now = drHands(DR.beat, DR.st), next = drHands(nb, metro.pattern[nb]);
-    const pose = (h) => {
-      if (now.includes(h) && f < 0.14) return 2;          // frappe, pile sur le temps
-      if (next.includes(h) && f > 0.8) return 1;          // redescend juste avant le temps suivant
-      if (next.includes(h) && f > 0.42) return 0;         // se lève pour le temps suivant
-      return 3;                                           // prêt
-    };
-    const hit = now && f < 0.14;
-    setDrummer('L' + pose('L') + ' R' + pose('R') + (hit ? ' hit' : '') + (hit && now === 'LR' && DR.beat === 0 ? ' one' : ''));
+  function drawLeo() {
+    const on = metro.running;
+    if (on !== LEO.was) {
+      LEO.was = on;
+      leoDraw(on);
+      if (on) leoBurst();
+    }
+    const c = LEO.cx, g = sparkGeom;
+    if (!c) return;
+    if (!LEO.notes.length) {
+      if (LEO.drawn) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, LEO.cv.width, LEO.cv.height); LEO.drawn = false; }
+      return;
+    }
+    const now = performance.now();
+    c.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
+    c.clearRect(0, 0, g.w, g.h);
+    LEO.drawn = true;
+    const P = pal(), col = P === PAL[45] ? [255, 205, 140] : [242, 208, 138];
+    for (let i = LEO.notes.length - 1; i >= 0; i--) {
+      const n = LEO.notes[i], s = (now - n.t0) / n.dur;
+      if (s < 0) continue;
+      if (s >= 1) { LEO.notes.splice(i, 1); continue; }
+      let x, y, alpha, sc;
+      const sA = Math.min(1, s / 0.55);                 // 1re phase : la note suit la spirale, du centre vers le bord du disque
+      const r = 18 + 128 * Math.pow(sA, 0.85);
+      const th = n.a0 + sA * Math.PI * 1.35;
+      x = g.cx + r * Math.cos(th); y = g.cy + r * Math.sin(th);
+      sc = 0.75 + 0.45 * sA;
+      if (s > 0.55) {                                   // 2e phase : elle s'élève et s'évapore comme de l'encre qui sèche
+        const sB = (s - 0.55) / 0.45;
+        y -= 70 * sB; x += n.sway * sB;
+        sc += 0.25 * sB;
+        alpha = 1 - sB;
+      } else alpha = Math.min(1, s / 0.08);
+      c.save();
+      c.translate(x, y);
+      c.rotate(Math.sin((now - n.t0) / 260) * 0.18);
+      c.scale(sc, sc);
+      c.fillStyle = 'rgba(' + col.join(',') + ',' + (0.95 * alpha).toFixed(3) + ')';
+      c.strokeStyle = c.fillStyle;
+      c.shadowColor = 'rgba(255, 196, 110,' + (0.7 * alpha).toFixed(3) + ')';
+      c.shadowBlur = 8;
+      inkNote(c, n.kind);
+      c.restore();
+    }
   }
-  buildDrummer();
+  buildSwirl();
+  // Rappel discret du tempo pendant le jeu
+  function renderMini() { const e = $('twMiniN'); if (e) e.textContent = String(metro.bpm); }
   // Pendant la marche, toucher ±1 / ±5 rallume le chiffre le temps de le lire
   let peekTimer = 0;
   function peekTempo() {
@@ -1592,7 +1619,8 @@
   }
   /* Choix du son : un toucher le sélectionne et le fait entendre */
   function setSound(s, preview) {
-    metro.sound = SOUNDS.indexOf(s) >= 0 ? s : 'clave';
+    metro.sound = SOUNDS.indexOf(s) >= 0 ? s : 'cowbell';
+    store.set('soundOrder', 2);
     document.querySelectorAll('.snd').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.snd === metro.sound)));
     store.set('sound', metro.sound);
     if (preview) {
@@ -1626,6 +1654,7 @@
   function setMetroBpm(v) {
     const prevBpm = metro.bpm;
     metro.bpm = clamp(Math.round(v), 30, 240);
+    if (typeof renderMini === 'function') renderMini();
     if (metro.bpm !== prevBpm && typeof peekTempo === 'function') peekTempo();
     const inp = $('mBpm');
     if (document.activeElement !== inp) inp.value = metro.bpm;
@@ -2017,7 +2046,6 @@
         lightBeat(ev.beat, ev.st);
         sparkBeat(ev, now);
         cradleBeat(ev);
-        drumBeat(ev);
         // La lueur derrière le A de l'en-tête respire doucement à chaque temps
         if (ev.st !== 0 && !reduceMotion && wmHalo.animate) {
           wmHalo.animate([{ opacity: ev.beat === 0 ? 1.6 : 1.3, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }], { duration: Math.min(420, 60000 / metro.bpm * 0.8), easing: 'ease-out' });
@@ -2059,7 +2087,7 @@
     drawSpark();
     drawSig();
     drawCradle();
-    drawDrummer();
+    drawLeo();
   }
 
   /* ===================================================================== */

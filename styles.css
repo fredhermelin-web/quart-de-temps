@@ -2072,32 +2072,6 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
 body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none; }
 .metro[data-rpm="45"].running .go { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 6px rgba(12, 15, 36, .62), 0 0 0 7px rgba(255, 170, 80, .5), 0 0 26px -2px rgba(255, 150, 70, .5); }
 
-/* Le petit batteur de l'étiquette : caché à l'arrêt, il apparaît quand le métronome tourne */
-.tempo-win > .tw-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-.tw-art .tw-dr-pos { opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .7s cubic-bezier(.3, 1.2, .4, 1); }
-.metro.running .tw-art .tw-dr-pos { opacity: .55; transform: none; }
-.dr .star { fill: #FFD58A; }
-.dr .body { fill: #E9DDC0; }
-.dr .head, .dr .hand { fill: #F6ECD5; }
-.dr .arm { fill: none; stroke: #E9DDC0; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
-.dr .stick { fill: none; stroke: #F2D08A; stroke-width: .7; stroke-linecap: round; }
-.dr .shell { fill: #C98B4A; }
-.dr .lug { stroke: #F2D08A; stroke-width: .35; }
-.dr .drumhead { fill: #FFF6E0; }
-.dr .stand { fill: none; stroke: #B9A27A; stroke-width: .55; stroke-linecap: round; }
-.dr .hitfx { fill: none; stroke: #FFD38A; stroke-width: .55; stroke-linecap: round; display: none; }
-.dr .star { fill: #FFC56E; display: none; }
-.dr.hit .hitfx, .dr.one .star { display: inline; }
-.dr [class^="aL"], .dr [class^="aR"] { display: none; }
-.dr.L0 .aL0, .dr.L1 .aL1, .dr.L2 .aL2, .dr.L3 .aL3, .dr.R0 .aR0, .dr.R1 .aR1, .dr.R2 .aR2, .dr.R3 .aR3 { display: inline; }
-/* En marche : le chiffre glisse en haut de l'étiquette pour laisser la place au batteur */
-.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transition: transform .7s cubic-bezier(.3, 1.2, .4, 1), opacity .5s ease, text-shadow .3s, color .3s; }
-.metro.running .tempo-win .bpm-input { transform: translateY(-27px) scale(.66); }
-.metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { opacity: 0; }
-/* ±1 / ±5 ou saisie pendant la marche : le chiffre revient au centre le temps de le lire */
-.metro.running .tempo-win.peek .bpm-input, .metro.running .tempo-win.editing .bpm-input { transform: none; transition-duration: .25s; }
-.metro.running .tempo-win.peek .eyebrow, .metro.running .tempo-win.peek .unit, .metro.running .tempo-win.editing .eyebrow, .metro.running .tempo-win.editing .unit { opacity: 1; transition-duration: .2s; }
-.metro.running .tempo-win.peek .tw-dr-pos, .metro.running .tempo-win.editing .tw-dr-pos { opacity: .12; transition-duration: .25s; }
 /* En marche, le petit anneau central de l'étiquette s'efface (il passerait derrière la tête du batteur) */
 .metro.running .tempo-win {
   background:
@@ -2150,7 +2124,7 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 .metro .record { transform: scale(.85); }
 .metro .beats { margin-bottom: 6px; }
 /* Rangée de commandes : −5 −1 ▶ +1 +5, mêmes boutons ronds ; le Play au centre, seul en or */
-.mctl { grid-template-columns: repeat(5, auto) !important; grid-template-rows: auto auto; column-gap: 12px !important; row-gap: 46px !important; justify-content: center; padding: 4px 0 0 !important; }
+.mctl { grid-template-columns: 46px 46px 72px 46px 46px !important; grid-template-rows: auto auto; column-gap: 16px !important; row-gap: 84px !important; justify-content: center; padding: 4px 0 0 !important; }
 .mctl .tempo-win { grid-column: 1 / -1; grid-row: 1; }
 .mctl .step, .mctl .go { grid-row: 2; }
 .mctl .step {
@@ -2161,18 +2135,18 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
   color: var(--ice);
 }
 .mctl .go {
-  width: 62px; height: 62px; padding: 0; border-radius: 50%; justify-content: center; gap: 0;
+  width: 56px; height: 56px; justify-self: center; padding: 0; border-radius: 50%; justify-content: center; gap: 0;
   background: radial-gradient(circle at 38% 28%, #FFF1CC 0%, #F2C46E 45%, #C98A2E 100%) padding-box,
     conic-gradient(from 210deg, #8A6F3E, #F4E3B8, #B08A47, #F7EBCB, #8A6F3E) border-box;
   box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(242, 208, 138, .35), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 26px -6px rgba(255, 190, 100, .5);
 }
-.mctl .go .go-ic { width: 62px; height: 62px; background: none; box-shadow: none; color: #2A1A06; }
-.mctl .go .go-ic svg { width: 24px; height: 24px; }
+.mctl .go .go-ic { width: 56px; height: 56px; background: none; box-shadow: none; color: #2A1A06; }
+.mctl .go .go-ic svg { width: 22px; height: 22px; }
 .mctl .go .i-play { margin-left: 3px; }
 .mctl .go.running { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(255, 220, 150, .6), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 30px -2px rgba(255, 190, 100, .75); }
 .metro[data-rpm="45"] .mctl .go .go-ic { background: none; color: #2A1406; box-shadow: none; }
 .metro[data-rpm="45"].running .mctl .go { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(255, 220, 150, .6), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 30px -2px rgba(255, 170, 80, .75); }
-@media (max-width: 380px) { .mctl { column-gap: 8px !important; } .mctl .step { width: 42px; height: 42px; } }
+@media (max-width: 380px) { .mctl { grid-template-columns: 44px 44px 66px 44px 44px !important; column-gap: 14px !important; } .mctl .step { width: 44px; height: 44px; } }
 /* Le disque se touche : il démarre ou arrête le métronome */
 .tempo-win { cursor: pointer; }
 /* TAP tempo, dans le style de la mesure et de la figure */
@@ -2190,3 +2164,34 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 .player[data-state="empty"] .tsf-plate,
 .player[data-state="empty"] .tsf-cloth,
 .player[data-state="empty"] .empty-note { display: none; }
+
+/* Le Play respire doucement à l'arrêt : il appelle le doigt */
+@keyframes go-breathe {
+  0%, 100% { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(242, 208, 138, .35), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 18px -6px rgba(255, 190, 100, .35); }
+  50% { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(255, 224, 160, .65), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 34px 2px rgba(255, 196, 110, .6); }
+}
+.mctl .go:not(.running) { animation: go-breathe 3s ease-in-out infinite; }
+body.lite .mctl .go { animation: none; }
+
+/* Le tourbillon de Léonard : bascule de plateau, la spirale monte et se trace, le chiffre s'enfonce */
+.tempo-win { perspective: 380px; }
+.tempo-win > .tw-swirl { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+  transform-origin: 50% 85%; transform: rotateX(78deg) translateY(18px); opacity: 0;
+  transition: transform .6s cubic-bezier(.3, 1.15, .4, 1) .08s, opacity .35s ease .08s; }
+.metro.running .tempo-win > .tw-swirl { transform: none; opacity: 1; }
+.tw-swirl .swirl-rot { transform-box: view-box; transform-origin: 0 0; animation: swirl-spin 11s linear infinite; animation-play-state: paused; }
+.metro.running .tw-swirl .swirl-rot { animation-play-state: running; }
+@keyframes swirl-spin { to { transform: rotate(360deg); } }
+.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.5, 0, .3, 1), opacity .35s ease, text-shadow .3s, color .3s; }
+.metro.running .tempo-win .bpm-input, .metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { transform: rotateX(-86deg) translateY(24px); opacity: 0; }
+/* Rappel du tempo en haut de l'étiquette pendant le jeu */
+.tw-mini { position: absolute; left: 0; right: 0; top: 13px; z-index: 2; text-align: center; font: 700 9px/1 var(--f-ui); letter-spacing: .14em; color: var(--dim); opacity: 0; transform: translateY(-6px); transition: opacity .4s ease .35s, transform .4s ease .35s; pointer-events: none; }
+.tw-mini b { font: 600 15px/1 var(--f-num); letter-spacing: 0; color: #EAF4FF; margin-right: 2px; }
+.metro.running .tw-mini { opacity: .92; transform: none; }
+/* ±1 / ±5 ou saisie pendant le jeu : le chiffre remonte le temps de le lire */
+.metro.running .tempo-win.peek .bpm-input, .metro.running .tempo-win.peek .eyebrow, .metro.running .tempo-win.peek .unit,
+.metro.running .tempo-win.editing .bpm-input, .metro.running .tempo-win.editing .eyebrow, .metro.running .tempo-win.editing .unit { transform: none; opacity: 1; transition-duration: .25s; }
+.metro.running .tempo-win.peek > .tw-swirl, .metro.running .tempo-win.editing > .tw-swirl { opacity: .12; transition-duration: .25s; transition-delay: 0s; }
+.metro.running .tempo-win.peek .tw-mini, .metro.running .tempo-win.editing .tw-mini { opacity: 0; transition-delay: 0s; }
+/* Calque des notes, au-dessus de l'étiquette */
+.leo-notes { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }

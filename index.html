@@ -91,6 +91,8 @@
 
     <!-- Étincelle qui suit la spirale du sillon -->
     <canvas class="spark" id="spark" aria-hidden="true"></canvas>
+    <!-- Notes qui s'échappent du tourbillon (au-dessus de l'étiquette, ne capte pas les touchers) -->
+    <canvas class="leo-notes" id="leoNotes" aria-hidden="true"></canvas>
 
     <!-- Bras de la platine : se pose sur le disque quand le métronome tourne -->
     <div class="tonearm" id="tonearm" aria-hidden="true">
@@ -115,6 +117,7 @@
 
     <div class="mctl">
       <div class="tempo-win glass" id="tempoWin" title="Touche pour démarrer ou arrêter · appui long pour saisir le tempo">
+        <span class="tw-mini" id="twMini" aria-hidden="true"><b id="twMiniN">121</b> BPM</span>
         <span class="eyebrow">Tempo</span>
         <input id="mBpm" class="bpm-input" type="text" inputmode="numeric" autocomplete="off" maxlength="3" value="121" readonly aria-label="Tempo du métronome en BPM. Touche pour démarrer ou arrêter, appui long pour saisir.">
         <span class="unit">BPM</span>
@@ -159,13 +162,13 @@
     </div>
 
     <div class="sounds" role="radiogroup" aria-label="Son du métronome">
-      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="true">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
-        <span>Clave</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="false">
+      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="true">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5h7l3 14h-13z"/><path d="M10.5 5V2.5h3V5"/><path d="M6.2 15.5h11.6"/></svg>
         <span>Cloche</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
+        <span>Clave</span>
       </button>
       <button type="button" class="snd" role="radio" data-snd="wood" aria-checked="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="2.5"/><path d="M7.5 12h9"/></svg>
