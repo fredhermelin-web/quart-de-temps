@@ -2091,7 +2091,7 @@
     placeRecord();
   }
   /* Panneau « Mesure » : un bac de pochettes (mesures courantes) + mesure personnalisée */
-  const SLEEVES = [[4, 4, '#FF9A3D'], [3, 4, '#FF6F91'], [2, 4, '#B58CFF'], [6, 8, '#56C1FF'], [12, 8, '#3FD6B5'], [5, 4, '#FFC15A'], [7, 8, '#FF7A5C'], [9, 8, '#8FA4FF']];
+  const SLEEVES = [[2, 4, '#B58CFF'], [3, 4, '#FF6F91'], [4, 4, '#FF9A3D'], [5, 4, '#FFC15A'], [6, 8, '#56C1FF'], [7, 8, '#FF7A5C'], [9, 8, '#8FA4FF'], [12, 8, '#3FD6B5']];   // en haut à la noire, en bas à la croche, de la plus courte à la plus longue
   const sheet = $('meterSheet'), sleevesBox = $('sleeves');
   SLEEVES.forEach((s) => {
     const b = document.createElement('button');
