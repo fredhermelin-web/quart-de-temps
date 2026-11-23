@@ -2044,7 +2044,10 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
 .metro-head .rpm { margin-left: auto; }
 /* Devise gravée sur le vinyle */
 .record-label { position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 640px; height: 640px; margin: -320px 0 0 -320px; z-index: -1; pointer-events: none; overflow: visible; }
-.record-label text { font: italic 500 14px "EB Garamond", Garamond, serif; letter-spacing: .14em; fill: rgba(241, 226, 191, .5); }
+.record-label text { font: italic 500 14px "EB Garamond", Garamond, serif; letter-spacing: .14em; fill: rgba(241, 226, 191, .5); transition: fill .9s ease, filter .9s ease; }
+/* Métronome en marche : la gravure attrape doucement la lumière */
+.metro.running .record-label text { fill: rgba(255, 233, 186, .82); filter: drop-shadow(0 0 4px rgba(255, 196, 110, .45)); }
+.metro[data-rpm="45"].running .record-label text { fill: rgba(225, 248, 255, .85); filter: drop-shadow(0 0 4px rgba(61, 242, 255, .45)); }
 .metro[data-rpm="45"] .record-label text { fill: rgba(220, 240, 255, .5); }
 
 /* Bouton Démarrer : un peu plus bas, détaché du vinyle par un anneau sombre et un liseré laiton */
