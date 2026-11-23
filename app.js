@@ -223,7 +223,7 @@
       P.bpm = res.bpm;
       if (VIEW.span > maxSpan()) VIEW.span = maxSpan();
       setState('ready');
-      if (P.bpm == null) toast('BPM non détecté : saisis-le dans « BPM d’origine ».', 3800);
+      if (P.bpm == null) toast('BPM non détecté : double-touche « BPM d’origine » pour le saisir.', 3800);
       // Chaque morceau ouvert : le ralentisseur s'ouvre, la vitesse est directement accessible
       hideSpeedHint();
       setTempoOpen(true);
@@ -1981,11 +1981,26 @@
   holdRepeat($('spPlus'), () => setSpeed(P.speed + 5));
   $('spReset').addEventListener('click', () => setSpeed(100));
 
+  /* BPM d'origine : un simple toucher n'ouvre plus le clavier ; double-toucher pour le corriger */
   const ob = $('origBpm');
+  ob.readOnly = true;
+  let obLastTap = 0;
+  function editOrig() {
+    if (ob.disabled) return;
+    ob.readOnly = false;
+    ob.closest('.orig-field').classList.add('editing');
+    ob.focus();
+    ob.select();
+  }
+  ob.addEventListener('pointerup', (e) => {
+    if (!ob.readOnly || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const now = performance.now();
+    if (now - obLastTap < 350) { obLastTap = 0; editOrig(); } else obLastTap = now;
+  });
+  ob.addEventListener('dblclick', (e) => { e.preventDefault(); if (ob.readOnly) editOrig(); });
   ob.addEventListener('change', commitOrig);
   ob.addEventListener('keydown', (e) => { if (e.key === 'Enter') ob.blur(); });
-  ob.addEventListener('blur', commitOrig);
-  ob.addEventListener('focus', () => ob.select());
+  ob.addEventListener('blur', () => { commitOrig(); ob.readOnly = true; ob.closest('.orig-field').classList.remove('editing'); });
 
 
   document.querySelectorAll('.mctl .step').forEach((b) => holdRepeat(b, () => setMetroBpm(metro.bpm + +b.dataset.step)));

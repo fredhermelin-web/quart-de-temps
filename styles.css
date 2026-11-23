@@ -2126,3 +2126,6 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
   opacity: .5;
 }
 
+
+/* BPM d'origine en lecture seule : pas de curseur de saisie tant qu'on n'a pas double-touché */
+#origBpm[readonly] { cursor: default; -webkit-user-select: none; user-select: none; caret-color: transparent; }
