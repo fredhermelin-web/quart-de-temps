@@ -1121,10 +1121,10 @@
   const sparkCv = $('spark'), sparkCtx = sparkCv.getContext('2d');
   const sparkGeom = { cx: 0, cy: 0, w: 1, h: 1, r0: 80, r1: 200, dpr: 1 };
   const SPARK = { lastT: 0, k: -1, bar: 0, parts: [], burst: 0, drawn: false, last: 0 };
-  // Palettes de lumière : 33 tours (couchant et bleu nuit) / 45 tours (néon cyan et magenta)
+  // Palettes de lumière : 33 tours (couchant et bleu nuit) / 45 tours (lampe d'ampli : cuivre, ambre, champagne)
   const PAL = {
     33: { tail: [255, 95, 140], mid: [255, 180, 90], head: [140, 215, 255], first: [255, 175, 70], beat: [120, 205, 255], alt: [255, 130, 160] },
-    45: { tail: [150, 90, 255], mid: [255, 79, 216], head: [90, 245, 255], first: [255, 79, 216], beat: [61, 242, 255], alt: [170, 120, 255] }
+    45: { tail: [196, 92, 58], mid: [255, 150, 72], head: [255, 222, 160], first: [255, 138, 61], beat: [255, 200, 120], alt: [232, 140, 130] }
   };
   const pal = () => PAL[metro.rpm] || PAL[33];
   const sparkTurns = () => Math.max(4, Math.floor((sparkGeom.r1 - sparkGeom.r0) / GROOVE));
@@ -1245,6 +1245,89 @@
 
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
+
+  /* Mouvement d'horlogerie vu à travers l'étiquette du tempo (montre squelette).
+     À l'arrêt : à peine deviné, le chiffre domine. En marche : le mécanisme apparaît et la roue
+     d'échappement avance d'une dent à chaque temps, avec l'à-coup d'une vraie horloge. */
+  const MECH = { esc: 0, big: 0, pin: 0, gEsc: null, gBig: null, gPin: null };
+  const mp = (cx, cy, t, r) => (cx + r * Math.cos(t)).toFixed(2) + ' ' + (cy + r * Math.sin(t)).toFixed(2);
+  function gearPath(cx, cy, n, rIn, rOut, tipFrac) {
+    const pts = [], st = (Math.PI * 2) / n, w = st * tipFrac;
+    for (let i = 0; i < n; i++) {
+      const a = i * st;
+      pts.push(mp(cx, cy, a, rIn), mp(cx, cy, a + st * 0.5 - w / 2, rOut), mp(cx, cy, a + st * 0.5 + w / 2, rOut), mp(cx, cy, a + st, rIn));
+    }
+    return 'M' + pts.join(' L') + 'Z';
+  }
+  function escapePath(cx, cy, n, rIn, rOut) {
+    // Dents d'échappement en dent de scie, inclinées, comme sur les horloges
+    const st = (Math.PI * 2) / n;
+    let d = '';
+    for (let i = 0; i < n; i++) {
+      const a = i * st;
+      d += (i ? ' L' : 'M') + mp(cx, cy, a, rIn) + ' L' + mp(cx, cy, a + st * 0.62, rOut) + ' L' + mp(cx, cy, a + st * 0.7, rOut - 1.6) + ' L' + mp(cx, cy, a + st * 0.66, rIn);
+    }
+    return d + 'Z';
+  }
+  function spokes(cx, cy, n, r0, r1) {
+    let d = '';
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + 0.3;
+      d += 'M' + mp(cx, cy, a, r0) + ' Q' + mp(cx, cy, a + 0.35, (r0 + r1) / 2) + ' ' + mp(cx, cy, a + 0.2, r1) + ' ';
+    }
+    return d;
+  }
+  function buildMech() {
+    if (!tempoWinEl || $('twMech')) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'tw-mech');
+    svg.setAttribute('id', 'twMech');
+    svg.setAttribute('viewBox', '-68 -68 136 136');
+    svg.setAttribute('aria-hidden', 'true');
+    const E = { x: 15, y: 17 }, B = { x: -27, y: -23 }, P = { x: 33, y: -33 };
+    svg.innerHTML =
+      '<defs><clipPath id="twClip"><circle r="64"/></clipPath>' +
+      '<filter id="twBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1"/></filter>' +
+      '<radialGradient id="twShade"><stop offset="0" stop-color="#0C0F26" stop-opacity=".55"/><stop offset="1" stop-color="#0C0F26" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="twRuby" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#FF9AAE"/><stop offset=".45" stop-color="#C2304F"/><stop offset="1" stop-color="#5E0F22"/></radialGradient></defs>' +
+      '<g clip-path="url(#twClip)" fill="none" stroke-linejoin="round">' +
+        '<g id="twBig" filter="url(#twBlur)" style="transform-origin:' + B.x + 'px ' + B.y + 'px" stroke="#C9A25A" stroke-width="1.1" opacity=".7">' +
+          '<path d="' + gearPath(B.x, B.y, 32, 44, 48, 0.45) + '"/><circle cx="' + B.x + '" cy="' + B.y + '" r="37"/><circle cx="' + B.x + '" cy="' + B.y + '" r="8"/>' +
+          '<path d="' + spokes(B.x, B.y, 5, 8, 37) + '" stroke-width="2.2"/></g>' +
+        '<g id="twPin" style="transform-origin:' + P.x + 'px ' + P.y + 'px" stroke="#E3C27F" stroke-width=".9">' +
+          '<path d="' + gearPath(P.x, P.y, 10, 9.5, 12.5, 0.4) + '"/><circle cx="' + P.x + '" cy="' + P.y + '" r="3.2"/></g>' +
+        '<g id="twEsc" style="transform-origin:' + E.x + 'px ' + E.y + 'px" stroke="#F0D08E" stroke-width="1">' +
+          '<path d="' + escapePath(E.x, E.y, 15, 27, 35) + '"/><circle cx="' + E.x + '" cy="' + E.y + '" r="22"/><circle cx="' + E.x + '" cy="' + E.y + '" r="5.5"/>' +
+          '<path d="' + spokes(E.x, E.y, 4, 5.5, 22) + '" stroke-width="1.8"/></g>' +
+        '<g stroke="none"><circle cx="' + E.x + '" cy="' + E.y + '" r="2.4" fill="url(#twRuby)"/><circle cx="' + P.x + '" cy="' + P.y + '" r="1.7" fill="url(#twRuby)"/><circle cx="' + B.x + '" cy="' + B.y + '" r="2.6" fill="url(#twRuby)" opacity=".75"/></g>' +
+        '<ellipse rx="50" ry="26" fill="url(#twShade)" stroke="none"/>' +
+      '</g>';
+    tempoWinEl.insertBefore(svg, tempoWinEl.firstChild);
+    MECH.gEsc = svg.querySelector('#twEsc');
+    MECH.gBig = svg.querySelector('#twBig');
+    MECH.gPin = svg.querySelector('#twPin');
+  }
+  function mechTick() {
+    if (!MECH.gEsc || reduceMotion || document.body.classList.contains('lite') || !MECH.gEsc.animate) return;
+    const beat = 60000 / metro.bpm, snap = Math.min(150, beat * 0.4);
+    const step = (g, key, deg, dur, ease) => {
+      const a0 = MECH[key];
+      MECH[key] += deg;
+      g.animate([{ transform: 'rotate(' + a0 + 'deg)' }, { transform: 'rotate(' + MECH[key] + 'deg)' }], { duration: dur, easing: ease, fill: 'forwards' });
+    };
+    step(MECH.gEsc, 'esc', 24, snap, 'cubic-bezier(.25,1.7,.45,1)');
+    step(MECH.gPin, 'pin', -36, snap, 'cubic-bezier(.25,1.7,.45,1)');
+    step(MECH.gBig, 'big', 7.5, Math.min(260, beat * 0.6), 'ease-out');
+  }
+  buildMech();
+  // Pendant la marche, toucher ±1 / ±5 rallume le chiffre le temps de le lire
+  let peekTimer = 0;
+  function peekTempo() {
+    if (!metro.running) return;
+    tempoWinEl.classList.add('peek');
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => tempoWinEl.classList.remove('peek'), 1600);
+  }
   function placeRecord() {
     const m = metroEl.getBoundingClientRect(), t = tempoWinEl.getBoundingClientRect();
     if (!m.width) return;
@@ -1346,7 +1429,7 @@
     document.querySelectorAll('.rpm-opt').forEach((b) => b.setAttribute('aria-checked', String(+b.dataset.rpm === metro.rpm)));
     if (recordAnim && recordAnim.effect && recordAnim.effect.updateTiming) recordAnim.effect.updateTiming({ duration: rpmDuration() });
     store.set('rpm', metro.rpm);
-    if (announce) toast(metro.rpm === 45 ? '45 tours · ambiance néon' : '33 tours · ambiance couchant', 1600);
+    if (announce) toast(metro.rpm === 45 ? '45 tours · ambiance lampe d\u2019ampli' : '33 tours · ambiance couchant', 1600);
   }
   /* Choix du son : un toucher le sélectionne et le fait entendre */
   function setSound(s, preview) {
@@ -1381,7 +1464,9 @@
   }
 
   function setMetroBpm(v) {
+    const prevBpm = metro.bpm;
     metro.bpm = clamp(Math.round(v), 30, 240);
+    if (metro.bpm !== prevBpm && typeof peekTempo === 'function') peekTempo();
     const inp = $('mBpm');
     if (document.activeElement !== inp) inp.value = metro.bpm;
     const s = $('mSlider');
@@ -1772,6 +1857,7 @@
         lightBeat(ev.beat, ev.st);
         sparkBeat(ev, now);
         cradleBeat(ev);
+        mechTick();
         // La lueur derrière le A de l'en-tête respire doucement à chaque temps
         if (ev.st !== 0 && !reduceMotion && wmHalo.animate) {
           wmHalo.animate([{ opacity: ev.beat === 0 ? 1.6 : 1.3, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }], { duration: Math.min(420, 60000 / metro.bpm * 0.8), easing: 'ease-out' });
