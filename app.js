@@ -1392,7 +1392,7 @@
     taRest.style.setProperty('--rest-y', (restY + 9) + 'px');
     if (!armEl.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => armEl.classList.add('ready')));
     sparkGeom.cx = rx; sparkGeom.cy = ry; sparkGeom.w = m.width; sparkGeom.h = m.height;
-    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width * 0.62, 230);
+    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 156); // reste sur le disque, à l'intérieur de l'anneau de laiton
     sizeSpark();
   }
   if (window.ResizeObserver) new ResizeObserver(placeRecord).observe(metroEl);
