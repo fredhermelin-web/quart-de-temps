@@ -2264,3 +2264,6 @@ html.intro .mini-mark { opacity: 0; }
 .vol-pop .vol-wrap { position: absolute; left: 16px; right: 16px; top: 50%; width: auto; margin: 0; transform: translateY(-50%); }
 .vol-pop #mVol { touch-action: none; }
 @keyframes vol-pop-in { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+
+/* repose-bras : fin liseré sombre et ombre portée, pour qu'il se détache du disque */
+.ta-rest { border: 1px solid rgba(6, 8, 20, .85); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 3px 7px rgba(0, 0, 0, .65); }

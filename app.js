@@ -1505,83 +1505,103 @@
     c.globalAlpha = 1;
     c.restore();
   }
-  /* Piste cachée : après une minute de jeu sans interruption, une comète entre dans le hublot et trace
-     un quart de cercle autour du centre (le quart doré du logo). Chaque fois, le quart suivant du cadran,
-     dans l'autre sens ; au quatrième, le cercle complet s'illumine un instant. Le compte est gardé. */
-  const COMET = { t0: 0, q: 0, dir: 1, full: false, trail: [], dust: null, playT0: 0, fired: false };
+  /* Piste cachée, en quatre actes : à chaque minute de jeu sans interruption, une comète entre dans le hublot
+     et trace un quart de cercle de plus (1, puis 2, puis 3 quarts). À la quatrième minute, le cercle se referme,
+     la spirale à quatre centres se dessine au centre : le logo s'écrit dans le ciel, brille, puis se dissout.
+     Ensuite plus rien jusqu'au prochain Play, où l'histoire recommence. */
+  const COMET = { t0: 0, stage: 0, quarters: 1, T: 0, trail: [], dust: null, playT0: 0, spiral: null };
+  function cometSpiral() {
+    if (COMET.spiral) return COMET.spiral;
+    const el = document.querySelector('#introLogo .il-spiral'), pts = [];
+    try {
+      const L = el.getTotalLength();
+      for (let i = 0; i <= 160; i++) { const q = el.getPointAtLength(L * i / 160); pts.push([q.x / 90, q.y / 90]); }
+    } catch (e) { /* pas de spirale : le cercle seul suffira */ }
+    return (COMET.spiral = pts);
+  }
   function cometFire(now) {
-    const n = store.get('quarts', 0) | 0;
-    COMET.q = n % 4; COMET.dir = n % 2 ? -1 : 1; COMET.full = (n % 4) === 3;
+    if (COMET.stage >= 4) return;
+    COMET.stage++;
+    COMET.quarters = COMET.stage;
     COMET.t0 = now; COMET.trail = []; COMET.dust = null;
-    store.set('quarts', n + 1);
+    COMET.T = 900 + 800 * COMET.quarters;                 // même vitesse à chaque passage : elle va juste plus loin
+    if (COMET.stage === 4) cometSpiral();
   }
   function drawComet(c, cx, cy, R, now, vis, sprite) {
     if (!COMET.t0) return;
-    const T = 3000, el = now - COMET.t0, end = T + (COMET.full ? 3000 : 1900);
+    const T = COMET.T, el = now - COMET.t0, full = COMET.quarters === 4;
+    const end = T + (full ? 5600 : 1900);
     if (el > end) { COMET.t0 = 0; return; }
-    const Rq = R * 0.6, qa = -Math.PI / 2 + COMET.q * Math.PI / 2;          // quart n°1 : de midi à trois heures
-    const a0 = COMET.dir > 0 ? qa : qa + Math.PI / 2, a1 = COMET.dir > 0 ? qa + Math.PI / 2 : qa, d = COMET.dir;
+    const Rq = R * 0.6, span = COMET.quarters * Math.PI / 2, a0 = -Math.PI / 2, a1 = a0 + span;
     const P = (a) => [cx + Rq * Math.cos(a), cy + Rq * Math.sin(a)];
-    const Tg = (a) => [-Math.sin(a) * d, Math.cos(a) * d];
-    const Lin = R * 1.05, Lar = Rq * Math.PI / 2, Lout = R * 1.05, D = Lin + Lar + Lout;
+    const Tg = (a) => [-Math.sin(a), Math.cos(a)];
+    const Lin = R * 0.9, Lar = Rq * span, Lout = R * 0.9, D = Lin + Lar + Lout;
     const at = (dist) => {
       if (dist < Lin) { const p0 = P(a0), t = Tg(a0), k = Lin - dist; return [p0[0] - t[0] * k, p0[1] - t[1] * k]; }
-      if (dist < Lin + Lar) return P(a0 + d * (dist - Lin) / Rq);
+      if (dist < Lin + Lar) return P(a0 + (dist - Lin) / Rq);
       const p1 = P(a1), t = Tg(a1), k = dist - Lin - Lar; return [p1[0] + t[0] * k, p1[1] + t[1] * k];
     };
     c.globalCompositeOperation = 'lighter';
-    // l'arc tracé par la comète, qui reste suspendu puis s'égrène
-    const u = Math.min(1, el / T), dist = D * (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2) * 0.999;
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    const u = Math.min(1, el / T), ease = u < 0.12 ? (u / 0.12) * (u / 0.12) * 0.06 : u > 0.88 ? 1 - ((1 - u) / 0.12) * ((1 - u) / 0.12) * 0.06 : 0.06 + (u - 0.12) / 0.76 * 0.88;
+    const dist = D * ease * 0.999;
     const arcDone = Math.max(0, Math.min(1, (dist - Lin) / Lar));
-    const arcA = el < T + 900 ? 1 : Math.max(0, 1 - (el - T - 900) / 800);
+    // l'arc qui se rallume sous la comète et reste suspendu
+    const hold = full ? 3600 : 900;
+    const arcA = el < T + hold ? 1 : Math.max(0, 1 - (el - T - hold) / 800);
+    const glow = full && el > T ? Math.min(1, (el - T) / 500) * arcA : 0;
+    const stroke = (fn, layers, k) => layers.forEach(([w, al]) => { c.strokeStyle = 'rgba(246,214,146,' + (al * k * vis).toFixed(3) + ')'; c.lineWidth = w; c.beginPath(); fn(); c.stroke(); });
     if (arcDone > 0 && arcA > 0) {
-      const aEnd = a0 + d * arcDone * Math.PI / 2;
-      c.lineCap = 'round';
-      [[6, 0.12], [2.4, 0.35], [1, 0.85]].forEach(([w, al]) => {
-        c.strokeStyle = 'rgba(242,208,138,' + (al * arcA * vis).toFixed(3) + ')'; c.lineWidth = w;
-        c.beginPath(); c.arc(cx, cy, Rq, a0, aEnd, d < 0); c.stroke();
-      });
+      const aEnd = a0 + arcDone * span;
+      stroke(() => c.arc(cx, cy, Rq, a0, aEnd), [[7, 0.1 + 0.12 * glow], [2.6, 0.35 + 0.2 * glow], [1.1, 0.85]], arcA);
     }
-    // poussière d'étoiles quand l'arc s'efface
-    if (el > T + 700) {
-      if (!COMET.dust) COMET.dust = Array.from({ length: 34 }, () => ({ a: Math.random(), r: Rq + (Math.random() - 0.5) * 6, v: 4 + Math.random() * 10, s: 0.5 + Math.random() }));
-      const k = (el - T - 700) / 1200;
+    // grand final : la spirale à quatre centres s'écrit à l'encre d'or depuis le centre, le logo brille
+    if (full && el > T + 200) {
+      const pts = COMET.spiral || [], k = Math.min(1, (el - T - 200) / 1500), n = Math.floor(k * (pts.length - 1));
+      if (n > 1 && arcA > 0) {
+        const sc = Rq * 0.92;
+        stroke(() => { c.moveTo(cx + pts[0][0] * sc, cy + pts[0][1] * sc); for (let i = 1; i <= n; i++) c.lineTo(cx + pts[i][0] * sc, cy + pts[i][1] * sc); }, [[6, 0.08 + 0.1 * glow], [2.4, 0.3 + 0.2 * glow], [1.1, 0.85]], arcA);
+        if (k < 1) { const h = pts[n]; c.globalAlpha = vis; c.drawImage(sprite, cx + h[0] * sc - 6, cy + h[1] * sc - 6, 12, 12); }
+      }
+      if (el > T + 1700 && el < T + hold) {                 // éclat : quatre points de lumière aux quarts
+        const g = Math.sin(Math.PI * Math.min(1, (el - T - 1700) / (hold - 1700)));
+        for (let i = 0; i < 4; i++) {
+          const ang = -Math.PI / 2 + i * Math.PI / 2, sz = 8 + 8 * g;
+          c.globalAlpha = g * vis; c.drawImage(sprite, cx + Rq * Math.cos(ang) - sz / 2, cy + Rq * Math.sin(ang) - sz / 2, sz, sz);
+        }
+      }
+    }
+    // poussière d'étoiles quand le dessin s'efface (au final, elle retombe dans la galaxie)
+    if (el > T + hold - 200) {
+      if (!COMET.dust) {
+        const pts = full ? (COMET.spiral || []) : [];
+        COMET.dust = Array.from({ length: full ? 90 : 34 }, (_, i) => {
+          if (full && i % 2 && pts.length) { const q = pts[(Math.random() * pts.length) | 0]; return { x: q[0] * Rq * 0.92, y: q[1] * Rq * 0.92, s: 0.5 + Math.random() }; }
+          const a = a0 + Math.random() * span, r = Rq + (Math.random() - 0.5) * 6; return { x: r * Math.cos(a), y: r * Math.sin(a), s: 0.5 + Math.random() };
+        });
+      }
+      const k = (el - T - hold + 200) / 1400;
       if (k < 1) for (const g of COMET.dust) {
-        const a = a0 + d * g.a * Math.PI / 2, rr = g.r + g.v * k;
-        c.globalAlpha = vis * (1 - k) * (0.5 + 0.5 * Math.sin(now / 90 + g.a * 40) ** 2);
-        const sz = g.s * 3.2; c.drawImage(sprite, cx + rr * Math.cos(a) - sz / 2, cy + rr * Math.sin(a) - sz / 2, sz, sz);
+        const pull = full ? 1 - 0.7 * k : 1 + 0.08 * k;      // au final, la poussière est aspirée par la galaxie
+        c.globalAlpha = vis * (1 - k) * (0.5 + 0.5 * Math.sin(now / 90 + g.x) ** 2);
+        const sz = g.s * 3.2; c.drawImage(sprite, cx + g.x * pull - sz / 2, cy + g.y * pull - sz / 2, sz, sz);
       }
     }
     // la comète : tête lumineuse et longue chevelure qui s'effile
     if (el < T) {
       COMET.trail.push(at(dist));
-      if (COMET.trail.length > 30) COMET.trail.shift();
+      if (COMET.trail.length > 42) COMET.trail.shift();
       const tr = COMET.trail;
+      c.globalAlpha = 1;
       for (let i = 1; i < tr.length; i++) {
         const f = i / tr.length;
-        c.globalAlpha = 1;
-        c.strokeStyle = 'rgba(255,246,222,' + (0.75 * f * f * vis).toFixed(3) + ')';
-        c.lineWidth = 0.4 + 3.2 * f;
+        c.strokeStyle = 'rgba(255,246,222,' + (0.8 * f * f * vis).toFixed(3) + ')';
+        c.lineWidth = 0.5 + 4.4 * f;
         c.beginPath(); c.moveTo(tr[i - 1][0], tr[i - 1][1]); c.lineTo(tr[i][0], tr[i][1]); c.stroke();
       }
       const h = tr[tr.length - 1];
-      c.globalAlpha = vis; c.drawImage(sprite, h[0] - 9, h[1] - 9, 18, 18);
+      c.globalAlpha = vis; c.drawImage(sprite, h[0] - 10, h[1] - 10, 20, 20);
       c.globalAlpha = vis * 0.9; c.drawImage(sprite, h[0] - 4, h[1] - 4, 8, 8);
-    }
-    // quatrième quart : le cercle complet s'illumine, comme une mesure accomplie
-    if (COMET.full && el > T + 900) {
-      const k = (el - T - 900) / 2000;
-      if (k < 1) {
-        const a = Math.sin(Math.PI * k);
-        [[8, 0.1], [3, 0.3], [1.2, 0.8]].forEach(([w, al]) => {
-          c.globalAlpha = 1; c.strokeStyle = 'rgba(246,214,146,' + (al * a * vis).toFixed(3) + ')'; c.lineWidth = w;
-          c.beginPath(); c.arc(cx, cy, Rq, 0, Math.PI * 2); c.stroke();
-        });
-        for (let i = 0; i < 4; i++) {
-          const ang = -Math.PI / 2 + i * Math.PI / 2, sz = 10 + 6 * a;
-          c.globalAlpha = a * vis; c.drawImage(sprite, cx + Rq * Math.cos(ang) - sz / 2, cy + Rq * Math.sin(ang) - sz / 2, sz, sz);
-        }
-      }
     }
     c.globalAlpha = 1;
   }
@@ -1613,7 +1633,7 @@
     for (let i = 0; i < n; i++) { const p = dustSpawn(true); p.h = -Math.random() * 0.9; DUST.ps.push(p); }   // le chiffre se dissout : les grains partent de l'étiquette par vagues
     DUST.mode = 'on';
     DUST.t0 = performance.now();                           // la tornade ne vit qu'un instant
-    COMET.playT0 = DUST.t0; COMET.fired = false;           // la minute de la comète repart à chaque Play
+    COMET.playT0 = DUST.t0; COMET.stage = 0; COMET.t0 = 0;  // l'histoire de la comète recommence à chaque Play
   }
   function dustStop() {
     DUST.mode = 'fall';
@@ -1651,7 +1671,7 @@
     let alive = 0;
     const age = now - (DUST.t0 || now), settle = age > 2300, tf = settle ? Math.max(0, 1 - (age - 2300) / 1100) : 1;
     if (DUST.mode === 'on' && settle && tf <= 0 && DUST.ps.length) DUST.ps = [];
-    if (DUST.mode === 'on' && now - COMET.playT0 > 60000) { COMET.playT0 = now; cometFire(now); }   // une comète à chaque minute de jeu
+    if (DUST.mode === 'on' && COMET.stage < 4 && now - COMET.playT0 > 60000) { COMET.playT0 = now; cometFire(now); }   // un acte à chaque minute de jeu
     for (const p of DUST.ps) {
       if (DUST.mode === 'on' && !settle) {
         p.h += p.v * dt * (0.8 + metro.bpm / 240);
