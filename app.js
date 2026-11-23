@@ -1622,48 +1622,63 @@
   (function intro() {
     const root = document.documentElement;
     if (!root.classList.contains('intro')) return;
-    const top = $('top'), wm = top.querySelector('.wordmark'), logo = $('introLogo');
+    const top = $('top'), wm = top.querySelector('.wordmark'), logo = $('introLogo'), bg = $('introBg'), mini = $('miniMark');
     const sp = logo.querySelector('.il-spiral'), q = logo.querySelector('.il-quarter');
-    let done = false;
+    const parts = [wm.querySelector('.wm-qu'), wm.querySelector('.wm-a'), wm.querySelector('.wm-rt'), wm.querySelector('.wm-line2'), wm.querySelector('.wm-rule'), wm.querySelector('.wm-devise')].filter(Boolean);
+    let done = false, started = false;
     const timers = [];
     const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-    const dash = (el, delay, dur) => {
-      let L = 600; try { L = el.getTotalLength(); } catch (e) { /* défaut */ }
-      el.style.strokeDasharray = L + ' ' + L;
-      el.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'both' });
-    };
-    dash(sp, 100, 900);
-    dash(q, 750, 420);
-    const parts = [wm.querySelector('.wm-qu'), wm.querySelector('.wm-a'), wm.querySelector('.wm-rt'), wm.querySelector('.wm-line2'), wm.querySelector('.wm-rule'), wm.querySelector('.wm-devise')];
-    parts.forEach((el, i) => el && el.animate([{ opacity: 0, transform: 'translateY(10px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
-      { duration: 520, delay: 650 + i * 140, easing: 'cubic-bezier(.3,.9,.3,1)', fill: 'both' }));
-    const aSvg = wm.querySelector('.wm-a svg');
-    if (aSvg) aSvg.style.transformOrigin = '50% 0';
-    if (aSvg) aSvg.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-9deg)' }, { transform: 'rotate(7deg)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(0)' }],
-      { duration: 900, delay: 1150, easing: 'ease-in-out' });
+    // état de départ : tout invisible, sans calcul coûteux
+    parts.forEach((el) => { el.style.opacity = '0'; });
+    const prep = (el) => { let L = 600; try { L = el.getTotalLength(); } catch (e) { /* défaut */ } el.style.strokeDasharray = L + ' ' + L; el.style.strokeDashoffset = String(L); return L; };
+    const Ls = prep(sp), Lq = prep(q);
+    function start() {
+      if (started || done) return;
+      started = true;
+      sp.animate([{ strokeDashoffset: Ls }, { strokeDashoffset: 0 }], { duration: 900, delay: 60, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards' });
+      q.animate([{ strokeDashoffset: Lq }, { strokeDashoffset: 0 }], { duration: 420, delay: 700, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards' });
+      parts.forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 520, delay: 600 + i * 130, easing: 'cubic-bezier(.3,.9,.3,1)', fill: 'forwards' }));
+      const aSvg = wm.querySelector('.wm-a svg');
+      if (aSvg) {
+        aSvg.style.transformOrigin = '50% 0';
+        aSvg.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-9deg)' }, { transform: 'rotate(7deg)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(0)' }],
+          { duration: 900, delay: 1100, easing: 'ease-in-out' });
+      }
+      later(2000, () => finish(false));
+    }
     function finish(fast) {
       if (done) return;
       done = true;
       timers.forEach(clearTimeout);
-      const mini = $('miniMark');
-      const a = wm.getBoundingClientRect(), b = mini.getBoundingClientRect();
-      root.classList.add('intro-out');
-      if (!fast && a.width && b.width) {
-        const sc = b.width / a.width;
-        const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
-        wm.animate([{ transform: 'none' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')' }], { duration: 650, easing: 'cubic-bezier(.6,0,.25,1)', fill: 'forwards' });
-        logo.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 450, easing: 'ease-in', fill: 'forwards' });
-        top.animate([{ backgroundColor: getComputedStyle(top).backgroundColor }, { backgroundColor: 'rgba(20,24,51,0)' }], { duration: 650, easing: 'ease-in', fill: 'forwards' });
-      }
-      setTimeout(() => {
-        root.classList.remove('intro', 'intro-out');
-        wm.getAnimations().forEach((x) => x.cancel());
+      parts.forEach((el) => { el.style.opacity = ''; });
+      const decks = document.querySelectorAll('.app > .deck');
+      const end = () => {
+        root.classList.remove('intro');
+        [wm, logo, bg].forEach((el) => el.getAnimations().forEach((x) => x.cancel()));
+        parts.forEach((el) => el.getAnimations().forEach((x) => x.cancel()));
         fitTries = 0;
         placeRecord();
-      }, fast ? 0 : 680);
+      };
+      if (fast) { end(); return; }
+      const a = wm.getBoundingClientRect(), b = mini.getBoundingClientRect();
+      const sc = b.width && a.width ? b.width / a.width : 0.3;
+      const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+      // le grand logo s'envole vers sa place en s'estompant presque entièrement
+      wm.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')', opacity: 0.06 }], { duration: 640, easing: 'cubic-bezier(.6,0,.25,1)', fill: 'forwards' });
+      logo.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 420, easing: 'ease-in', fill: 'forwards' });
+      bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 640, easing: 'ease-in', fill: 'forwards' });
+      decks.forEach((d, i) => d.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 620, delay: 120 + i * 90, easing: 'cubic-bezier(.3,1.1,.4,1)', fill: 'backwards' }));
+      // le petit logo apparaît à sa place avec un léger éclat doré
+      mini.animate([{ opacity: 0, filter: 'drop-shadow(0 0 0 rgba(255,200,120,0))' }, { opacity: 1, filter: 'drop-shadow(0 0 9px rgba(255,200,120,.9))', offset: 0.45 }, { opacity: 1, filter: 'drop-shadow(0 0 0 rgba(255,200,120,0))' }],
+        { duration: 760, delay: 560, easing: 'ease-out', fill: 'backwards' });
+      setTimeout(end, 660);
     }
     top.addEventListener('pointerdown', () => finish(true), { once: true });
-    later(2050, () => finish(false));
+    // on attend les polices (sinon le texte « saute »), puis l'image suivante, pour un départ fluide
+    const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    Promise.race([fontsReady, new Promise((r) => setTimeout(r, 450))]).then(() => requestAnimationFrame(() => requestAnimationFrame(start)));
+    later(3200, () => finish(false));                                   // filet de sécurité
   })();
   // Tempo gravé sur le disque pendant le jeu
   function renderMini() { const e = $('discTempoTxt'); if (e) e.textContent = metro.bpm + ' BPM'; }
@@ -1701,7 +1716,7 @@
       return requestAnimationFrame(placeRecord);           // on repositionne après ce réglage
     }
     // Le métronome tient dans l'écran dès l'ouverture : si les sons dépassent le bas, le disque se réduit un peu
-    if (!document.documentElement.classList.contains('intro') && fitTries < 6) {
+    if (fitTries < 6) {
       const snd = document.querySelector('.metro .sounds').getBoundingClientRect();
       const excess = (snd.bottom + window.scrollY) + 10 - window.innerHeight;
       let want = DISC;
@@ -1753,6 +1768,8 @@
     armEl.style.setProperty('--rest', rest + 'deg');
     taRest.style.setProperty('--rest-x', restX + 'px');
     taRest.style.setProperty('--rest-y', (restY + 9) + 'px');
+    const rpmEl = $('rpm');
+    if (rpmEl) rpmEl.style.top = Math.round(restY + 9 - rpmEl.offsetHeight / 2) + 'px';
     if (!armEl.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => armEl.classList.add('ready')));
     sparkGeom.cx = rx; sparkGeom.cy = ry; sparkGeom.w = m.width; sparkGeom.h = m.height;
     sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 156 * DISC); // reste sur le disque, à l'intérieur de l'anneau de laiton

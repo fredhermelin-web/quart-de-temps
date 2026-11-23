@@ -25,6 +25,7 @@
 
   <!-- En-tête : QUART DE TEMPS — QU ivoire, ART laiton, le A-balancier (clé de voûte) et sa lueur, filet à losange -->
   <header class="top" id="top">
+    <div class="intro-bg" id="introBg" aria-hidden="true"></div>
     <svg class="intro-logo" id="introLogo" viewBox="-110 -110 220 220" aria-hidden="true">
       <path class="il-quarter" d="M4 -86 A90 90 0 0 1 94 4" fill="none" stroke="#F2D08A" stroke-width="7" stroke-linecap="round"/>
       <g transform="translate(-4 -4)"><rect x="0" y="0" width="8" height="8" fill="none" stroke="#E3C27F" stroke-width="2.4"/>
@@ -125,6 +126,12 @@
     <span class="ta-rest" id="taRest" aria-hidden="true"></span>
 
     <div class="beats" id="beats"></div>
+    <!-- 33/45 : à gauche du disque, à la hauteur de la tête du bras au repos (contrepoids visuel) -->
+    <div class="rpm rpm-float" id="rpm" role="radiogroup" aria-label="Vitesse du disque : change l'ambiance lumineuse">
+      <span class="rpm-knob" aria-hidden="true"></span>
+      <button type="button" class="rpm-opt" data-rpm="33" role="radio" aria-checked="true">33</button>
+      <button type="button" class="rpm-opt" data-rpm="45" role="radio" aria-checked="false">45</button>
+    </div>
     <p class="beats-hint" aria-hidden="true"></p>
 
     <div class="mctl">
@@ -197,11 +204,6 @@
 
     <!-- Ambiance du disque et volume, ensemble en bas -->
     <div class="vol-line">
-      <div class="rpm" id="rpm" role="radiogroup" aria-label="Vitesse du disque : change l'ambiance lumineuse">
-        <span class="rpm-knob" aria-hidden="true"></span>
-        <button type="button" class="rpm-opt" data-rpm="33" role="radio" aria-checked="true">33</button>
-        <button type="button" class="rpm-opt" data-rpm="45" role="radio" aria-checked="false">45</button>
-      </div>
       <div class="vol">
         <svg id="volIcon" class="vol-ic v3" viewBox="0 0 24 24" aria-hidden="true">
           <path class="spk" d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z"/>
