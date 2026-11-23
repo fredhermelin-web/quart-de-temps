@@ -1858,7 +1858,7 @@ body.lite .wave-empty .deco i { animation-duration: 3.2s; }
 
 input.metro-slider { --fill: var(--ice); --track: rgba(255, 255, 255, .08); }
 /* Réglette du tempo isolée sur sa ligne, avec ses bornes ; plus d'air autour des commandes */
-.mslider-row { display: grid; grid-template-columns: 22px 1fr 28px; align-items: center; gap: 8px; margin-top: 10px; }
+.mslider-row { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
 .mslider-row span { font: 500 10px/1 var(--f-num); color: var(--faint); font-variant-numeric: tabular-nums; }
 .mslider-row span:last-child { text-align: right; }
 .metro { gap: 16px; }
@@ -2121,7 +2121,7 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 .metro.running .metro-sub { color: #FFE3B0; text-shadow: 0 0 8px rgba(255, 196, 110, .45); }
 .player-plaque { margin-top: 2px; }
 /* Disque un peu plus petit : les temps au-dessus, les commandes dessous, rien ne mord sur les sillons */
-.metro .record { transform: scale(.85); }
+.metro .record { transform: scale(var(--disc, .85)); }
 .metro .beats { margin-bottom: var(--beats-gap, 6px); }
 /* Rangée de commandes : −5 −1 ▶ +1 +5, mêmes boutons ronds ; le Play au centre, seul en or */
 .mctl { grid-template-columns: 46px 46px 72px 46px 46px !important; grid-template-rows: auto auto; column-gap: 16px !important; row-gap: var(--row-gap, 84px) !important; justify-content: center; padding: 4px 0 0 !important; }
@@ -2185,3 +2185,30 @@ body.lite .mctl .go { animation: none; }
 .metro[data-rpm="45"] .disc-tempo text { fill: #FFCB8A; }
 /* Calque du tourbillon de poussière d'or */
 .dust { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 30; pointer-events: none; }
+
+/* =================== Maître Da Vinci =================== */
+/* L'en-tête QUART DE TEMPS ne sert plus qu'à l'ouverture ; le petit logo vit dans le métronome */
+.top { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); padding: 0; }
+.top .intro-logo { display: none; }
+html.intro .top { position: fixed; inset: 0; width: auto; height: auto; clip: auto; overflow: visible; z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: radial-gradient(70% 50% at 50% 40%, #1E2450 0%, #141833 60%, #0D1026 100%); }
+html.intro .top .intro-logo { display: block; width: 150px; height: 150px; filter: drop-shadow(0 0 14px rgba(242, 208, 138, .35)); }
+html.intro .top .wordmark { transform-origin: 50% 50%; }
+html.intro .app > .deck { opacity: 0; transform: translateY(26px) scale(.97); }
+html.intro.intro-out .app > .deck { opacity: 1; transform: none; transition: opacity .6s ease .15s, transform .7s cubic-bezier(.3, 1.1, .4, 1) .1s; }
+.mini-mark { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; font-size: 17px; pointer-events: none; }
+.mini-mark .wm-line1 { font-size: 17px; }
+.mini-mark .wm-line2 { font-size: 6.5px; margin-top: 3px; }
+.mini-mark .wm-halo { display: none; }
+html.intro .mini-mark { opacity: 0; }
+.metro-head #meterBtn { margin-left: 0; }
+/* Réglette pleine largeur, bornes en dessous, bulle du tempo */
+.mslider-wrap { position: relative; }
+.mslider-wrap input.metro-slider { width: 100%; pointer-events: none; }
+.mslider-hit { position: absolute; left: 0; right: 0; top: -10px; bottom: -10px; touch-action: pan-y; cursor: pointer; }
+.mslider-ends { display: flex; justify-content: space-between; padding: 0 4px; }
+.mslider-ends span { font: 500 10px/1 var(--f-num); color: var(--faint); font-variant-numeric: tabular-nums; }
+.mslider-bubble { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 6px 10px 5px; border-radius: 12px;
+  background: linear-gradient(180deg, #FBE3A6, #D9AE5E); color: #2A1A06; font: 700 20px/1 var(--f-num); font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .8); pointer-events: none; }
+.mslider-bubble::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px; border: 5px solid transparent; border-top-color: #D9AE5E; }

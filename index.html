@@ -18,12 +18,18 @@
 </head>
 <body data-zone="normal">
 <!--APP-START-->
+<script>try{if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('intro')}catch(e){}</script>
 <div class="app" id="app">
   <!-- Tourbillon de poussière d'or : calque fixe au-dessus de tout, il peut déborder du cadre ; ne capte aucun toucher -->
   <canvas class="dust" id="dust" aria-hidden="true"></canvas>
 
   <!-- En-tête : QUART DE TEMPS — QU ivoire, ART laiton, le A-balancier (clé de voûte) et sa lueur, filet à losange -->
-  <header class="top">
+  <header class="top" id="top">
+    <svg class="intro-logo" id="introLogo" viewBox="-110 -110 220 220" aria-hidden="true">
+      <path class="il-quarter" d="M4 -86 A90 90 0 0 1 94 4" fill="none" stroke="#F2D08A" stroke-width="7" stroke-linecap="round"/>
+      <g transform="translate(-4 -4)"><rect x="0" y="0" width="8" height="8" fill="none" stroke="#E3C27F" stroke-width="2.4"/>
+      <path class="il-spiral" d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72" fill="none" stroke="#E3C27F" stroke-width="5" stroke-linecap="round"/></g>
+    </svg>
     <h1 class="wordmark" aria-label="Quart de temps — L'art de la mesure">
       <span class="wm-line1" aria-hidden="true">
         <span class="wm-qu">QU</span><span class="wm-a" id="wmA"><span class="wm-halo" id="wmHalo"></span><svg viewBox="-50 -58 100 100">
@@ -75,6 +81,7 @@
           </button>
         </span>
       </span>
+      <div class="mini-mark" id="miniMark" aria-hidden="true"></div>
       <button type="button" class="meter" id="meterBtn" aria-haspopup="dialog" aria-label="Mesure 4/4. Touche pour changer.">
         <span class="meter-num" id="meterN">4</span>
         <span class="meter-bar" aria-hidden="true"></span>
@@ -141,9 +148,31 @@
     </div>
 
     <div class="mslider-row">
-      <span aria-hidden="true">30</span>
-      <input type="range" id="mSlider" class="metro-slider" min="30" max="240" step="1" value="121" aria-label="Tempo du métronome, de 30 à 240 BPM">
-      <span aria-hidden="true">240</span>
+      <div class="mslider-wrap">
+        <input type="range" id="mSlider" class="metro-slider" min="0" max="1000" step="1" value="500" aria-label="Tempo du métronome, de 30 à 320 BPM">
+        <span class="mslider-hit" id="mSliderHit" aria-hidden="true"></span>
+        <span class="mslider-bubble" id="mSliderBubble" aria-hidden="true" hidden>121</span>
+      </div>
+      <div class="mslider-ends" aria-hidden="true"><span>30</span><span>320</span></div>
+    </div>
+
+    <div class="sounds" role="radiogroup" aria-label="Son du métronome">
+      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5h7l3 14h-13z"/><path d="M10.5 5V2.5h3V5"/><path d="M6.2 15.5h11.6"/></svg>
+        <span>Cloche</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
+        <span>Clave</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="wood" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="2.5"/><path d="M7.5 12h9"/></svg>
+        <span>Wood</span>
+      </button>
+      <button type="button" class="snd" role="radio" data-snd="conga" aria-checked="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="4.5" rx="5" ry="1.8"/><path d="M7 4.5 8.6 20.5h6.8L17 4.5"/><path d="M7.8 12h8.4"/></svg>
+        <span>Conga</span>
+      </button>
     </div>
 
     <div class="subdiv glass" role="radiogroup" aria-label="Clics par temps">
@@ -165,24 +194,6 @@
       </button>
     </div>
 
-    <div class="sounds" role="radiogroup" aria-label="Son du métronome">
-      <button type="button" class="snd" role="radio" data-snd="cowbell" aria-checked="true">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5h7l3 14h-13z"/><path d="M10.5 5V2.5h3V5"/><path d="M6.2 15.5h11.6"/></svg>
-        <span>Cloche</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="clave" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16 16 4"/><path d="M8 20 20 8"/></svg>
-        <span>Clave</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="wood" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="2.5"/><path d="M7.5 12h9"/></svg>
-        <span>Wood</span>
-      </button>
-      <button type="button" class="snd" role="radio" data-snd="conga" aria-checked="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="4.5" rx="5" ry="1.8"/><path d="M7 4.5 8.6 20.5h6.8L17 4.5"/><path d="M7.8 12h8.4"/></svg>
-        <span>Conga</span>
-      </button>
-    </div>
 
     <!-- Ambiance du disque et volume, ensemble en bas -->
     <div class="vol-line">

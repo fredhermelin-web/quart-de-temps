@@ -1393,6 +1393,7 @@
 
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
+  let DISC = 0.85, fitTries = 0;      // échelle du disque : 0,85 au plus, réduite si l'écran est trop court
 
   /* Le tourbillon de poussière d'or (hommage aux tourbillons d'eau de Léonard).
      Au Play, le chiffre se dissout et des grains de lumière montent du centre du disque en entonnoir,
@@ -1438,8 +1439,70 @@
       GAL.stars.push({ r: r + (Math.random() - 0.5) * 5, th, s: 0.35 + Math.random() * 0.75, tw: Math.random() * 6.28 });
     }
   })();
+  const SKY = { far: [], mid: [], near: [], shoot: null, nextShoot: 0 };
+  (function makeSky() {
+    const pt = (n, s0, s1) => Array.from({ length: n }, () => ({ r: Math.sqrt(Math.random()), th: Math.random() * 6.283, s: s0 + Math.random() * (s1 - s0), tw: Math.random() * 6.283 }));
+    SKY.far = pt(90, 0.35, 0.7); SKY.mid = pt(28, 0.6, 1.1); SKY.near = pt(9, 1.1, 1.8);
+  })();
+  // L'espace, uniquement dans le cercle du tempo : noir profond, nébuleuse, étoiles sur trois profondeurs, un peu de vie
+  function drawSpace(c, cx, cy, R, now, vis, sprite) {
+    if (vis <= 0) return;
+    c.save();
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.clip();
+    c.globalCompositeOperation = 'source-over';
+    const bg = c.createRadialGradient(cx, cy, 0, cx, cy, R);
+    bg.addColorStop(0, 'rgba(3,4,14,' + (0.96 * vis).toFixed(3) + ')');
+    bg.addColorStop(0.75, 'rgba(6,8,26,' + (0.94 * vis).toFixed(3) + ')');
+    bg.addColorStop(1, 'rgba(14,17,44,' + (0.85 * vis).toFixed(3) + ')');
+    c.fillStyle = bg; c.fillRect(cx - R, cy - R, R * 2, R * 2);
+    c.globalCompositeOperation = 'lighter';
+    const neb = metro.rpm === 45 ? ['255,140,60', '232,140,130'] : ['120,80,220', '60,110,220'];
+    [[-0.32, -0.18, 0.75, neb[0]], [0.3, 0.22, 0.65, neb[1]]].forEach(([ox, oy, rr, col]) => {
+      const g = c.createRadialGradient(cx + ox * R, cy + oy * R, 0, cx + ox * R, cy + oy * R, rr * R);
+      g.addColorStop(0, 'rgba(' + col + ',' + (0.2 * vis).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + col + ',0)');
+      c.fillStyle = g; c.fillRect(cx - R, cy - R, R * 2, R * 2);
+    });
+    const layer = (arr, speed, bright, twinkle) => {
+      for (const st of arr) {
+        const th = st.th + GAL.rot * speed, rr = st.r * R;
+        const x = cx + rr * Math.cos(th), y = cy + rr * Math.sin(th);
+        const a = vis * bright * (twinkle ? 0.45 + 0.55 * Math.sin(now / 520 + st.tw) ** 2 : 0.85);
+        const d = st.s * 3;
+        c.globalAlpha = a;
+        c.drawImage(sprite, x - d / 2, y - d / 2, d, d);
+      }
+    };
+    layer(SKY.far, 0.08, 0.5, false);
+    layer(SKY.mid, 0.25, 0.75, true);
+    layer(SKY.near, 0.5, 1, true);
+    // une étoile qui pulse doucement
+    const pz = 0.5 + 0.5 * Math.sin(now / 900);
+    c.globalAlpha = vis * (0.4 + 0.6 * pz);
+    const pd = 4 + 4 * pz;
+    c.drawImage(sprite, cx + 0.62 * R - pd / 2, cy - 0.5 * R - pd / 2, pd, pd);
+    // de temps en temps, une minuscule étoile filante traverse le hublot
+    if (!SKY.shoot && now > SKY.nextShoot) {
+      const a0 = Math.random() * 6.283;
+      SKY.shoot = { x: cx + Math.cos(a0) * R * 0.9, y: cy + Math.sin(a0) * R * 0.9, ang: a0 + Math.PI + (Math.random() - 0.5) * 0.9, t0: now };
+      SKY.nextShoot = now + 4000 + Math.random() * 4000;
+    }
+    if (SKY.shoot) {
+      const k = (now - SKY.shoot.t0) / 500;
+      if (k > 1) SKY.shoot = null;
+      else {
+        const L = R * 1.1, hx = SKY.shoot.x + Math.cos(SKY.shoot.ang) * L * k, hy = SKY.shoot.y + Math.sin(SKY.shoot.ang) * L * k;
+        const tx = hx - Math.cos(SKY.shoot.ang) * 22, ty = hy - Math.sin(SKY.shoot.ang) * 22;
+        const gr = c.createLinearGradient(tx, ty, hx, hy);
+        gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,250,235,' + (0.8 * vis * (1 - k)).toFixed(3) + ')');
+        c.globalAlpha = 1; c.strokeStyle = gr; c.lineWidth = 1.1; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke();
+      }
+    }
+    c.globalAlpha = 1;
+    c.restore();
+  }
   function drawGalaxy(c, cx, cy, now, dt, sprite, br) {
-    GAL.vis = Math.max(0, Math.min(1, GAL.vis + (DUST.mode === 'on' ? dt * 1.4 : -dt * 1.6)));
     if (GAL.vis <= 0) return;
     GAL.rot += dt * (0.25 + metro.bpm / 900);
     const flat = 0.56;                                   // inclinaison : un disque vu de biais
@@ -1488,12 +1551,17 @@
     DUST.breath = Math.max(0, DUST.breath - dt * 2.2);
     const br = DUST.breath;
     const F = 700, H = 120, TILT = 0.42;                  // distance focale, hauteur de la tornade, légère inclinaison vers l'œil
-    const RING = 172 * 0.85 - 4;                          // le tourbillon reste dans l'anneau doré
+    const RING = 172 * DISC - 4;                          // le tourbillon reste dans l'anneau doré
     const ct = Math.cos(TILT), st = Math.sin(TILT);
     const sprite = DUST.sprites[metro.rpm === 45 ? 45 : 33];
+    const peek = tempoWinEl.classList.contains('peek') || tempoWinEl.classList.contains('editing');
+    GAL.vis = Math.max(0, Math.min(1, GAL.vis + (DUST.mode === 'on' ? dt * 1.4 : -dt * 1.6)));
+    const tr = tempoWinEl.getBoundingClientRect();
+    drawSpace(c, cx, cy, tr.width / 2 - 3, now, GAL.vis * (peek ? 0.12 : 1), sprite);
     c.save();
     c.beginPath(); c.arc(cx, cy, RING, 0, Math.PI * 2); c.clip();
     c.globalCompositeOperation = 'lighter';
+    if (peek) c.globalAlpha = 0.15;
     drawGalaxy(c, cx, cy, now, dt, sprite, br);
     let alive = 0;
     for (const p of DUST.ps) {
@@ -1536,6 +1604,67 @@
     if (DUST.mode === 'fall' && !alive && GAL.vis <= 0) { DUST.mode = 'off'; DUST.ps = []; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, DUST.cv.width, DUST.cv.height); }
   }
   dustInit();
+
+  /* Petit logo « QUART DE TEMPS » dans le métronome (copie du logo de l'en-tête, sans ses identifiants) */
+  (function buildMini() {
+    const host = $('miniMark'), src = document.querySelector('.wordmark');
+    if (!host || !src) return;
+    const l1 = src.querySelector('.wm-line1').cloneNode(true), l2 = src.querySelector('.wm-line2').cloneNode(true);
+    l1.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+    const gr = l1.querySelector('linearGradient');
+    if (gr) { gr.setAttribute('id', 'wmBrassMini'); l1.querySelectorAll('[stroke="url(#wmBrass)"]').forEach((e) => e.setAttribute('stroke', 'url(#wmBrassMini)')); }
+    host.appendChild(l1); host.appendChild(l2);
+  })();
+
+  /* Ouverture : la spirale se trace à l'encre d'or, le quart s'allume, le nom apparaît et le A-balancier oscille ;
+     puis le logo s'envole jusqu'à sa petite place dans le métronome, qui se déploie à l'écran.
+     Environ 2,5 s, un toucher la passe ; seulement à l'ouverture de l'appli. */
+  (function intro() {
+    const root = document.documentElement;
+    if (!root.classList.contains('intro')) return;
+    const top = $('top'), wm = top.querySelector('.wordmark'), logo = $('introLogo');
+    const sp = logo.querySelector('.il-spiral'), q = logo.querySelector('.il-quarter');
+    let done = false;
+    const timers = [];
+    const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+    const dash = (el, delay, dur) => {
+      let L = 600; try { L = el.getTotalLength(); } catch (e) { /* défaut */ }
+      el.style.strokeDasharray = L + ' ' + L;
+      el.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'both' });
+    };
+    dash(sp, 100, 900);
+    dash(q, 750, 420);
+    const parts = [wm.querySelector('.wm-qu'), wm.querySelector('.wm-a'), wm.querySelector('.wm-rt'), wm.querySelector('.wm-line2'), wm.querySelector('.wm-rule'), wm.querySelector('.wm-devise')];
+    parts.forEach((el, i) => el && el.animate([{ opacity: 0, transform: 'translateY(10px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+      { duration: 520, delay: 650 + i * 140, easing: 'cubic-bezier(.3,.9,.3,1)', fill: 'both' }));
+    const aSvg = wm.querySelector('.wm-a svg');
+    if (aSvg) aSvg.style.transformOrigin = '50% 0';
+    if (aSvg) aSvg.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-9deg)' }, { transform: 'rotate(7deg)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(0)' }],
+      { duration: 900, delay: 1150, easing: 'ease-in-out' });
+    function finish(fast) {
+      if (done) return;
+      done = true;
+      timers.forEach(clearTimeout);
+      const mini = $('miniMark');
+      const a = wm.getBoundingClientRect(), b = mini.getBoundingClientRect();
+      root.classList.add('intro-out');
+      if (!fast && a.width && b.width) {
+        const sc = b.width / a.width;
+        const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+        wm.animate([{ transform: 'none' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')' }], { duration: 650, easing: 'cubic-bezier(.6,0,.25,1)', fill: 'forwards' });
+        logo.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 450, easing: 'ease-in', fill: 'forwards' });
+        top.animate([{ backgroundColor: getComputedStyle(top).backgroundColor }, { backgroundColor: 'rgba(20,24,51,0)' }], { duration: 650, easing: 'ease-in', fill: 'forwards' });
+      }
+      setTimeout(() => {
+        root.classList.remove('intro', 'intro-out');
+        wm.getAnimations().forEach((x) => x.cancel());
+        fitTries = 0;
+        placeRecord();
+      }, fast ? 0 : 680);
+    }
+    top.addEventListener('pointerdown', () => finish(true), { once: true });
+    later(2050, () => finish(false));
+  })();
   // Tempo gravé sur le disque pendant le jeu
   function renderMini() { const e = $('discTempoTxt'); if (e) e.textContent = metro.bpm + ' BPM'; }
   // Pendant la marche, toucher ±1 / ±5 rallume le chiffre le temps de le lire
@@ -1553,9 +1682,13 @@
     recordEl.style.setProperty('--rx', rx + 'px');
     recordEl.style.setProperty('--ry', ry + 'px');
     const dt = $('discTempo');
-    if (dt) { dt.style.setProperty('--rx', rx + 'px'); dt.style.setProperty('--ry', ry + 'px'); }
+    if (dt) {
+      dt.style.setProperty('--rx', rx + 'px'); dt.style.setProperty('--ry', ry + 'px');
+      const R = Math.round(146 * DISC);                  // entre l'anneau doré et le sillon du milieu
+      $('discArc').setAttribute('d', 'M ' + (-R) + ' 0 A ' + R + ' ' + R + ' 0 0 0 ' + R + ' 0');
+    }
     // Rien ne touche le disque, sur tous les écrans : temps 1-2-3-4 au-dessus de l'anneau doré, commandes en dessous
-    const RING = 172 * 0.85 + 3;
+    const RING = 172 * DISC + 3;
     const bx = $('beats').getBoundingClientRect(), gb = $('mToggle').getBoundingClientRect();
     const cyAbs = t.top + t.height / 2;
     const gapTop = (cyAbs - RING) - bx.bottom, gapBot = gb.top - (cyAbs + RING);
@@ -1566,6 +1699,19 @@
       metroEl.style.setProperty('--beats-gap', wantTop + 'px');
       metroEl.style.setProperty('--row-gap', wantRow + 'px');
       return requestAnimationFrame(placeRecord);           // on repositionne après ce réglage
+    }
+    // Le métronome tient dans l'écran dès l'ouverture : si les sons dépassent le bas, le disque se réduit un peu
+    if (!document.documentElement.classList.contains('intro') && fitTries < 6) {
+      const snd = document.querySelector('.metro .sounds').getBoundingClientRect();
+      const excess = (snd.bottom + window.scrollY) + 10 - window.innerHeight;
+      let want = DISC;
+      if (excess > 2) want = Math.max(0.62, DISC - excess / 344);
+      else if (excess < -24 && DISC < 0.85) want = Math.min(0.85, DISC + (-excess - 12) / 344);
+      if (Math.abs(want - DISC) > 0.004) {
+        DISC = want; fitTries++;
+        metroEl.style.setProperty('--disc', DISC.toFixed(3));
+        return requestAnimationFrame(placeRecord);
+      }
     }
     placeArm(m, rx, ry);
   }
@@ -1609,11 +1755,11 @@
     taRest.style.setProperty('--rest-y', (restY + 9) + 'px');
     if (!armEl.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => armEl.classList.add('ready')));
     sparkGeom.cx = rx; sparkGeom.cy = ry; sparkGeom.w = m.width; sparkGeom.h = m.height;
-    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 132); // reste sur le disque (réduit à 85 %), à l'intérieur de l'anneau de laiton
+    sparkGeom.r0 = L.r - L.cx + 12; sparkGeom.r1 = Math.min(m.width / 2 - 14, 156 * DISC); // reste sur le disque, à l'intérieur de l'anneau de laiton
     sizeSpark();
   }
-  if (window.ResizeObserver) new ResizeObserver(placeRecord).observe(metroEl);
-  window.addEventListener('resize', placeRecord);
+  if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeRecord)).observe(metroEl);
+  window.addEventListener('resize', () => { fitTries = 0; placeRecord(); });
   let recordAnim = null, recordRate = 0, recordTarget = 0, recordRaf = 0;
   function spinRecord(on) {
     recordTarget = on ? 1 : 0;
@@ -1685,25 +1831,39 @@
     b.setAttribute('aria-label', metro.running ? 'Arrêter le métronome' : 'Démarrer le métronome');
   }
 
+  /* Réglette : la zone 60-200 BPM occupe les deux tiers de la course (on y vise plus juste) */
+  function bpmToPos(b) {
+    if (b <= 60) return (b - 30) / 30 * 120;
+    if (b <= 200) return 120 + (b - 60) / 140 * 680;
+    return 800 + (b - 200) / 120 * 200;
+  }
+  function posToBpm(p) {
+    if (p <= 120) return 30 + p / 120 * 30;
+    if (p <= 800) return 60 + (p - 120) / 680 * 140;
+    return 200 + (p - 800) / 200 * 120;
+  }
   function setMetroBpm(v) {
     const prevBpm = metro.bpm;
-    metro.bpm = clamp(Math.round(v), 30, 240);
+    metro.bpm = clamp(Math.round(v), 30, 320);
     if (typeof renderMini === 'function') renderMini();
     if (metro.bpm !== prevBpm && typeof peekTempo === 'function') peekTempo();
     const inp = $('mBpm');
     if (document.activeElement !== inp) inp.value = metro.bpm;
-    const s = $('mSlider');
-    if (+s.value !== metro.bpm) s.value = metro.bpm;
-    s.style.setProperty('--hi', ((metro.bpm - 30) / 210 * 100) + '%');
+    const s = $('mSlider'), pos = bpmToPos(metro.bpm);
+    if (Math.abs(+s.value - pos) > 0.5) s.value = Math.round(pos);
+    s.style.setProperty('--hi', (pos / 10) + '%');
+    s.setAttribute('aria-valuetext', metro.bpm + ' BPM');
+    const bb = $('mSliderBubble');
+    if (bb) { bb.textContent = String(metro.bpm); bb.style.left = (pos / 10) + '%'; }
     document.querySelectorAll('.mctl .step').forEach((b) => {
       const st = +b.dataset.step;
-      b.disabled = (st < 0 && metro.bpm <= 30) || (st > 0 && metro.bpm >= 240);
+      b.disabled = (st < 0 && metro.bpm <= 30) || (st > 0 && metro.bpm >= 320);
     });
   }
   function commitMetroInput() {
     const v = parseInt(String($('mBpm').value).replace(/\D/g, ''), 10);
     if (isFinite(v)) {
-      if (v < 30 || v > 240) toast('Le métronome va de 30 à 240 BPM.');
+      if (v < 30 || v > 320) toast('Le métronome va de 30 à 320 BPM.');
       setMetroBpm(v);
     }
     $('mBpm').value = metro.bpm;
@@ -2223,7 +2383,34 @@
 
 
   document.querySelectorAll('.mctl .step').forEach((b) => holdRepeat(b, () => setMetroBpm(metro.bpm + +b.dataset.step)));
-  $('mSlider').addEventListener('input', (e) => setMetroBpm(+e.target.value));
+  $('mSlider').addEventListener('input', (e) => setMetroBpm(posToBpm(+e.target.value)));
+  /* Glisser sur la réglette : geste rapide = le curseur suit le doigt ; geste lent = réglage fin, de 1 en 1.
+     Une bulle affiche le tempo au-dessus du doigt pendant le réglage. */
+  (function sliderTouch() {
+    const hit = $('mSliderHit'), inp = $('mSlider'), bub = $('mSliderBubble');
+    if (!hit) return;
+    const D = { id: null, x: 0, t: 0, acc: 0 };
+    const posAt = (x) => { const r = inp.getBoundingClientRect(); return clamp((x - r.left - 11) / Math.max(1, r.width - 22), 0, 1) * 1000; };
+    hit.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0;
+      try { hit.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
+      setMetroBpm(posToBpm(posAt(e.clientX)));
+      bub.hidden = false;
+    });
+    hit.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== D.id) return;
+      const dx = e.clientX - D.x, dtm = Math.max(1, e.timeStamp - D.t);
+      D.x = e.clientX; D.t = e.timeStamp;
+      if (Math.abs(dx) / dtm < 0.12) {                      // geste lent : réglage fin
+        D.acc += dx;
+        while (Math.abs(D.acc) >= 7) { const sg = Math.sign(D.acc); setMetroBpm(metro.bpm + sg); D.acc -= sg * 7; }
+      } else { D.acc = 0; setMetroBpm(posToBpm(posAt(e.clientX))); }
+    });
+    const end = (e) => { if (e.pointerId !== D.id) return; D.id = null; bub.hidden = true; };
+    hit.addEventListener('pointerup', end);
+    hit.addEventListener('pointercancel', end);
+  })();
   const mb = $('mBpm');
   const tw = $('tempoWin');
   // Glisser sur la fenêtre Tempo règle le BPM (haut/droite = plus vite) ; double-tape ouvre le clavier.
