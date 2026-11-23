@@ -2267,3 +2267,27 @@ html.intro .mini-mark { opacity: 0; }
 
 /* repose-bras : fin liseré sombre et ombre portée, pour qu'il se détache du disque */
 .ta-rest { border: 1px solid rgba(6, 8, 20, .85); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 3px 7px rgba(0, 0, 0, .65); }
+
+/* =================== Bac à disques : un vrai vinyle noir et brillant, qui sort franchement et tourne =================== */
+.sleeve { padding-top: 40px; }
+.sleeve .disc { top: 40px; background: #050609; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .26), 0 0 0 2px rgba(0, 0, 0, .6), 0 8px 16px rgba(0, 0, 0, .75);
+  transform: translateY(-3px);                                   /* chaque pochette laisse dépasser son disque */
+  transition: transform .6s cubic-bezier(.2, 1.35, .35, 1); }
+.sleeve .vin { position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(circle, #050609 0 2.5px, rgba(0, 0, 0, 0) 3px),                       /* trou central */
+    radial-gradient(circle at 50% 39%, rgba(255, 255, 255, .75) 0 1.4px, rgba(0, 0, 0, 0) 2px),   /* repère : on voit qu'il tourne */
+    radial-gradient(circle, var(--tint) 0 29%, rgba(255, 255, 255, .5) 29.5% 30.5%, rgba(0, 0, 0, 0) 31%),
+    radial-gradient(circle, rgba(0, 0, 0, 0) 0 92%, #2A2C36 93% 95%, rgba(0, 0, 0, 0) 96%),
+    repeating-radial-gradient(circle, #07080B 0 1px, #191B23 1px 2px); }
+.sleeve .shine { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;   /* les deux reflets en éventail restent fixes */
+  background: conic-gradient(from -20deg, rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, .34) 22deg, rgba(255, 255, 255, 0) 44deg,
+    rgba(255, 255, 255, 0) 180deg, rgba(255, 255, 255, .26) 202deg, rgba(255, 255, 255, 0) 224deg);
+  -webkit-mask: radial-gradient(circle, rgba(0, 0, 0, 0) 0 31%, #000 33%); mask: radial-gradient(circle, rgba(0, 0, 0, 0) 0 31%, #000 33%); }
+.sleeve[aria-pressed="true"] .disc { transform: translateY(-52%); }
+.sleeve[aria-pressed="true"] .vin { animation: vin-spin 2.2s linear infinite; }
+@keyframes vin-spin { to { transform: rotate(360deg); } }
+/* ombre douce du disque sur le haut de la pochette */
+.sleeve[aria-pressed="true"] .cover::before { left: 4%; right: 4%; height: 12px; border-radius: 0 0 50% 50%; background: radial-gradient(60% 100% at 50% 0, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0)); }
+@media (prefers-reduced-motion: reduce) { .sleeve[aria-pressed="true"] .vin { animation: none; } }

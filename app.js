@@ -2100,7 +2100,7 @@
     b.dataset.n = s[0]; b.dataset.d = s[1];
     b.style.setProperty('--tint', s[2]);
     b.setAttribute('aria-label', 'Mesure ' + s[0] + '/' + s[1]);
-    b.innerHTML = '<span class="disc" aria-hidden="true"></span><span class="cover" aria-hidden="true"><span class="frac"><b>' + s[0] + '</b><i></i><b>' + s[1] + '</b></span></span>';
+    b.innerHTML = '<span class="disc" aria-hidden="true"><span class="vin"></span><span class="shine"></span></span><span class="cover" aria-hidden="true"><span class="frac"><b>' + s[0] + '</b><i></i><b>' + s[1] + '</b></span></span>';
     sleevesBox.appendChild(b);
   });
   function renderMeter() {
