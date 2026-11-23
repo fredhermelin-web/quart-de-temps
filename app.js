@@ -1485,22 +1485,105 @@
     if (!SKY.shoot && now > SKY.nextShoot) {
       const a0 = Math.random() * 6.283;
       SKY.shoot = { x: cx + Math.cos(a0) * R * 0.9, y: cy + Math.sin(a0) * R * 0.9, ang: a0 + Math.PI + (Math.random() - 0.5) * 0.9, t0: now };
-      SKY.nextShoot = now + 4000 + Math.random() * 4000;
+      SKY.nextShoot = now + 6000 + Math.random() * 4000;
     }
     if (SKY.shoot) {
-      const k = (now - SKY.shoot.t0) / 500;
+      const k = (now - SKY.shoot.t0) / 750;
       if (k > 1) SKY.shoot = null;
       else {
-        const L = R * 1.1, hx = SKY.shoot.x + Math.cos(SKY.shoot.ang) * L * k, hy = SKY.shoot.y + Math.sin(SKY.shoot.ang) * L * k;
-        const tx = hx - Math.cos(SKY.shoot.ang) * 22, ty = hy - Math.sin(SKY.shoot.ang) * 22;
+        const L = R * 1.6, e = 1 - Math.pow(1 - k, 1.6), hx = SKY.shoot.x + Math.cos(SKY.shoot.ang) * L * e, hy = SKY.shoot.y + Math.sin(SKY.shoot.ang) * L * e;
+        const tl = 34 * Math.min(1, k * 4), tx = hx - Math.cos(SKY.shoot.ang) * tl, ty = hy - Math.sin(SKY.shoot.ang) * tl;
+        const fade = vis * Math.min(1, (1 - k) * 2.5);
         const gr = c.createLinearGradient(tx, ty, hx, hy);
-        gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,250,235,' + (0.8 * vis * (1 - k)).toFixed(3) + ')');
-        c.globalAlpha = 1; c.strokeStyle = gr; c.lineWidth = 1.1; c.lineCap = 'round';
+        gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,248,228,' + (0.9 * fade).toFixed(3) + ')');
+        c.globalAlpha = 1; c.strokeStyle = gr; c.lineWidth = 1.4; c.lineCap = 'round';
         c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke();
+        c.globalAlpha = 0.9 * fade; c.drawImage(sprite, hx - 3.5, hy - 3.5, 7, 7);
+      }
+    }
+    drawComet(c, cx, cy, R, now, vis, sprite);
+    c.globalAlpha = 1;
+    c.restore();
+  }
+  /* Piste cachée : après une minute de jeu sans interruption, une comète entre dans le hublot et trace
+     un quart de cercle autour du centre (le quart doré du logo). Chaque fois, le quart suivant du cadran,
+     dans l'autre sens ; au quatrième, le cercle complet s'illumine un instant. Le compte est gardé. */
+  const COMET = { t0: 0, q: 0, dir: 1, full: false, trail: [], dust: null, playT0: 0, fired: false };
+  function cometFire(now) {
+    const n = store.get('quarts', 0) | 0;
+    COMET.q = n % 4; COMET.dir = n % 2 ? -1 : 1; COMET.full = (n % 4) === 3;
+    COMET.t0 = now; COMET.trail = []; COMET.dust = null;
+    store.set('quarts', n + 1);
+  }
+  function drawComet(c, cx, cy, R, now, vis, sprite) {
+    if (!COMET.t0) return;
+    const T = 3000, el = now - COMET.t0, end = T + (COMET.full ? 3000 : 1900);
+    if (el > end) { COMET.t0 = 0; return; }
+    const Rq = R * 0.6, qa = -Math.PI / 2 + COMET.q * Math.PI / 2;          // quart n°1 : de midi à trois heures
+    const a0 = COMET.dir > 0 ? qa : qa + Math.PI / 2, a1 = COMET.dir > 0 ? qa + Math.PI / 2 : qa, d = COMET.dir;
+    const P = (a) => [cx + Rq * Math.cos(a), cy + Rq * Math.sin(a)];
+    const Tg = (a) => [-Math.sin(a) * d, Math.cos(a) * d];
+    const Lin = R * 1.05, Lar = Rq * Math.PI / 2, Lout = R * 1.05, D = Lin + Lar + Lout;
+    const at = (dist) => {
+      if (dist < Lin) { const p0 = P(a0), t = Tg(a0), k = Lin - dist; return [p0[0] - t[0] * k, p0[1] - t[1] * k]; }
+      if (dist < Lin + Lar) return P(a0 + d * (dist - Lin) / Rq);
+      const p1 = P(a1), t = Tg(a1), k = dist - Lin - Lar; return [p1[0] + t[0] * k, p1[1] + t[1] * k];
+    };
+    c.globalCompositeOperation = 'lighter';
+    // l'arc tracé par la comète, qui reste suspendu puis s'égrène
+    const u = Math.min(1, el / T), dist = D * (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2) * 0.999;
+    const arcDone = Math.max(0, Math.min(1, (dist - Lin) / Lar));
+    const arcA = el < T + 900 ? 1 : Math.max(0, 1 - (el - T - 900) / 800);
+    if (arcDone > 0 && arcA > 0) {
+      const aEnd = a0 + d * arcDone * Math.PI / 2;
+      c.lineCap = 'round';
+      [[6, 0.12], [2.4, 0.35], [1, 0.85]].forEach(([w, al]) => {
+        c.strokeStyle = 'rgba(242,208,138,' + (al * arcA * vis).toFixed(3) + ')'; c.lineWidth = w;
+        c.beginPath(); c.arc(cx, cy, Rq, a0, aEnd, d < 0); c.stroke();
+      });
+    }
+    // poussière d'étoiles quand l'arc s'efface
+    if (el > T + 700) {
+      if (!COMET.dust) COMET.dust = Array.from({ length: 34 }, () => ({ a: Math.random(), r: Rq + (Math.random() - 0.5) * 6, v: 4 + Math.random() * 10, s: 0.5 + Math.random() }));
+      const k = (el - T - 700) / 1200;
+      if (k < 1) for (const g of COMET.dust) {
+        const a = a0 + d * g.a * Math.PI / 2, rr = g.r + g.v * k;
+        c.globalAlpha = vis * (1 - k) * (0.5 + 0.5 * Math.sin(now / 90 + g.a * 40) ** 2);
+        const sz = g.s * 3.2; c.drawImage(sprite, cx + rr * Math.cos(a) - sz / 2, cy + rr * Math.sin(a) - sz / 2, sz, sz);
+      }
+    }
+    // la comète : tête lumineuse et longue chevelure qui s'effile
+    if (el < T) {
+      COMET.trail.push(at(dist));
+      if (COMET.trail.length > 30) COMET.trail.shift();
+      const tr = COMET.trail;
+      for (let i = 1; i < tr.length; i++) {
+        const f = i / tr.length;
+        c.globalAlpha = 1;
+        c.strokeStyle = 'rgba(255,246,222,' + (0.75 * f * f * vis).toFixed(3) + ')';
+        c.lineWidth = 0.4 + 3.2 * f;
+        c.beginPath(); c.moveTo(tr[i - 1][0], tr[i - 1][1]); c.lineTo(tr[i][0], tr[i][1]); c.stroke();
+      }
+      const h = tr[tr.length - 1];
+      c.globalAlpha = vis; c.drawImage(sprite, h[0] - 9, h[1] - 9, 18, 18);
+      c.globalAlpha = vis * 0.9; c.drawImage(sprite, h[0] - 4, h[1] - 4, 8, 8);
+    }
+    // quatrième quart : le cercle complet s'illumine, comme une mesure accomplie
+    if (COMET.full && el > T + 900) {
+      const k = (el - T - 900) / 2000;
+      if (k < 1) {
+        const a = Math.sin(Math.PI * k);
+        [[8, 0.1], [3, 0.3], [1.2, 0.8]].forEach(([w, al]) => {
+          c.globalAlpha = 1; c.strokeStyle = 'rgba(246,214,146,' + (al * a * vis).toFixed(3) + ')'; c.lineWidth = w;
+          c.beginPath(); c.arc(cx, cy, Rq, 0, Math.PI * 2); c.stroke();
+        });
+        for (let i = 0; i < 4; i++) {
+          const ang = -Math.PI / 2 + i * Math.PI / 2, sz = 10 + 6 * a;
+          c.globalAlpha = a * vis; c.drawImage(sprite, cx + Rq * Math.cos(ang) - sz / 2, cy + Rq * Math.sin(ang) - sz / 2, sz, sz);
+        }
       }
     }
     c.globalAlpha = 1;
-    c.restore();
   }
   function drawGalaxy(c, cx, cy, now, dt, sprite, br) {
     if (GAL.vis <= 0) return;
@@ -1529,6 +1612,8 @@
     DUST.ps = [];
     for (let i = 0; i < n; i++) { const p = dustSpawn(true); p.h = -Math.random() * 0.9; DUST.ps.push(p); }   // le chiffre se dissout : les grains partent de l'étiquette par vagues
     DUST.mode = 'on';
+    DUST.t0 = performance.now();                           // la tornade ne vit qu'un instant
+    COMET.playT0 = DUST.t0; COMET.fired = false;           // la minute de la comète repart à chaque Play
   }
   function dustStop() {
     DUST.mode = 'fall';
@@ -1564,10 +1649,16 @@
     if (peek) c.globalAlpha = 0.15;
     drawGalaxy(c, cx, cy, now, dt, sprite, br);
     let alive = 0;
+    const age = now - (DUST.t0 || now), settle = age > 2300, tf = settle ? Math.max(0, 1 - (age - 2300) / 1100) : 1;
+    if (DUST.mode === 'on' && settle && tf <= 0 && DUST.ps.length) DUST.ps = [];
+    if (DUST.mode === 'on' && !COMET.fired && now - COMET.playT0 > 60000) { COMET.fired = true; cometFire(now); }
     for (const p of DUST.ps) {
-      if (DUST.mode === 'on') {
+      if (DUST.mode === 'on' && !settle) {
         p.h += p.v * dt * (0.8 + metro.bpm / 240);
         if (p.h > 1) Object.assign(p, dustSpawn(false), { px: null, py: null });
+      } else if (DUST.mode === 'on') {
+        p.h -= dt * (0.55 + p.v);                           // les grains redescendent et la galaxie les absorbe
+        if (p.h <= 0 || tf <= 0) continue;
       } else {
         p.vy += 260 * dt; p.fall -= dt * 0.9;             // la poussière retombe dans le disque
         if (p.fall <= 0) continue;
@@ -1585,6 +1676,7 @@
       const depth = Math.min(1.9, k);
       let a = Math.min(1, p.h * 6) * Math.min(1, (1 - p.h) * 3) * (0.55 + 0.45 * Math.sin(now / 180 + p.tw) ** 2) * (0.7 + 0.5 * br);
       if (DUST.mode === 'fall') a *= p.fall;
+      else a *= tf;
       const size = p.s * 2.6 * depth * depth * (1 + 0.35 * br);
       const near = depth > 1.16;                           // grains les plus proches de l'œil : doux, hors mise au point
       // traînée de vitesse
