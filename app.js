@@ -140,11 +140,156 @@
   /* ===================================================================== */
   /*                               LECTEUR                                  */
   /* ===================================================================== */
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.preservesPitch = true;
-  audio.mozPreservesPitch = true;
-  audio.webkitPreservesPitch = true;
+  /* Lecteur : moteur de ralentissement Signalsmith Stretch (qualité studio, attaques de batterie nettes),
+     avec le lecteur natif du navigateur en secours : pendant le décodage du morceau, ou si l'appareil
+     ne peut pas faire tourner le moteur. L'objet imite l'élément <audio> : le reste de l'appli ne change pas. */
+  const audio = (() => {
+    const nat = new Audio();
+    nat.preload = 'auto';
+    nat.preservesPitch = true;
+    nat.mozPreservesPitch = true;
+    nat.webkitPreservesPitch = true;
+    const et = new EventTarget();
+    const S = { mode: 'nat', node: null, nodeP: null, failed: false, dur: NaN, rate: 1, paused: true, ended: false,
+      pos: 0, p0: 0, t0: 0, lat: 0, timer: 0, token: 0, keep: null };
+    const fire = (type) => et.dispatchEvent(new Event(type));
+    ['play', 'pause', 'ended', 'timeupdate', 'loadedmetadata', 'seeked', 'error'].forEach((t) => {
+      nat.addEventListener(t, () => { if (S.mode === 'nat') fire(t); });
+    });
+    // Petit son silencieux en boucle pendant la lecture : garde la session audio active
+    // (écran verrouillé, commandes de lecture du téléphone, bouton silencieux de l'iPhone)
+    function keepAlive(on) {
+      try {
+        if (!S.keep) {
+          const n = 4000, b = new ArrayBuffer(44 + n), v = new DataView(b);
+          const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+          w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+          v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+          for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+          S.keep = new Audio(URL.createObjectURL(new Blob([b], { type: 'audio/wav' })));
+          S.keep.loop = true;
+        }
+        if (on) { const pr = S.keep.play(); if (pr && pr.catch) pr.catch(() => {}); } else S.keep.pause();
+      } catch (e) { /* facultatif */ }
+    }
+    const ssPos = () => {
+      if (S.paused) return S.pos;
+      const p = S.p0 + Math.max(0, ctx.currentTime - S.t0 - S.lat) * S.rate;
+      return Math.min(p, S.dur);
+    };
+    function ssStart(p) {
+      S.p0 = p;
+      S.t0 = ctx.currentTime;
+      S.node.schedule({ active: true, input: p, rate: S.rate, semitones: 0 });
+    }
+    function ssTick() {
+      if (S.mode !== 'ss' || S.paused) return;
+      if (ssPos() >= S.dur - 0.02) {
+        S.pos = S.dur; S.paused = true; S.ended = true;
+        S.node.schedule({ active: false });
+        clearInterval(S.timer); keepAlive(false);
+        fire('pause'); fire('ended');
+        return;
+      }
+      fire('timeupdate');
+    }
+    function ssStop() {
+      clearInterval(S.timer);
+      if (S.node) S.node.schedule({ active: false });
+      keepAlive(false);
+    }
+    function ensureNode() {
+      if (S.nodeP) return S.nodeP;
+      S.nodeP = (async () => {
+        if (typeof window.SignalsmithStretch !== 'function' || !window.AudioWorkletNode) throw new Error('moteur indisponible');
+        const c = getCtx();
+        const node = await window.SignalsmithStretch(c, { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] });
+        node.connect(c.destination);
+        if (document.body.classList.contains('lite')) { try { await node.configure({ preset: 'cheaper' }); } catch (e) { /* défaut */ } }
+        try { S.lat = Math.max(0, Math.min(0.5, +(await node.latency()) || 0)); } catch (e) { S.lat = 0; }
+        S.node = node;
+        return node;
+      })().catch((e) => { S.failed = true; console.warn('Ralentisseur Signalsmith indisponible, lecteur natif utilisé.', e); return null; });
+      return S.nodeP;
+    }
+    function toNative() {
+      if (S.mode === 'ss') { ssStop(); S.paused = true; }
+      S.mode = 'nat';
+      S.dur = NaN; S.pos = 0; S.ended = false;
+    }
+    const api = {
+      addEventListener: (t, f, o) => et.addEventListener(t, f, o),
+      removeEventListener: (t, f, o) => et.removeEventListener(t, f, o),
+      get engine() { return S.mode === 'ss' ? 'signalsmith' : 'natif'; },
+      get src() { return nat.src; },
+      set src(v) { S.token++; toNative(); nat.src = v; },
+      removeAttribute(a) { S.token++; toNative(); if (S.node) S.node.dropBuffers().catch(() => {}); nat.removeAttribute(a); },
+      load() { nat.load(); },
+      set preload(v) { nat.preload = v; },
+      get paused() { return S.mode === 'ss' ? S.paused : nat.paused; },
+      get ended() { return S.mode === 'ss' ? S.ended : nat.ended; },
+      get seeking() { return S.mode === 'ss' ? false : nat.seeking; },
+      get readyState() { return S.mode === 'ss' ? 4 : nat.readyState; },
+      get duration() { return S.mode === 'ss' ? S.dur : nat.duration; },
+      get currentTime() { return S.mode === 'ss' ? ssPos() : nat.currentTime; },
+      set currentTime(v) {
+        if (S.mode !== 'ss') { nat.currentTime = v; return; }
+        S.pos = Math.max(0, Math.min(+v || 0, S.dur));
+        S.ended = false;
+        if (!S.paused) ssStart(S.pos);
+        fire('seeked');
+      },
+      get playbackRate() { return S.rate; },
+      set playbackRate(v) {
+        nat.playbackRate = v;
+        if (S.mode === 'ss' && !S.paused && v !== S.rate) { const p = ssPos(); S.rate = v; ssStart(p); }
+        else S.rate = v;
+      },
+      set defaultPlaybackRate(v) { nat.defaultPlaybackRate = v; },
+      play() {
+        if (S.mode !== 'ss') return nat.play();
+        if (!S.paused) return Promise.resolve();
+        if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+        if (S.ended || S.pos >= S.dur - 0.05) S.pos = 0;
+        S.ended = false; S.paused = false;
+        ssStart(S.pos);
+        clearInterval(S.timer);
+        S.timer = setInterval(ssTick, 200);
+        keepAlive(true);
+        fire('play');
+        return Promise.resolve();
+      },
+      pause() {
+        if (S.mode !== 'ss') { nat.pause(); return; }
+        if (S.paused) return;
+        S.pos = ssPos();
+        S.paused = true;
+        ssStop();
+        fire('pause');
+      },
+      // Le morceau est décodé : on passe sur Signalsmith (au même endroit si la lecture a déjà commencé)
+      async useDecoded(ab) {
+        const token = S.token;
+        const node = await ensureNode();
+        if (!node || token !== S.token) return;
+        try {
+          await node.dropBuffers();
+          const ch0 = ab.getChannelData(0);
+          const chans = [ch0, ab.numberOfChannels > 1 ? ab.getChannelData(1) : new Float32Array(ch0)]; // mono : copie du canal (deux tampons distincts)
+          await node.addBuffers(chans);
+        } catch (e) { console.warn('Ralentisseur : chargement impossible, lecteur natif utilisé.', e); return; }
+        if (token !== S.token) return;
+        const wasPlaying = !nat.paused && !nat.ended;
+        const at = nat.currentTime || 0;
+        S.mode = 'ss';                       // à partir d'ici, les événements du lecteur natif sont ignorés
+        S.dur = ab.duration; S.rate = nat.playbackRate || S.rate; S.pos = Math.min(at, S.dur); S.ended = false; S.paused = true;
+        nat.pause();
+        if (wasPlaying) api.play();
+        fire('loadedmetadata');
+      }
+    };
+    return api;
+  })();
 
   const P = {
     hasTrack: false,
@@ -208,6 +353,7 @@
       });
       if (token !== P.token) return;
       P.decodedDur = ab.duration;
+      audio.useDecoded(ab);
       const chans = [];
       for (let i = 0; i < Math.min(2, ab.numberOfChannels); i++) {
         const a = new Float32Array(ab.length);

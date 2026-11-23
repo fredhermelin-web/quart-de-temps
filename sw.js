@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v38';
+const CACHE = 'atelier-v39';
 const SHARE = 'atelier-share';
 const SHELL = [
   './',
@@ -12,6 +12,7 @@ const SHELL = [
   'fonts/manrope-normal-500.woff2',
   'fonts/unbounded-normal-400.woff2',
   'sounds.js',
+  'vendor/signalsmith-stretch-1.3.2.js',
   'app.js',
   'manifest.webmanifest',
   'icons/icon.svg',
