@@ -2492,7 +2492,56 @@
   mb.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !mb.readOnly) mb.blur(); });
   document.querySelectorAll('.sub').forEach((b) => b.addEventListener('click', () => setSub(+b.dataset.sub)));
   $('mToggle').addEventListener('click', toggleMetro);
-  $('mVol').addEventListener('input', (e) => setVol(+e.target.value));
+  $('mVol').addEventListener('input', (e) => { setVol(+e.target.value); volArm(); });
+  /* Volume : le haut-parleur sous TAP déplie une petite réglette, qui se replie seule */
+  const volBtn = $('volBtn'), volPop = $('volPop');
+  let volT = 0;
+  function volArm() { clearTimeout(volT); volT = setTimeout(() => volOpen(false), 2200); }
+  function volOpen(o) {
+    volPop.hidden = !o;
+    volBtn.setAttribute('aria-expanded', String(o));
+    clearTimeout(volT);
+    if (o) volArm();
+  }
+  volBtn.addEventListener('click', () => volOpen(volPop.hidden));
+  $('mVol').addEventListener('pointerdown', () => clearTimeout(volT));
+  $('mVol').addEventListener('pointerup', volArm);
+  document.addEventListener('pointerdown', (e) => { if (!volPop.hidden && !e.target.closest('.vol-anchor')) volOpen(false); });
+
+  /* Cadres biseautés : huit facettes taillées comme une pierre, éclairées d'en haut à gauche */
+  (function bevels() {
+    const NS = 'http://www.w3.org/2000/svg', C = 16, B = 7, K = C + B * (Math.SQRT2 - 1);
+    // couleur de chaque facette : haut, haut-droit, droite, bas-droit, bas, bas-gauche, gauche, haut-gauche
+    const FACE = ['#E9CB8A', '#A9874B', '#6E5730', '#3B2E22', '#2A2342', '#5E4A2E', '#C39D5A', '#F6DFA6'];
+    const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const f = (v) => Math.max(0, Math.min(255, Math.round(v * k))); return 'rgb(' + f(n >> 16) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')'; };
+    document.querySelectorAll('.deck').forEach((deck, di) => {
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'deck-bevel');
+      svg.setAttribute('aria-hidden', 'true');
+      deck.appendChild(svg);
+      const draw = () => {
+        const w = deck.offsetWidth, h = deck.offsetHeight;
+        if (!w || !h) return;
+        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+        const O = [[C, 0], [w - C, 0], [w, C], [w, h - C], [w - C, h], [C, h], [0, h - C], [0, C]];
+        const I = [[K, B], [w - K, B], [w - B, K], [w - B, h - K], [w - K, h - B], [K, h - B], [B, h - K], [B, K]];
+        let defs = '', body = '';
+        for (let i = 0; i < 8; i++) {
+          const j = (i + 1) % 8, id = 'bv' + di + '_' + i;
+          const mo = [(O[i][0] + O[j][0]) / 2, (O[i][1] + O[j][1]) / 2], mi = [(I[i][0] + I[j][0]) / 2, (I[i][1] + I[j][1]) / 2];
+          // la facette « monte » : plus sombre au bord extérieur, plus claire vers l'arête intérieure
+          defs += '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="' + mo[0] + '" y1="' + mo[1] + '" x2="' + mi[0] + '" y2="' + mi[1] + '">' +
+            '<stop offset="0" stop-color="' + shade(FACE[i], 0.62) + '"/><stop offset="1" stop-color="' + shade(FACE[i], 1.08) + '"/></linearGradient>';
+          body += '<polygon points="' + [O[i], O[j], I[j], I[i]].map((q) => q.join(',')).join(' ') + '" fill="url(#' + id + ')"/>';
+        }
+        const ring = (P) => P.map((q) => q.join(',')).join(' ');
+        body += '<polygon class="bv-outer" points="' + ring(O) + '"/><polygon class="bv-inner" points="' + ring(I) + '"/><polygon class="bv-ridge" points="' + ring(I.map((q) => [q[0] + (q[0] < w / 2 ? 1 : -1), q[1] + (q[1] < h / 2 ? 1 : -1)])) + '"/>';
+        svg.innerHTML = '<defs>' + defs + '</defs>' + body;
+      };
+      draw();
+      new ResizeObserver(() => requestAnimationFrame(draw)).observe(deck);
+    });
+  })();
 
   // Clavier (ordinateur) : Espace = lecture, M = métronome
   document.addEventListener('keydown', (e) => {

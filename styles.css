@@ -2218,3 +2218,40 @@ html.intro .mini-mark { opacity: 0; }
 .metro .rpm-float .rpm-knob { width: calc(100% - 4px); height: calc(50% - 2px); }
 .metro[data-rpm="45"] .rpm-float .rpm-knob { transform: translateY(100%); }
 .metro .rpm-float .rpm-opt { font-size: 10.5px; }
+
+/* =================== Cadres taillés en biseau (facettes), spirale dans les plaques, volume sous TAP =================== */
+.deck { position: relative; isolation: isolate; border: 0; outline: 0; border-radius: 0; box-shadow: none;
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px); }
+.deck-bevel { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: .92; }
+.deck-bevel .bv-outer { fill: none; stroke: rgba(255, 238, 200, .35); stroke-width: 1; }
+.deck-bevel .bv-inner { fill: none; stroke: rgba(8, 8, 24, .7); stroke-width: 1.4; }
+.deck-bevel .bv-ridge { fill: none; stroke: rgba(242, 208, 138, .22); stroke-width: 1; }
+@media (max-width: 430px) {
+  .app { padding-left: max(4px, env(safe-area-inset-left, 0px)); padding-right: max(4px, env(safe-area-inset-right, 0px)); }
+  .deck { padding: 16px 16px; }
+}
+.metro .rpm-float { left: 13px; }
+/* spirale à quatre centres de part et d'autre du titre */
+.metro-plaque .pl-spiral { width: 13px; height: 13px; flex: none; overflow: visible; filter: drop-shadow(0 0 2px rgba(255, 196, 110, .35)); }
+.metro-plaque .pl-spiral path { fill: none; stroke: #E3C27F; stroke-width: 11; stroke-linecap: round; }
+.metro-plaque .pl-mirror { transform: scaleX(-1); }
+/* figures du bas retirées : le bouton figure en haut suffit */
+.metro .subdiv { display: none; }
+/* TAP et, dessous, le volume (pendant du bouton muet sous le balancier) */
+.tap-col { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: none; }
+.vol-anchor { position: relative; display: block; }
+.vol-btn { width: 42px; height: 28px; padding: 0; border: 1.2px solid transparent; border-radius: 999px;
+  background: linear-gradient(#171B3C, #171B3C) padding-box, conic-gradient(from 210deg, #6E7183, #E9E2D2, #8C7A5C, #F4EBDA, #6E7183, #CDBB98, #6E7183) border-box;
+  display: grid; place-items: center; color: #D9B26A; }
+.vol-btn .vol-ic { width: 20px; height: 20px; color: #D9B26A; }
+.vol-btn[aria-expanded="true"] { box-shadow: 0 0 10px rgba(255, 196, 110, .45); }
+.vol-pop { position: absolute; top: calc(100% + 8px); left: 50%; z-index: 20; width: 44px; height: 150px; margin-left: -22px; border-radius: 22px;
+  background: rgba(20, 24, 51, .96); border: 1px solid rgba(217, 178, 106, .45); box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .7);
+  animation: vol-pop-in .18s ease-out; }
+.vol-pop[hidden] { display: none; }
+.vol-pop .vol-wrap { position: absolute; left: 50%; top: 50%; width: 124px; margin-left: -62px; transform: translateY(-50%) rotate(-90deg); }
+.vol-pop #mVol { width: 100%; }
+@keyframes vol-pop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+/* le disque déborde du cadre : on le rogne sans que le cadre puisse défiler (focus, défilement auto) */
+.metro { overflow: hidden; overflow: clip; }
+.metro .metro-head { z-index: 40; }
