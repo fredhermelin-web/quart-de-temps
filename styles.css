@@ -2122,9 +2122,9 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 .player-plaque { margin-top: 2px; }
 /* Disque un peu plus petit : les temps au-dessus, les commandes dessous, rien ne mord sur les sillons */
 .metro .record { transform: scale(.85); }
-.metro .beats { margin-bottom: 6px; }
+.metro .beats { margin-bottom: var(--beats-gap, 6px); }
 /* Rangée de commandes : −5 −1 ▶ +1 +5, mêmes boutons ronds ; le Play au centre, seul en or */
-.mctl { grid-template-columns: 46px 46px 72px 46px 46px !important; grid-template-rows: auto auto; column-gap: 16px !important; row-gap: 84px !important; justify-content: center; padding: 4px 0 0 !important; }
+.mctl { grid-template-columns: 46px 46px 72px 46px 46px !important; grid-template-rows: auto auto; column-gap: 16px !important; row-gap: var(--row-gap, 84px) !important; justify-content: center; padding: 4px 0 0 !important; }
 .mctl .tempo-win { grid-column: 1 / -1; grid-row: 1; }
 .mctl .step, .mctl .go { grid-row: 2; }
 .mctl .step {
@@ -2173,25 +2173,15 @@ body.lite .metro .subdiv { -webkit-backdrop-filter: none; backdrop-filter: none;
 .mctl .go:not(.running) { animation: go-breathe 3s ease-in-out infinite; }
 body.lite .mctl .go { animation: none; }
 
-/* Le tourbillon de Léonard : bascule de plateau, la spirale monte et se trace, le chiffre s'enfonce */
-.tempo-win { perspective: 380px; }
-.tempo-win > .tw-swirl { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
-  transform-origin: 50% 85%; transform: rotateX(78deg) translateY(18px); opacity: 0;
-  transition: transform .6s cubic-bezier(.3, 1.15, .4, 1) .08s, opacity .35s ease .08s; }
-.metro.running .tempo-win > .tw-swirl { transform: none; opacity: 1; }
-.tw-swirl .swirl-rot { transform-box: view-box; transform-origin: 0 0; animation: swirl-spin 11s linear infinite; animation-play-state: paused; }
-.metro.running .tw-swirl .swirl-rot { animation-play-state: running; }
-@keyframes swirl-spin { to { transform: rotate(360deg); } }
-.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.5, 0, .3, 1), opacity .35s ease, text-shadow .3s, color .3s; }
-.metro.running .tempo-win .bpm-input, .metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { transform: rotateX(-86deg) translateY(24px); opacity: 0; }
-/* Rappel du tempo en haut de l'étiquette pendant le jeu */
-.tw-mini { position: absolute; left: 0; right: 0; top: 13px; z-index: 2; text-align: center; font: 700 9px/1 var(--f-ui); letter-spacing: .14em; color: var(--dim); opacity: 0; transform: translateY(-6px); transition: opacity .4s ease .35s, transform .4s ease .35s; pointer-events: none; }
-.tw-mini b { font: 600 15px/1 var(--f-num); letter-spacing: 0; color: #EAF4FF; margin-right: 2px; }
-.metro.running .tw-mini { opacity: .92; transform: none; }
-/* ±1 / ±5 ou saisie pendant le jeu : le chiffre remonte le temps de le lire */
+/* Au Play, le chiffre se dissout en poussière d'or ; à l'arrêt, il se reforme */
+.tempo-win .bpm-input, .tempo-win .eyebrow, .tempo-win .unit { transition: opacity .55s ease, filter .55s ease, transform .55s ease, text-shadow .3s, color .3s; }
+.metro.running .tempo-win .bpm-input, .metro.running .tempo-win .eyebrow, .metro.running .tempo-win .unit { opacity: 0; filter: blur(7px); transform: scale(1.18); }
 .metro.running .tempo-win.peek .bpm-input, .metro.running .tempo-win.peek .eyebrow, .metro.running .tempo-win.peek .unit,
-.metro.running .tempo-win.editing .bpm-input, .metro.running .tempo-win.editing .eyebrow, .metro.running .tempo-win.editing .unit { transform: none; opacity: 1; transition-duration: .25s; }
-.metro.running .tempo-win.peek > .tw-swirl, .metro.running .tempo-win.editing > .tw-swirl { opacity: .12; transition-duration: .25s; transition-delay: 0s; }
-.metro.running .tempo-win.peek .tw-mini, .metro.running .tempo-win.editing .tw-mini { opacity: 0; transition-delay: 0s; }
-/* Calque des notes, au-dessus de l'étiquette */
-.leo-notes { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+.metro.running .tempo-win.editing .bpm-input, .metro.running .tempo-win.editing .eyebrow, .metro.running .tempo-win.editing .unit { opacity: 1; filter: none; transform: none; transition-duration: .25s; }
+/* Tempo gravé en arc sur le disque, au-dessus du Play */
+.disc-tempo { position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 400px; height: 400px; margin: -200px 0 0 -200px; z-index: 0; pointer-events: none; overflow: visible; opacity: 0; transition: opacity .6s ease .35s; }
+.metro.running .disc-tempo { opacity: 1; }
+.disc-tempo text { font: 600 15px var(--f-num); letter-spacing: .2em; fill: #F2D08A; filter: drop-shadow(0 0 5px rgba(255, 196, 110, .55)); }
+.metro[data-rpm="45"] .disc-tempo text { fill: #FFCB8A; }
+/* Calque du tourbillon de poussière d'or */
+.dust { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 30; pointer-events: none; }

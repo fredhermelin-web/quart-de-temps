@@ -1294,8 +1294,6 @@
     sparkGeom.dpr = dpr;
     const w = Math.max(1, Math.round(sparkGeom.w * dpr)), h = Math.max(1, Math.round(sparkGeom.h * dpr));
     if (sparkCv.width !== w || sparkCv.height !== h) { sparkCv.width = w; sparkCv.height = h; }
-    const nc = $('leoNotes');
-    if (nc && (nc.width !== w || nc.height !== h)) { nc.width = w; nc.height = h; }
   }
   function sparkPos(u) {
     const g = sparkGeom;
@@ -1314,7 +1312,7 @@
     SPARK.k = SPARK.k + 1 >= sparkTurns() ? 0 : SPARK.k + 1;
     SPARK.bar = 1;
     if (ev.st === 0) return;
-    if (ev.beat === 0) leoNote(0);                       // une note s'échappe du tourbillon à chaque mesure
+    if (ev.beat === 0) DUST.breath = 1;                  // le tourbillon « respire » sur chaque 1
     if (--SPARK.nextStar <= 0) {                         // une étoile filante toutes les 2 ou 3 mesures
       spawnStar();
       SPARK.nextStar = (metro.pattern.length || 4) * (Math.random() < 0.5 ? 2 : 3);
@@ -1396,120 +1394,112 @@
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
 
-  /* Le tourbillon de Léonard. Au départ, le plateau bascule : le chiffre s'enfonce, la spirale à quatre centres
-     monte et se trace à l'encre d'or, puis quelques notes s'en échappent en suivant sa courbe et s'évaporent
-     au-dessus du disque. En marche, la spirale tourne doucement et une note s'envole à chaque mesure.
-     À l'arrêt, la spirale se « désécrit » et le chiffre remonte. */
-  const LEO = { svg: null, path: null, len: 0, notes: [], cv: null, cx: null, drawn: false, was: false };
-  function buildSwirl() {
-    if (!tempoWinEl || $('twSwirl')) return;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'tw-swirl');
-    svg.setAttribute('id', 'twSwirl');
-    svg.setAttribute('viewBox', '-68 -68 136 136');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.innerHTML = '<defs><filter id="leoGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
-      '<g class="swirl-rot"><g transform="scale(.66) translate(-4 -4)" filter="url(#leoGlow)">' +
-      '<rect x="0" y="0" width="8" height="8" fill="none" stroke="#E3C27F" stroke-width="2.6"/>' +
-      '<path class="swirl-ink" d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72" fill="none" stroke="#F2D08A" stroke-width="4.2" stroke-linecap="round"/>' +
-      '</g></g>';
-    tempoWinEl.insertBefore(svg, tempoWinEl.firstChild);
-    LEO.svg = svg;
-    LEO.path = svg.querySelector('.swirl-ink');
-    try { LEO.len = LEO.path.getTotalLength(); } catch (e) { LEO.len = 900; }
-    LEO.path.style.strokeDasharray = LEO.len + ' ' + LEO.len;
-    LEO.path.style.strokeDashoffset = String(LEO.len);
-    LEO.cv = $('leoNotes');
-    LEO.cx = LEO.cv ? LEO.cv.getContext('2d') : null;
+  /* Le tourbillon de poussière d'or (hommage aux tourbillons d'eau de Léonard).
+     Au Play, le chiffre se dissout et des grains de lumière montent du centre du disque en entonnoir,
+     en perspective : ils viennent vers l'œil, grossissent, deviennent flous et peuvent déborder du cadre.
+     Il tourne au tempo et « respire » sur chaque 1. À l'arrêt, la poussière retombe et le chiffre se reforme. */
+  const DUST = { cv: null, c: null, sprite: null, ps: [], mode: 'off', breath: 0, last: 0, was: false, w: 0, h: 0, dpr: 1 };
+  function dustSprite(col) {
+    const sp = document.createElement('canvas'); sp.width = sp.height = 64;
+    const g = sp.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.22, 'rgba(' + col + ',.95)');
+    gr.addColorStop(0.55, 'rgba(' + col + ',.28)');
+    gr.addColorStop(1, 'rgba(' + col + ',0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return sp;
   }
-  function leoDraw(on) {
-    if (!LEO.path) return;
-    const L = LEO.len;
-    const from = on ? L : 0, to = on ? 0 : L;
-    LEO.path.getAnimations().forEach((a) => a.cancel());
-    if (reduceMotion || !LEO.path.animate) { LEO.path.style.strokeDashoffset = String(to); return; }
-    const an = LEO.path.animate([{ strokeDashoffset: from }, { strokeDashoffset: to }],
-      { duration: on ? 950 : 520, delay: on ? 220 : 0, easing: on ? 'cubic-bezier(.45,.05,.3,1)' : 'ease-in', fill: 'both' });
-    an.onfinish = () => { LEO.path.style.strokeDashoffset = String(to); };
+  function dustInit() {
+    DUST.cv = $('dust');
+    if (!DUST.cv) return;
+    DUST.c = DUST.cv.getContext('2d');
+    DUST.sprites = { 33: dustSprite('242,208,138'), 45: dustSprite('255,190,110') };
   }
-  // Une note qui s'échappe du tourbillon ; delay en ms
-  function leoNote(delay) {
-    if (reduceMotion || document.body.classList.contains('lite') || !LEO.cx) return;
-    const kinds = ['8', '8', '16', 'pair'];
-    LEO.notes.push({
-      t0: performance.now() + (delay || 0),
-      a0: -Math.PI / 2 + (Math.random() - 0.5) * 1.6,
-      kind: kinds[(Math.random() * kinds.length) | 0],
-      sway: (Math.random() - 0.5) * 30,
-      dur: 2300 + Math.random() * 500
-    });
-  }
-  function leoBurst() { for (let i = 0; i < 5; i++) leoNote(1050 + i * 150); }
-  // Une note dessinée à la plume (tête penchée, hampe, crochet ou ligature)
-  function inkNote(c, kind) {
-    const head = (x, y) => { c.beginPath(); c.ellipse(x, y, 3.5, 2.5, -0.38, 0, Math.PI * 2); c.fill(); };
-    c.lineWidth = 1.25; c.lineCap = 'round';
-    if (kind === 'pair') {
-      head(-4.5, 4); head(4.5, 2.2);
-      c.beginPath(); c.moveTo(-1.6, 3.2); c.lineTo(-1.6, -9); c.moveTo(7.4, 1.4); c.lineTo(7.4, -10.8); c.stroke();
-      c.beginPath(); c.moveTo(-1.6, -9); c.lineTo(7.4, -10.8); c.lineTo(7.4, -8.6); c.lineTo(-1.6, -6.8); c.closePath(); c.fill();
-      return;
-    }
-    head(0, 3);
-    c.beginPath(); c.moveTo(2.9, 2.2); c.lineTo(2.9, -11); c.stroke();
-    const flag = (y) => { c.beginPath(); c.moveTo(2.9, y); c.quadraticCurveTo(8.5, y + 3, 6.8, y + 8); c.stroke(); };
-    flag(-11);
-    if (kind === '16') flag(-7.2);
-  }
-  function drawLeo() {
-    const on = metro.running;
-    if (on !== LEO.was) {
-      LEO.was = on;
-      leoDraw(on);
-      if (on) leoBurst();
-    }
-    const c = LEO.cx, g = sparkGeom;
-    if (!c) return;
-    if (!LEO.notes.length) {
-      if (LEO.drawn) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, LEO.cv.width, LEO.cv.height); LEO.drawn = false; }
-      return;
-    }
-    const now = performance.now();
-    c.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
-    c.clearRect(0, 0, g.w, g.h);
-    LEO.drawn = true;
-    const P = pal(), col = P === PAL[45] ? [255, 205, 140] : [242, 208, 138];
-    for (let i = LEO.notes.length - 1; i >= 0; i--) {
-      const n = LEO.notes[i], s = (now - n.t0) / n.dur;
-      if (s < 0) continue;
-      if (s >= 1) { LEO.notes.splice(i, 1); continue; }
-      let x, y, alpha, sc;
-      const sA = Math.min(1, s / 0.55);                 // 1re phase : la note suit la spirale, du centre vers le bord du disque
-      const r = 18 + 128 * Math.pow(sA, 0.85);
-      const th = n.a0 + sA * Math.PI * 1.35;
-      x = g.cx + r * Math.cos(th); y = g.cy + r * Math.sin(th);
-      sc = 0.75 + 0.45 * sA;
-      if (s > 0.55) {                                   // 2e phase : elle s'élève et s'évapore comme de l'encre qui sèche
-        const sB = (s - 0.55) / 0.45;
-        y -= 70 * sB; x += n.sway * sB;
-        sc += 0.25 * sB;
-        alpha = 1 - sB;
-      } else alpha = Math.min(1, s / 0.08);
-      c.save();
-      c.translate(x, y);
-      c.rotate(Math.sin((now - n.t0) / 260) * 0.18);
-      c.scale(sc, sc);
-      c.fillStyle = 'rgba(' + col.join(',') + ',' + (0.95 * alpha).toFixed(3) + ')';
-      c.strokeStyle = c.fillStyle;
-      c.shadowColor = 'rgba(255, 196, 110,' + (0.7 * alpha).toFixed(3) + ')';
-      c.shadowBlur = 8;
-      inkNote(c, n.kind);
-      c.restore();
+  function dustSize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = window.innerWidth, h = window.innerHeight;
+    if (DUST.w !== w || DUST.h !== h || DUST.dpr !== dpr) {
+      DUST.w = w; DUST.h = h; DUST.dpr = dpr;
+      DUST.cv.width = Math.round(w * dpr); DUST.cv.height = Math.round(h * dpr);
     }
   }
-  buildSwirl();
-  // Rappel discret du tempo pendant le jeu
-  function renderMini() { const e = $('twMiniN'); if (e) e.textContent = String(metro.bpm); }
+  function dustSpawn(fromLabel) {
+    // h : hauteur dans l'entonnoir (0 = centre du disque, 1 = sommet) ; th : angle ; tw : scintillement
+    return { h: fromLabel ? Math.random() * 0.15 : 0, th: Math.random() * Math.PI * 2, r0: 4 + Math.random() * (fromLabel ? 60 : 14),
+      v: 0.24 + Math.random() * 0.26, s: 0.6 + Math.random() * 0.9, tw: Math.random() * 6.28, px: null, py: null, fall: 0, vy: 0 };
+  }
+  function dustStart() {
+    const lite = document.body.classList.contains('lite');
+    const n = lite ? 90 : 240;
+    DUST.ps = [];
+    for (let i = 0; i < n; i++) { const p = dustSpawn(true); p.h = -Math.random() * 0.9; DUST.ps.push(p); }   // le chiffre se dissout : les grains partent de l'étiquette par vagues
+    DUST.mode = 'on';
+  }
+  function dustStop() {
+    DUST.mode = 'fall';
+    DUST.ps.forEach((p) => { p.fall = 1; p.vy = -20 - Math.random() * 40; });
+  }
+  function drawDust() {
+    const on = metro.running && !reduceMotion;
+    if (on !== DUST.was) { DUST.was = on; if (on) dustStart(); else if (DUST.mode === 'on') dustStop(); }
+    if (!DUST.c) return;
+    if (DUST.mode === 'off') return;
+    dustSize();
+    const now = performance.now(), dt = Math.min(0.05, DUST.last ? (now - DUST.last) / 1000 : 0.016);
+    DUST.last = now;
+    const c = DUST.c;
+    c.setTransform(DUST.dpr, 0, 0, DUST.dpr, 0, 0);
+    c.clearRect(0, 0, DUST.w, DUST.h);
+    const m = metroEl.getBoundingClientRect();
+    const cx = m.left + sparkGeom.cx, cy = m.top + sparkGeom.cy;
+    const spin = (metro.bpm / 60) * 1.15;                 // tours par seconde : suit le tempo
+    DUST.breath = Math.max(0, DUST.breath - dt * 2.2);
+    const br = DUST.breath;
+    const F = 520, H = 230, TILT = 0.62;                  // distance focale, hauteur de l'entonnoir, inclinaison vers l'œil
+    const ct = Math.cos(TILT), st = Math.sin(TILT);
+    const sprite = DUST.sprites[metro.rpm === 45 ? 45 : 33];
+    c.globalCompositeOperation = 'lighter';
+    let alive = 0;
+    for (const p of DUST.ps) {
+      if (DUST.mode === 'on') {
+        p.h += p.v * dt * (0.8 + metro.bpm / 240);
+        if (p.h > 1) Object.assign(p, dustSpawn(false), { px: null, py: null });
+      } else {
+        p.vy += 260 * dt; p.fall -= dt * 0.9;             // la poussière retombe dans le disque
+        if (p.fall <= 0) continue;
+      }
+      alive++;
+      if (p.h < 0) continue;
+      p.th += spin * Math.PI * 2 * dt * (1.35 - 0.7 * p.h);
+      const r = (p.r0 + 150 * Math.pow(p.h, 1.25)) * (1 + 0.28 * br);
+      // repère 3D : l'axe de l'entonnoir monte et penche vers l'œil
+      const x3 = r * Math.cos(p.th), z0 = r * Math.sin(p.th), y0 = -H * p.h;
+      const y3 = y0 * ct - z0 * st, z3 = y0 * st + z0 * ct;
+      const k = F / (F + z3);
+      let sx = cx + x3 * k, sy = cy + y3 * k;
+      if (DUST.mode === 'fall') sy += (p.vy * (1 - p.fall));
+      const depth = Math.min(1.9, k);
+      let a = Math.min(1, p.h * 6) * Math.min(1, (1 - p.h) * 3) * (0.55 + 0.45 * Math.sin(now / 180 + p.tw) ** 2) * (0.7 + 0.5 * br);
+      if (DUST.mode === 'fall') a *= p.fall;
+      const size = p.s * 3.2 * depth * depth * (1 + 0.4 * br);
+      const near = depth > 1.3;                            // grains tout près de l'œil : gros, doux, hors mise au point
+      // traînée de vitesse
+      if (p.px !== null && !near && Math.abs(sx - p.px) + Math.abs(sy - p.py) < 22) {   // traînée courte, même si l'affichage saccade
+        c.strokeStyle = metro.rpm === 45 ? 'rgba(255,190,110,' + (a * 0.35).toFixed(3) + ')' : 'rgba(242,208,138,' + (a * 0.35).toFixed(3) + ')';
+        c.lineWidth = Math.max(0.6, size * 0.32);
+        c.beginPath(); c.moveTo(p.px, p.py); c.lineTo(sx, sy); c.stroke();
+      }
+      c.globalAlpha = near ? a * 0.32 : a;
+      const d = near ? size * 3.2 : size * 2;
+      c.drawImage(sprite, sx - d / 2, sy - d / 2, d, d);
+      c.globalAlpha = 1;
+      p.px = sx; p.py = sy;
+    }
+    c.globalCompositeOperation = 'source-over';
+    if (DUST.mode === 'fall' && !alive) { DUST.mode = 'off'; DUST.ps = []; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, DUST.cv.width, DUST.cv.height); }
+  }
+  dustInit();
+  // Tempo gravé sur le disque pendant le jeu
+  function renderMini() { const e = $('discTempoTxt'); if (e) e.textContent = metro.bpm + ' BPM'; }
   // Pendant la marche, toucher ±1 / ±5 rallume le chiffre le temps de le lire
   let peekTimer = 0;
   function peekTempo() {
@@ -1524,14 +1514,20 @@
     const rx = t.left + t.width / 2 - m.left, ry = t.top + t.height / 2 - m.top;
     recordEl.style.setProperty('--rx', rx + 'px');
     recordEl.style.setProperty('--ry', ry + 'px');
-    // Devise gravée : arc centré sur l'étiquette, juste sous le bouton Démarrer
-    const lab = $('recordLabel');
-    if (lab) {
-      lab.style.setProperty('--rx', rx + 'px');
-      lab.style.setProperty('--ry', ry + 'px');
-      const g = $('mToggle').getBoundingClientRect();
-      const R = Math.round(g.bottom - m.top - ry + 27);
-      $('recordArc').setAttribute('d', 'M ' + (-R) + ' 0 A ' + R + ' ' + R + ' 0 0 0 ' + R + ' 0');
+    const dt = $('discTempo');
+    if (dt) { dt.style.setProperty('--rx', rx + 'px'); dt.style.setProperty('--ry', ry + 'px'); }
+    // Rien ne touche le disque, sur tous les écrans : temps 1-2-3-4 au-dessus de l'anneau doré, commandes en dessous
+    const RING = 172 * 0.85 + 3;
+    const bx = $('beats').getBoundingClientRect(), gb = $('mToggle').getBoundingClientRect();
+    const cyAbs = t.top + t.height / 2;
+    const gapTop = (cyAbs - RING) - bx.bottom, gapBot = gb.top - (cyAbs + RING);
+    const cs = getComputedStyle(metroEl);
+    const curTop = parseFloat(cs.getPropertyValue('--beats-gap')) || 6, curRow = parseFloat(cs.getPropertyValue('--row-gap')) || 84;
+    const wantTop = Math.max(6, Math.round(curTop + (12 - gapTop))), wantRow = Math.max(24, Math.round(curRow + (14 - gapBot)));
+    if (Math.abs(wantTop - curTop) > 1 || Math.abs(wantRow - curRow) > 1) {
+      metroEl.style.setProperty('--beats-gap', wantTop + 'px');
+      metroEl.style.setProperty('--row-gap', wantRow + 'px');
+      return requestAnimationFrame(placeRecord);           // on repositionne après ce réglage
     }
     placeArm(m, rx, ry);
   }
@@ -2087,7 +2083,7 @@
     drawSpark();
     drawSig();
     drawCradle();
-    drawLeo();
+    drawDust();
   }
 
   /* ===================================================================== */
