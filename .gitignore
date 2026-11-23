@@ -1,0 +1,13 @@
+# Dossiers et fichiers de travail (non publiés)
+.claude/
+livraison/
+logo/
+*.zip
+/launch.json
+/icon-180.png
+/icon-192.png
+/icon-512.png
+/icon-512-maskable.png
+/icon.svg
+Thumbs.db
+desktop.ini

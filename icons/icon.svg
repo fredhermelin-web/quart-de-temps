@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Quart de temps : la spirale à quatre centres et le quart doré (de midi à trois heures) -->
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".35" r=".8">
+      <stop offset="0" stop-color="#1E2450"/>
+      <stop offset="1" stop-color="#11142C"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M256 74 A182 182 0 0 1 438 256" fill="none" stroke="#F2D08A" stroke-width="22" stroke-linecap="round"/>
+  <g transform="translate(263.8 263.8) scale(1.95)">
+    <rect x="0" y="0" width="8" height="8" fill="none" stroke="#E3C27F" stroke-width="2.4"/>
+    <path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72" fill="none" stroke="#E3C27F" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
