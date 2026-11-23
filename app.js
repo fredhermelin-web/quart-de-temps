@@ -1424,12 +1424,45 @@
   }
   function dustSpawn(fromLabel) {
     // h : hauteur dans l'entonnoir (0 = centre du disque, 1 = sommet) ; th : angle ; tw : scintillement
-    return { h: fromLabel ? Math.random() * 0.15 : 0, th: Math.random() * Math.PI * 2, r0: 4 + Math.random() * (fromLabel ? 60 : 14),
-      v: 0.24 + Math.random() * 0.26, s: 0.6 + Math.random() * 0.9, tw: Math.random() * 6.28, px: null, py: null, fall: 0, vy: 0 };
+    return { h: fromLabel ? Math.random() * 0.15 : 0, th: Math.random() * Math.PI * 2, r0: 3 + Math.random() * (fromLabel ? 30 : 9),
+      v: 0.2 + Math.random() * 0.22, s: 0.5 + Math.random() * 0.7, tw: Math.random() * 6.28, px: null, py: null, fall: 0, vy: 0 };
+  }
+  /* Petite galaxie spirale d'or au cœur du disque (vue un peu inclinée) : la tornade naît de son centre.
+     Elle apparaît au Play, tourne lentement, puis s'efface à l'arrêt. */
+  const GAL = { stars: [], vis: 0, rot: 0 };
+  (function makeGalaxy() {
+    for (let i = 0; i < 260; i++) {
+      const arm = i % 3, t = Math.random();
+      const r = 6 + 50 * Math.pow(t, 0.8);
+      const th = arm * (Math.PI * 2 / 3) + t * 3.4 + (Math.random() - 0.5) * (0.55 - 0.3 * t);
+      GAL.stars.push({ r: r + (Math.random() - 0.5) * 5, th, s: 0.35 + Math.random() * 0.75, tw: Math.random() * 6.28 });
+    }
+  })();
+  function drawGalaxy(c, cx, cy, now, dt, sprite, br) {
+    GAL.vis = Math.max(0, Math.min(1, GAL.vis + (DUST.mode === 'on' ? dt * 1.4 : -dt * 1.6)));
+    if (GAL.vis <= 0) return;
+    GAL.rot += dt * (0.25 + metro.bpm / 900);
+    const flat = 0.56;                                   // inclinaison : un disque vu de biais
+    // cœur lumineux
+    const core = c.createRadialGradient(cx, cy, 0, cx, cy, 22);
+    core.addColorStop(0, 'rgba(255,240,205,' + (0.55 * GAL.vis * (1 + 0.4 * br)).toFixed(3) + ')');
+    core.addColorStop(1, 'rgba(242,208,138,0)');
+    c.fillStyle = core;
+    c.beginPath(); c.ellipse(cx, cy, 22, 22 * flat, 0, 0, Math.PI * 2); c.fill();
+    for (const st of GAL.stars) {
+      const th = st.th + GAL.rot * (1.2 - st.r / 80);
+      const x = cx + st.r * Math.cos(th), y = cy + st.r * Math.sin(th) * flat;
+      const a = GAL.vis * (0.35 + 0.65 * Math.sin(now / 400 + st.tw) ** 2) * (1 - st.r / 70);
+      if (a <= 0.02) continue;
+      const d = st.s * 3.4;
+      c.globalAlpha = a;
+      c.drawImage(sprite, x - d / 2, y - d / 2, d, d);
+    }
+    c.globalAlpha = 1;
   }
   function dustStart() {
     const lite = document.body.classList.contains('lite');
-    const n = lite ? 90 : 240;
+    const n = lite ? 160 : 420;
     DUST.ps = [];
     for (let i = 0; i < n; i++) { const p = dustSpawn(true); p.h = -Math.random() * 0.9; DUST.ps.push(p); }   // le chiffre se dissout : les grains partent de l'étiquette par vagues
     DUST.mode = 'on';
@@ -1451,13 +1484,17 @@
     c.clearRect(0, 0, DUST.w, DUST.h);
     const m = metroEl.getBoundingClientRect();
     const cx = m.left + sparkGeom.cx, cy = m.top + sparkGeom.cy;
-    const spin = (metro.bpm / 60) * 1.15;                 // tours par seconde : suit le tempo
+    const spin = (metro.bpm / 60) * 0.75;                 // tours par seconde : suit le tempo, en douceur
     DUST.breath = Math.max(0, DUST.breath - dt * 2.2);
     const br = DUST.breath;
-    const F = 520, H = 230, TILT = 0.62;                  // distance focale, hauteur de l'entonnoir, inclinaison vers l'œil
+    const F = 700, H = 120, TILT = 0.42;                  // distance focale, hauteur de la tornade, légère inclinaison vers l'œil
+    const RING = 172 * 0.85 - 4;                          // le tourbillon reste dans l'anneau doré
     const ct = Math.cos(TILT), st = Math.sin(TILT);
     const sprite = DUST.sprites[metro.rpm === 45 ? 45 : 33];
+    c.save();
+    c.beginPath(); c.arc(cx, cy, RING, 0, Math.PI * 2); c.clip();
     c.globalCompositeOperation = 'lighter';
+    drawGalaxy(c, cx, cy, now, dt, sprite, br);
     let alive = 0;
     for (const p of DUST.ps) {
       if (DUST.mode === 'on') {
@@ -1470,7 +1507,7 @@
       alive++;
       if (p.h < 0) continue;
       p.th += spin * Math.PI * 2 * dt * (1.35 - 0.7 * p.h);
-      const r = (p.r0 + 150 * Math.pow(p.h, 1.25)) * (1 + 0.28 * br);
+      const r = (p.r0 + 62 * Math.pow(p.h, 1.35)) * (1 + 0.22 * br);
       // repère 3D : l'axe de l'entonnoir monte et penche vers l'œil
       const x3 = r * Math.cos(p.th), z0 = r * Math.sin(p.th), y0 = -H * p.h;
       const y3 = y0 * ct - z0 * st, z3 = y0 * st + z0 * ct;
@@ -1480,22 +1517,23 @@
       const depth = Math.min(1.9, k);
       let a = Math.min(1, p.h * 6) * Math.min(1, (1 - p.h) * 3) * (0.55 + 0.45 * Math.sin(now / 180 + p.tw) ** 2) * (0.7 + 0.5 * br);
       if (DUST.mode === 'fall') a *= p.fall;
-      const size = p.s * 3.2 * depth * depth * (1 + 0.4 * br);
-      const near = depth > 1.3;                            // grains tout près de l'œil : gros, doux, hors mise au point
+      const size = p.s * 2.6 * depth * depth * (1 + 0.35 * br);
+      const near = depth > 1.16;                           // grains les plus proches de l'œil : doux, hors mise au point
       // traînée de vitesse
       if (p.px !== null && !near && Math.abs(sx - p.px) + Math.abs(sy - p.py) < 22) {   // traînée courte, même si l'affichage saccade
         c.strokeStyle = metro.rpm === 45 ? 'rgba(255,190,110,' + (a * 0.35).toFixed(3) + ')' : 'rgba(242,208,138,' + (a * 0.35).toFixed(3) + ')';
         c.lineWidth = Math.max(0.6, size * 0.32);
         c.beginPath(); c.moveTo(p.px, p.py); c.lineTo(sx, sy); c.stroke();
       }
-      c.globalAlpha = near ? a * 0.32 : a;
-      const d = near ? size * 3.2 : size * 2;
+      c.globalAlpha = near ? a * 0.4 : a;
+      const d = near ? size * 2.6 : size * 2;
       c.drawImage(sprite, sx - d / 2, sy - d / 2, d, d);
       c.globalAlpha = 1;
       p.px = sx; p.py = sy;
     }
     c.globalCompositeOperation = 'source-over';
-    if (DUST.mode === 'fall' && !alive) { DUST.mode = 'off'; DUST.ps = []; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, DUST.cv.width, DUST.cv.height); }
+    c.restore();
+    if (DUST.mode === 'fall' && !alive && GAL.vis <= 0) { DUST.mode = 'off'; DUST.ps = []; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, DUST.cv.width, DUST.cv.height); }
   }
   dustInit();
   // Tempo gravé sur le disque pendant le jeu

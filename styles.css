@@ -2181,7 +2181,7 @@ body.lite .mctl .go { animation: none; }
 /* Tempo gravé en arc sur le disque, au-dessus du Play */
 .disc-tempo { position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 400px; height: 400px; margin: -200px 0 0 -200px; z-index: 0; pointer-events: none; overflow: visible; opacity: 0; transition: opacity .6s ease .35s; }
 .metro.running .disc-tempo { opacity: 1; }
-.disc-tempo text { font: 600 15px var(--f-num); letter-spacing: .2em; fill: #F2D08A; filter: drop-shadow(0 0 5px rgba(255, 196, 110, .55)); }
+.disc-tempo text { font: 600 13px var(--f-num); letter-spacing: .22em; fill: #E3C27F; fill-opacity: .88; filter: drop-shadow(0 0 2.5px rgba(255, 196, 110, .3)); }
 .metro[data-rpm="45"] .disc-tempo text { fill: #FFCB8A; }
 /* Calque du tourbillon de poussière d'or */
 .dust { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 30; pointer-events: none; }
