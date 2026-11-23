@@ -1717,8 +1717,8 @@
     }
     // Le métronome tient dans l'écran dès l'ouverture : si les sons dépassent le bas, le disque se réduit un peu
     if (fitTries < 6) {
-      const snd = document.querySelector('.metro .sounds').getBoundingClientRect();
-      const excess = (snd.bottom + window.scrollY) + 10 - window.innerHeight;
+      const snd = metroEl.getBoundingClientRect();          // tout le cadre, biseau compris
+      const excess = (snd.bottom + window.scrollY) + 6 - window.innerHeight;
       let want = DISC;
       if (excess > 2) want = Math.max(0.62, DISC - excess / 344);
       else if (excess < -24 && DISC < 0.85) want = Math.min(0.85, DISC + (-excess - 12) / 344);
@@ -2506,14 +2506,15 @@
   volBtn.addEventListener('click', () => volOpen(volPop.hidden));
   $('mVol').addEventListener('pointerdown', () => clearTimeout(volT));
   $('mVol').addEventListener('pointerup', volArm);
+  $('mVol').addEventListener('pointercancel', volArm);
   document.addEventListener('pointerdown', (e) => { if (!volPop.hidden && !e.target.closest('.vol-anchor')) volOpen(false); });
 
   /* Cadres biseautés : huit facettes taillées comme une pierre, éclairées d'en haut à gauche */
   (function bevels() {
     const NS = 'http://www.w3.org/2000/svg', C = 16, B = 7, K = C + B * (Math.SQRT2 - 1);
     // couleur de chaque facette : haut, haut-droit, droite, bas-droit, bas, bas-gauche, gauche, haut-gauche
-    const FACE = ['#E9CB8A', '#A9874B', '#6E5730', '#3B2E22', '#2A2342', '#5E4A2E', '#C39D5A', '#F6DFA6'];
-    const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const f = (v) => Math.max(0, Math.min(255, Math.round(v * k))); return 'rgb(' + f(n >> 16) + ',' + f((n >> 8) & 255) + ',' + f(n & 255) + ')'; };
+    // opacité du blanc de chaque facette : haut, haut-droit, droite, bas-droit, bas, bas-gauche, gauche, haut-gauche
+    const FACE = [0.42, 0.2, 0.1, 0.05, 0.04, 0.12, 0.3, 0.58];
     document.querySelectorAll('.deck').forEach((deck, di) => {
       const svg = document.createElementNS(NS, 'svg');
       svg.setAttribute('class', 'deck-bevel');
@@ -2531,7 +2532,7 @@
           const mo = [(O[i][0] + O[j][0]) / 2, (O[i][1] + O[j][1]) / 2], mi = [(I[i][0] + I[j][0]) / 2, (I[i][1] + I[j][1]) / 2];
           // la facette « monte » : plus sombre au bord extérieur, plus claire vers l'arête intérieure
           defs += '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="' + mo[0] + '" y1="' + mo[1] + '" x2="' + mi[0] + '" y2="' + mi[1] + '">' +
-            '<stop offset="0" stop-color="' + shade(FACE[i], 0.62) + '"/><stop offset="1" stop-color="' + shade(FACE[i], 1.08) + '"/></linearGradient>';
+            '<stop offset="0" stop-color="#EAF4FF" stop-opacity="' + (FACE[i] * 0.45).toFixed(3) + '"/><stop offset=".7" stop-color="#F4FAFF" stop-opacity="' + FACE[i] + '"/><stop offset="1" stop-color="#BFEADB" stop-opacity="' + (FACE[i] * 0.8 + 0.06).toFixed(3) + '"/></linearGradient>';
           body += '<polygon points="' + [O[i], O[j], I[j], I[i]].map((q) => q.join(',')).join(' ') + '" fill="url(#' + id + ')"/>';
         }
         const ring = (P) => P.map((q) => q.join(',')).join(' ');
