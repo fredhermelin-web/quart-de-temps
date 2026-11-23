@@ -1561,29 +1561,9 @@
       b.setAttribute('aria-label', 'Temps ' + (i + 1) + ' : ' + BEAT_NAMES[st] + '. Touche pour changer.');
     });
   }
-  /* Aide aux temps : affichée aux deux premières ouvertures seulement, quelques secondes,
-     effacée dès qu'on touche un temps ; ensuite plus jamais */
-  const beatsTip = $('beatsTip');
-  let beatsTipTimer = 0;
-  function hideBeatsTip(forever) {
-    clearTimeout(beatsTipTimer);
-    if (forever) store.set('beatsTip', 2);
-    if (!beatsTip || beatsTip.hidden) return;
-    beatsTip.classList.remove('show');
-    setTimeout(() => { beatsTip.hidden = true; }, 650);
-  }
-  (function showBeatsTip() {
-    const seen = +store.get('beatsTip', 0) || 0;
-    if (!beatsTip || seen >= 2) return;
-    store.set('beatsTip', seen + 1);
-    beatsTip.hidden = false;
-    setTimeout(() => beatsTip.classList.add('show'), 400);
-    beatsTipTimer = setTimeout(() => hideBeatsTip(false), 6500);
-  })();
   beatsBox.addEventListener('click', (e) => {
     const b = e.target.closest('.beat');
     if (!b) return;
-    hideBeatsTip(true);
     const i = +b.dataset.i;
     const st = metro.pattern[i];
     metro.pattern[i] = st === 1 ? 2 : st === 2 ? 0 : 1;
@@ -2120,7 +2100,7 @@
   setRpm(metro.rpm, false);
   setSound(metro.sound, false);
   // Nettoyage des anciennes mémoires de réglages (ils ne sont plus restaurés)
-  ['bpm', 'sub', 'pattern', 'meter'].forEach((k) => { try { localStorage.removeItem('atelier.' + k); } catch (e) { /* ignoré */ } });
+  ['bpm', 'sub', 'pattern', 'meter', 'beatsTip'].forEach((k) => { try { localStorage.removeItem('atelier.' + k); } catch (e) { /* ignoré */ } });
   $('knobClose').setAttribute('aria-disabled', 'true');
   renderSpeedWitness();
   renderTransport();
