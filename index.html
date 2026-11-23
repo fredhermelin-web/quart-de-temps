@@ -54,6 +54,8 @@
         <span class="speed-witness" id="speedWitness" hidden></span>
         <!-- Aide discrète, une seule fois, au premier morceau importé -->
         <span class="knob-hint" id="knobHint" hidden>Vitesse</span>
+        <!-- Repère gravé : ▾ ouvrir (déplier vers le bas) -->
+        <svg class="knob-mark mark-open" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1 5 5 9 1"/></svg>
       </span>
       <span class="radio-label" id="radioLabel" aria-hidden="true"></span>
       <!-- Médaillon de marque : la spirale à quatre centres et le quart doré, avec un fin reflet de verre -->
@@ -69,9 +71,13 @@
         </button>
       </span>
       <span class="radio-label" aria-hidden="true"></span>
-      <button type="button" class="knob" id="knobClose" aria-controls="tempoWrap" aria-label="Fermer le réglage de vitesse du morceau">
-        <svg viewBox="-100 -100 200 200" aria-hidden="true"><path class="knob-spiral" d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64"/><line class="knob-notch" x1="0" y1="-88" x2="0" y2="-70"/></svg>
-      </button>
+      <span class="knob-wrap">
+        <button type="button" class="knob" id="knobClose" aria-controls="tempoWrap" aria-label="Fermer le réglage de vitesse du morceau">
+          <svg viewBox="-100 -100 200 200" aria-hidden="true"><path class="knob-spiral" d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64"/><line class="knob-notch" x1="0" y1="-88" x2="0" y2="-70"/></svg>
+        </button>
+        <!-- Repère gravé : ▴ fermer (replier) -->
+        <svg class="knob-mark mark-close" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 5 5 1 9 5"/></svg>
+      </span>
     </div>
     <div class="track-row">
       <div class="track-line">
@@ -102,6 +108,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14.5V17a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.5"/></svg>
           Importer un morceau
         </button>
+        <p class="empty-lead">Ralentis ou accélère, sans changer la note</p>
         <p class="empty-note">MP3 · WAV · M4A</p>
         <span class="tsf-cloth" aria-hidden="true"></span>
         <span class="tsf-plate" aria-hidden="true">QUART DE TEMPS</span>

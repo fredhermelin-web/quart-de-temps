@@ -571,6 +571,7 @@ body.has-track .track-row { display: flex; }
 .cta svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
 .cta:active { transform: translateY(1px); filter: brightness(.96); }
 .empty-note { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--ice); opacity: .8; }
+.empty-lead { margin: 0 0 -4px; padding: 0 12px; text-align: center; font: italic 500 15px/1.25 "EB Garamond", Garamond, serif; letter-spacing: .02em; color: #F3E6C8; opacity: .92; }
 
 .wave-loading { color: var(--dim); font-size: 13px; font-weight: 600; flex-direction: row; gap: 12px; }
 .eq { display: flex; align-items: center; gap: 3px; height: 26px; }
@@ -598,7 +599,7 @@ body.has-track .track-row { display: flex; }
 
 /* Haut du poste : deux boutons TSF gravés de la spirale */
 /* Barre du poste : bouton gauche · VITESSE · médaillon spirale · témoin · bouton droit */
-.radio-top { display: grid; grid-template-columns: 38px 1fr 38px 1fr 38px; align-items: center; gap: 8px; min-height: 42px; margin-bottom: -2px; }
+.radio-top { display: grid; grid-template-columns: 38px 1fr 38px 1fr 38px; align-items: center; gap: 8px; min-height: 42px; margin-bottom: 5px; }
 .radio-label { min-width: 0; }
 .knob-wrap { position: relative; width: 38px; height: 38px; }
 .knob {
@@ -619,6 +620,9 @@ body.has-track .track-row { display: flex; }
 .knob-spiral { fill: none; stroke: #4A3412; stroke-width: 9; stroke-linecap: round; opacity: .75; }
 .knob-notch { stroke: #2B1E08; stroke-width: 14; stroke-linecap: round; }
 .knob[aria-disabled="true"] { opacity: .45; }
+/* Repères gravés sous les boutons : ▾ ouvrir · ▴ fermer ; celui qui sert maintenant s'allume */
+.knob-mark { position: absolute; left: 50%; top: 44px; width: 10px; height: 6px; margin-left: -5px; fill: none; stroke: #D9B26A; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .35; transition: opacity .4s, filter .4s; pointer-events: none; }
+.player:not(.tempo-open) .mark-open, .player.tempo-open .mark-close { opacity: .95; filter: drop-shadow(0 0 3px rgba(242, 208, 138, .7)); }
 #knobOpen.turned { transform: rotate(90deg); }
 #knobClose.turned { transform: rotate(-90deg); }
 /* Vitesse modifiée volet fermé : le bouton gauche s'allume de la couleur de la zone */

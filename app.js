@@ -803,6 +803,7 @@
     }
     tempoOpen = open;
     $('tempoWrap').classList.toggle('open', open);
+    player.classList.toggle('tempo-open', open);
     $('knobOpen').classList.toggle('turned', open);
     $('knobOpen').setAttribute('aria-expanded', String(open));
     $('knobOpen').setAttribute('aria-disabled', String(open));
