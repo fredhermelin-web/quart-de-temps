@@ -1251,6 +1251,15 @@
     const rx = t.left + t.width / 2 - m.left, ry = t.top + t.height / 2 - m.top;
     recordEl.style.setProperty('--rx', rx + 'px');
     recordEl.style.setProperty('--ry', ry + 'px');
+    // Devise gravée : arc centré sur l'étiquette, juste sous le bouton Démarrer
+    const lab = $('recordLabel');
+    if (lab) {
+      lab.style.setProperty('--rx', rx + 'px');
+      lab.style.setProperty('--ry', ry + 'px');
+      const g = $('mToggle').getBoundingClientRect();
+      const R = Math.round(g.bottom - m.top - ry + 27);
+      $('recordArc').setAttribute('d', 'M ' + (-R) + ' 0 A ' + R + ' ' + R + ' 0 0 0 ' + R + ' 0');
+    }
     placeArm(m, rx, ry);
   }
   /* Bras : pivot en haut à droite, rentré dans le pupitre ; en lecture, la tête se pose sur les

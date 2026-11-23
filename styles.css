@@ -2033,9 +2033,19 @@ input.metro-slider::-moz-range-thumb, #mVol::-moz-range-thumb {
   .figure .fig-ic svg { width: 30px; }
 }
 
-/* Devise du métronome : remontée en haut du cadre, juste à droite du pendule */
-.metro-devise { position: absolute; left: 58px; top: 2px; font-size: 14px; color: #E3C27F; pointer-events: none; }
-@media (max-width: 430px) { .metro-devise { left: 54px; font-size: 13.5px; } }
+/* Titre du métronome : plein centre, entre deux filets laiton à losange */
+.metro-plaque { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 -6px; font: 600 15px/1 "EB Garamond", Garamond, serif; letter-spacing: .34em; text-transform: uppercase; }
+.metro-plaque span { padding-left: .34em; background: linear-gradient(180deg, #FBE3A6, #E3BC6C 55%, #B98A3E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.metro-plaque i { width: 52px; height: 1px; background: linear-gradient(90deg, rgba(217, 178, 106, 0), #D9B26A); }
+.metro-plaque i:last-child { background: linear-gradient(90deg, #D9B26A, rgba(217, 178, 106, 0)); }
+.metro-plaque b { width: 5px; height: 5px; background: #E3C27F; transform: rotate(45deg); flex: none; }
+/* En-tête : pendule et Mute à gauche ; 33/45 · mesure · figure groupés à droite */
+.metro-head { justify-content: flex-start; }
+.metro-head .rpm { margin-left: auto; }
+/* Devise gravée sur le vinyle */
+.record-label { position: absolute; left: var(--rx, 50%); top: var(--ry, 50%); width: 640px; height: 640px; margin: -320px 0 0 -320px; z-index: -1; pointer-events: none; overflow: visible; }
+.record-label text { font: italic 500 14px "EB Garamond", Garamond, serif; letter-spacing: .14em; fill: rgba(241, 226, 191, .5); }
+.metro[data-rpm="45"] .record-label text { fill: rgba(220, 240, 255, .5); }
 
 /* Bouton Démarrer : un peu plus bas, détaché du vinyle par un anneau sombre et un liseré laiton */
 .go { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 6px rgba(12, 15, 36, .62), 0 0 0 7px rgba(217, 178, 106, .28), 0 10px 22px -8px rgba(0, 0, 0, .85); }
