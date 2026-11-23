@@ -116,7 +116,7 @@
     const src = ctx.createBufferSource();
     if (smp) {
       let rate = 1, lvl = 0.88;
-      if (!isBeat) lvl = 0.52;
+      if (!isBeat) { lvl = 0.46; rate = 0.89; } // subdivision : un ton plus grave, un peu plus douce
       else if (st === 2) { rate = first ? 1.12 : 1.05; lvl = 1; }
       src.buffer = smp;
       src.playbackRate.value = rate;
@@ -1029,7 +1029,7 @@
     return {
       one: synth(1760, 2.76, 38, 1.0, 0.9, 0.12),
       beat: synth(1240, 2.76, 52, 0.88, 0.6, 0.09),
-      sub: synth(1240, 2.76, 64, 0.56, 0.35, 0.07),
+      sub: synth(1100, 2.76, 64, 0.5, 0.35, 0.07), // un ton plus grave que le temps, un peu plus doux
       // accent d'un autre temps que le 1 : marqué, mais distinct du 1
       acc: synth(1480, 2.76, 44, 0.95, 0.75, 0.11)
     };
