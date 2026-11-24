@@ -1393,7 +1393,7 @@
 
   /* Le vinyle : centré sur l'étiquette Tempo, il démarre et s'arrête comme une platine */
   const recordEl = $('record'), recordDisc = $('recordDisc'), metroEl = $('metro'), tempoWinEl = $('tempoWin');
-  let DISC = 0.85, fitTries = 0;      // échelle du disque : 0,85 au plus, réduite si l'écran est trop court
+  let DISC = 0.85, fitTries = 0, fitLocked = false, fitW = window.innerWidth;      // échelle du disque : 0,85 au plus, réduite si l'écran est trop court
 
   /* Le tourbillon de poussière d'or (hommage aux tourbillons d'eau de Léonard).
      Au Play, le chiffre se dissout et des grains de lumière montent du centre du disque en entonnoir,
@@ -1417,7 +1417,9 @@
     DUST.sprites = { 33: dustSprite('242,208,138'), 45: dustSprite('255,190,110') };
   }
   function dustSize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1), w = window.innerWidth, h = window.innerHeight;
+    // le calque vit dans le cadre du métronome : il défile avec le disque, d'un seul bloc, sans retard ni étirement
+    if (DUST.cv.parentNode !== metroEl) metroEl.appendChild(DUST.cv);
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = metroEl.offsetWidth, h = metroEl.offsetHeight;
     if (DUST.w !== w || DUST.h !== h || DUST.dpr !== dpr) {
       DUST.w = w; DUST.h = h; DUST.dpr = dpr;
       DUST.cv.width = Math.round(w * dpr); DUST.cv.height = Math.round(h * dpr);
@@ -1647,8 +1649,7 @@
     const c = DUST.c;
     c.setTransform(DUST.dpr, 0, 0, DUST.dpr, 0, 0);
     c.clearRect(0, 0, DUST.w, DUST.h);
-    const m = metroEl.getBoundingClientRect();
-    const cx = m.left + sparkGeom.cx, cy = m.top + sparkGeom.cy;
+    const cx = sparkGeom.cx, cy = sparkGeom.cy;           // repère du cadre : plus besoin de suivre le défilement
     const spin = (metro.bpm / 60) * 0.75;                 // tours par seconde : suit le tempo, en douceur
     DUST.breath = Math.max(0, DUST.breath - dt * 2.2);
     const br = DUST.breath;
@@ -1766,7 +1767,7 @@
         root.classList.remove('intro');
         [wm, logo, bg].forEach((el) => el.getAnimations().forEach((x) => x.cancel()));
         parts.forEach((el) => el.getAnimations().forEach((x) => x.cancel()));
-        fitTries = 0;
+        fitTries = 0; fitLocked = false;
         placeRecord();
       };
       if (fast) { end(); return; }
@@ -1825,7 +1826,7 @@
       return requestAnimationFrame(placeRecord);           // on repositionne après ce réglage
     }
     // Le métronome tient dans l'écran dès l'ouverture : si les sons dépassent le bas, le disque se réduit un peu
-    if (fitTries < 6) {
+    if (fitTries < 6 && !fitLocked) {
       const snd = metroEl.getBoundingClientRect();          // tout le cadre, biseau compris
       const excess = (snd.bottom + window.scrollY) + 6 - window.innerHeight;
       let want = DISC;
@@ -1836,6 +1837,7 @@
         metroEl.style.setProperty('--disc', DISC.toFixed(3));
         return requestAnimationFrame(placeRecord);
       }
+      fitLocked = true;                                     // calé : le défilement (barre d'adresse qui va et vient) ne le change plus
     }
     placeArm(m, rx, ry);
   }
@@ -1885,7 +1887,10 @@
     sizeSpark();
   }
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeRecord)).observe(metroEl);
-  window.addEventListener('resize', () => { fitTries = 0; placeRecord(); });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== fitW) { fitW = window.innerWidth; fitTries = 0; fitLocked = false; }   // seule une vraie rotation relance l'ajustement
+    placeRecord();
+  });
   let recordAnim = null, recordRate = 0, recordTarget = 0, recordRaf = 0;
   function spinRecord(on) {
     recordTarget = on ? 1 : 0;

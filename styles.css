@@ -2291,3 +2291,6 @@ html.intro .mini-mark { opacity: 0; }
 /* ombre douce du disque sur le haut de la pochette */
 .sleeve[aria-pressed="true"] .cover::before { left: 4%; right: 4%; height: 12px; border-radius: 0 0 50% 50%; background: radial-gradient(60% 100% at 50% 0, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0)); }
 @media (prefers-reduced-motion: reduce) { .sleeve[aria-pressed="true"] .vin { animation: none; } }
+
+/* le calque de la galaxie est rangé dans le cadre du métronome : il suit le disque quand on fait défiler */
+.metro > .dust { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 30; pointer-events: none; }
