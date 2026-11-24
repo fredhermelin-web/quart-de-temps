@@ -1627,12 +1627,9 @@
     c.globalAlpha = 1;
   }
   function dustStart() {
-    const lite = document.body.classList.contains('lite');
-    const n = lite ? 160 : 420;
-    DUST.ps = [];
-    for (let i = 0; i < n; i++) { const p = dustSpawn(true); p.h = -Math.random() * 0.9; DUST.ps.push(p); }   // le chiffre se dissout : les grains partent de l'étiquette par vagues
+    DUST.ps = [];                                          // plus de tornade au Play : la galaxie apparaît seule
     DUST.mode = 'on';
-    DUST.t0 = performance.now();                           // la tornade ne vit qu'un instant
+    DUST.t0 = performance.now();
     COMET.playT0 = DUST.t0; COMET.stage = 0; COMET.t0 = 0;  // l'histoire de la comète recommence à chaque Play
   }
   function dustStop() {
