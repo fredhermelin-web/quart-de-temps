@@ -2479,3 +2479,8 @@ html { scroll-snap-type: y mandatory; }
 .pager button::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: rgba(233, 211, 160, .32); transition: background .2s, transform .2s; }
 .pager button.on::before { background: #F0D08A; transform: scale(1.5); box-shadow: 0 0 6px rgba(240, 208, 138, .8); }
 .pageB .player { margin-top: clamp(24px, 12vh, 110px); margin-bottom: auto; }
+
+/* v64 : calage de page (rebond bref, filet doré qui s'éclaire) */
+@keyframes dock { 0% { transform: translateY(-8px) scale(1.012); } 36% { transform: translateY(2.5px) scale(.998); } 62% { transform: translateY(-1px); } 100% { transform: none; } }
+@keyframes dockRim { 0% { outline-color: rgba(255, 226, 160, .85); } 100% { outline-color: rgba(217, 178, 106, .17); } }
+.dock { animation: dock .44s cubic-bezier(.2, .8, .3, 1) both, dockRim .7s ease-out both; }

@@ -1665,7 +1665,9 @@
     DUST.mode = 'fall';
     DUST.ps.forEach((p) => { p.fall = 1; p.vy = -20 - Math.random() * 40; });
   }
+  const UIF = { drag: false, skip: false };               // pendant le réglage du tempo, les animations de fond tournent à demi-cadence
   function drawDust() {
+    if (UIF.drag && (UIF.skip = !UIF.skip)) return;
     const on = metro.running && !reduceMotion;
     if (on !== DUST.was) { DUST.was = on; if (on) dustStart(); else if (DUST.mode === 'on') dustStop(); }
     if (!DUST.c) return;
@@ -2006,13 +2008,13 @@
   /* Nom du mouvement, en italien, affiché dans la bulle pendant qu'on règle */
   function tempoName(b) { return b < 40 ? 'Grave' : b < 60 ? 'Largo' : b < 76 ? 'Adagio' : b < 108 ? 'Andante' : b < 120 ? 'Moderato' : b < 168 ? 'Allegro' : b < 200 ? 'Presto' : 'Prestissimo'; }
   const REF_BPM = 121, REF_POS = bpmToPos(REF_BPM);          // repère de la réglette : le tempo « de départ »
-  let stepFlags = null, paintQ = 0;
+  let stepFlags = null, paintQ = 0, dragPos = null;
   /* Les chiffres, couleurs et le rapporteur ne sont redessinés qu'une fois par image d'écran :
      la réglette reste fluide même quand le doigt envoie beaucoup de mesures. */
   function schedulePaint() { if (!paintQ) paintQ = requestAnimationFrame(paintSlider); }
   function paintSlider() {
-    paintQ = 0;
-    const s = $('mSlider'), pos = bpmToPos(metro.bpm), atRef = metro.bpm === REF_BPM;
+    cancelAnimationFrame(paintQ); paintQ = 0;
+    const s = $('mSlider'), pos = dragPos != null ? dragPos : bpmToPos(metro.bpm), atRef = metro.bpm === REF_BPM;
     if (Math.abs(+s.value - pos) > 0.5) s.value = Math.round(pos);
     s.style.setProperty('--hi', 'calc(12px + (100% - 24px) * ' + (pos / 1000).toFixed(4) + ')');
     $('mSliderMark').classList.toggle('lit', atRef);
@@ -2577,9 +2579,35 @@
   (function pager() {
     const nav = $('pager'); if (!nav) return;
     const dots = nav.querySelectorAll('button');
-    let q = 0;
-    const upd = () => { q = 0; const inB = $('pageB').getBoundingClientRect().top < window.innerHeight * 0.5; dots[0].classList.toggle('on', !inB); dots[1].classList.toggle('on', inB); };
-    window.addEventListener('scroll', () => { if (!q) q = requestAnimationFrame(upd); }, { passive: true });
+    let q = 0, cur = 'A', landed = 'A', endT = 0;
+    const where = () => $('pageB').getBoundingClientRect().top < window.innerHeight * 0.5 ? 'B' : 'A';
+    const upd = () => {
+      q = 0;
+      const w = where();
+      dots[0].classList.toggle('on', w === 'A'); dots[1].classList.toggle('on', w === 'B');
+      if (w !== cur) {
+        cur = w;
+        // Chaque page est un monde à part : en changeant de page, l'autre se tait
+        if (w === 'B' && metro.running) stopMetro();
+        if (w === 'A' && !audio.paused) audio.pause();
+      }
+    };
+    // Calage : quand la page s'immobilise, elle se pose avec un petit rebond (et une courte vibration sur Android)
+    const dock = () => {
+      const w = where();
+      if (w === landed) return;
+      landed = w;
+      if (reduceMotion) return;
+      const el = w === 'A' ? $('metro') : $('player');
+      el.classList.remove('dock'); void el.offsetWidth; el.classList.add('dock');
+      setTimeout(() => el.classList.remove('dock'), 700);
+      if (!isIOS && navigator.vibrate) { try { navigator.vibrate(16); } catch (err) { /* ignoré */ } }
+    };
+    window.addEventListener('scroll', () => {
+      if (!q) q = requestAnimationFrame(upd);
+      clearTimeout(endT); endT = setTimeout(dock, 140);     // arrêt du défilement (repli si « scrollend » n'existe pas)
+    }, { passive: true });
+    if ('onscrollend' in window) window.addEventListener('scrollend', () => { clearTimeout(endT); dock(); });
     dots.forEach((b) => b.addEventListener('click', () => $(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })));
     upd();
   })();
@@ -2625,7 +2653,7 @@
       if (r && !wasRef && navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* ignoré */ } }
       wasRef = r;
     };
-    const place = (p) => { setMetroBpm(posToBpm(p)); fx(); };
+    const place = (p) => { dragPos = p; setMetroBpm(posToBpm(p)); fx(); paintSlider(); };
     // Retour en douceur au tempo de départ (121)
     function glideTo(target) {
       cancelAnimationFrame(glideId);
@@ -2643,7 +2671,7 @@
       cancelAnimationFrame(glideId);
       D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0; D.sx = e.clientX; D.t0 = e.timeStamp; D.moved = false;
       try { hit.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
-      wasRef = metro.bpm === REF_BPM;
+      wasRef = metro.bpm === REF_BPM; UIF.drag = true;
       protGeo();
       if (PR) PR.root.classList.add('on');
       place(posAt(e.clientX));
@@ -2652,16 +2680,11 @@
     hit.addEventListener('pointermove', (e) => {
       if (e.pointerId !== D.id) return;
       if (Math.abs(e.clientX - D.sx) > 8) D.moved = true;
-      const dx = e.clientX - D.x, dtm = Math.max(1, e.timeStamp - D.t);
-      D.x = e.clientX; D.t = e.timeStamp;
-      if (Math.abs(dx) / dtm < 0.12) {                      // geste lent : réglage fin
-        D.acc += dx;
-        while (Math.abs(D.acc) >= 7) { const sg = Math.sign(D.acc); setMetroBpm(metro.bpm + sg); fx(); D.acc -= sg * 7; }
-      } else { D.acc = 0; place(posAt(e.clientX)); }
+      place(posAt(e.clientX));                              // le curseur suit le doigt, sans frein
     });
     const end = (e) => {
       if (e.pointerId !== D.id) return;
-      D.id = null;
+      D.id = null; dragPos = null; UIF.drag = false; schedulePaint();
       if (PR) PR.root.classList.remove('on');
       // simple tape sur le repère du milieu : retour au tempo de départ
       const r = inp.getBoundingClientRect();
