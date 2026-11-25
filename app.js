@@ -2379,7 +2379,44 @@
     setTimeout(() => { if (!carnet.classList.contains('open')) carnet.hidden = true; }, reduceMotion ? 0 : 320);
     if (carnetReturn && carnetReturn.focus) carnetReturn.focus({ preventScroll: true });
   }
-  $('sigEmblem').addEventListener('click', openCarnet);
+  /* Mode d'emploi derrière la spirale : les étapes d'un iPhone ou d'un Android, jamais les deux à la fois */
+  const guide = $('guide'), guideSteps = $('guideSteps');
+  let guideOS = isIOS ? 'ios' : 'android', guideReturn = null;
+  const GUIDE = {
+    ios: { who: 'Sur iPhone', other: 'Je suis sur Android', steps: [
+      'Dans WhatsApp, touche le morceau reçu, puis <b>Partager</b> et <b>Enregistrer dans Fichiers</b>.',
+      'Ici, touche <b>Importer un morceau</b> et choisis-le dans Fichiers.',
+      'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
+      'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'] },
+    android: { who: 'Sur Android', other: 'Je suis sur iPhone', steps: [
+      'Dans WhatsApp, touche la flèche pour <b>télécharger</b> le morceau reçu.',
+      'Ici, touche <b>Importer un morceau</b> et choisis-le dans tes fichiers (Téléchargements).',
+      'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
+      'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'] }
+  };
+  function paintGuide() {
+    const g = GUIDE[guideOS];
+    $('guideOs').textContent = g.who;
+    guideSteps.innerHTML = g.steps.map((s) => '<li><span>' + s + '</span></li>').join('');
+    $('guideSwitch').textContent = g.other;
+  }
+  function openGuide() {
+    guideReturn = document.activeElement;
+    paintGuide();
+    guide.hidden = false; void guide.offsetWidth; guide.classList.add('open');
+    store.set('guideSeen', true); $('sigCap').classList.remove('call');
+    const c = guide.querySelector('.guide-close'); if (c) c.focus({ preventScroll: true });
+  }
+  function closeGuide(back) {
+    guide.classList.remove('open');
+    setTimeout(() => { if (!guide.classList.contains('open')) guide.hidden = true; }, reduceMotion ? 0 : 300);
+    if (back !== false && guideReturn && guideReturn.focus) guideReturn.focus({ preventScroll: true });
+  }
+  $('sigEmblem').addEventListener('click', openGuide);
+  guide.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeGuide(); });
+  $('guideSwitch').addEventListener('click', () => { guideOS = guideOS === 'ios' ? 'android' : 'ios'; paintGuide(); });
+  $('guideLeo').addEventListener('click', () => { closeGuide(false); setTimeout(openCarnet, 180); });
+  if (!store.get('guideSeen', false)) $('sigCap').classList.add('call');
   carnet.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeCarnet(); });
   const sigLen = sigPath.getTotalLength ? sigPath.getTotalLength() : 0;
   function drawSig() {

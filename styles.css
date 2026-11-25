@@ -2484,3 +2484,69 @@ html { scroll-snap-type: y mandatory; }
 @keyframes dock { 0% { transform: translateY(-8px) scale(1.012); } 36% { transform: translateY(2.5px) scale(.998); } 62% { transform: translateY(-1px); } 100% { transform: none; } }
 @keyframes dockRim { 0% { outline-color: rgba(255, 226, 160, .85); } 100% { outline-color: rgba(217, 178, 106, .17); } }
 .dock { animation: dock .44s cubic-bezier(.2, .8, .3, 1) both, dockRim .7s ease-out both; }
+
+/* v65 : page B vide — carte remontée et agrandie, gros bouton doré, pastilles écartées */
+.pageB .player { margin-top: clamp(14px, 6vh, 56px); margin-bottom: auto; }
+.player[data-state="empty"] .wave-wrap { height: 176px; }
+.player[data-state="empty"] .wave-empty { gap: 14px; }
+.cta {
+  height: 62px;
+  padding: 0 32px;
+  gap: 12px;
+  font-size: 18.5px;
+  color: #3A2205;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, .5);
+  background:
+    radial-gradient(120% 90% at 30% -20%, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(110deg, #FFDA8A 0%, #FFB84D 48%, #F0902B 100%);
+  background-size: 100% 100%, 160% 100%;
+  box-shadow: inset 0 -2px 4px rgba(120, 60, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .6), 0 12px 30px -10px rgba(255, 160, 50, .65);
+}
+.cta svg { width: 24px; height: 24px; }
+.pager { right: 0; top: 56%; }
+
+/* v65b : façade de poste TSF rendue — grille, plaque, onde décorative et écran Rafale */
+.player[data-state="empty"] .wave-wrap { height: 196px; }
+.player[data-state="empty"] .wave-empty { justify-content: center; gap: 12px; padding-bottom: 30px; }
+.player[data-state="empty"] .wave-empty .deco,
+.player[data-state="empty"] .tsf-plate,
+.player[data-state="empty"] .tsf-cloth { display: block; }
+.player[data-state="empty"] .wave-empty .deco { display: flex; opacity: .22; bottom: 40px; }
+.player[data-state="empty"] .tsf-cloth { opacity: .9; }
+.hud-empty { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hud-empty svg { position: absolute; inset: 6px 8px; width: calc(100% - 16px); height: calc(100% - 12px); overflow: hidden; }
+.hud-empty path { fill: none; stroke-linecap: round; }
+.hud-br path { stroke: rgba(143, 224, 255, .75); stroke-width: 1.4; }
+.hud-grid path { stroke: rgba(143, 224, 255, .12); stroke-width: .8; stroke-dasharray: 2 4; }
+.hud-tick path { stroke: rgba(143, 224, 255, .4); stroke-width: 1; }
+.hud-sine path { stroke: #8FE0FF; stroke-width: 1.6; opacity: .7; filter: drop-shadow(0 0 3px rgba(143, 224, 255, .8)); animation: hud-sine 7s linear infinite; }
+@keyframes hud-sine { to { transform: translateX(320px); } }
+.hud-empty b { position: absolute; top: 12px; font: 700 8.5px/1 var(--f-num, monospace); letter-spacing: .22em; color: rgba(143, 224, 255, .85); text-shadow: 0 0 6px rgba(143, 224, 255, .5); }
+.hud-l { left: 16px; }
+.hud-r { right: 16px; letter-spacing: .12em; color: rgba(255, 207, 120, .85); text-shadow: none; }
+body.lite .hud-sine path { animation: none; }
+
+/* Légende sous la spirale + mode d'emploi */
+.sig { position: relative; }
+.sig-cap { position: absolute; top: calc(100% + 3px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: italic 500 11px/1 "EB Garamond", Georgia, serif; letter-spacing: .04em; color: #E3C27F; pointer-events: none; opacity: .85; }
+.sig-cap.call { animation: cap-call 2.4s ease-in-out infinite; }
+@keyframes cap-call { 0%, 100% { opacity: .6; } 50% { opacity: 1; text-shadow: 0 0 8px rgba(255, 207, 120, .7); } }
+.guide { position: fixed; inset: 0; z-index: 46; display: grid; place-items: center; padding: 16px; }
+.guide .sheet-backdrop { opacity: 0; transition: opacity .3s; }
+.guide.open .sheet-backdrop { opacity: 1; }
+.guide-card { position: relative; width: min(420px, 100%); padding: 22px 20px 18px; border-radius: 18px; background: linear-gradient(180deg, #232955, #171B3A); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 30px 60px rgba(0, 0, 0, .6); transform: translateY(16px) scale(.97); opacity: 0; transition: transform .35s cubic-bezier(.2, .9, .3, 1), opacity .3s; }
+.guide.open .guide-card { transform: none; opacity: 1; }
+.guide-title { margin: 0; font: 500 22px/1.1 "EB Garamond", Georgia, serif; letter-spacing: .14em; text-transform: uppercase; color: #E9CB8C; text-align: center; }
+.guide-os { margin: 6px 0 14px; text-align: center; font: italic 500 16px/1 "EB Garamond", Georgia, serif; color: var(--ice, #CFE3FF); }
+.guide-steps { margin: 0; padding: 0; list-style: none; counter-reset: g; display: grid; gap: 12px; }
+.guide-steps li { counter-increment: g; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; font-size: 16px; line-height: 1.4; color: #F2EEE2; }
+.guide-steps li::before { content: counter(g); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font: 600 18px/1 "EB Garamond", Georgia, serif; color: #3A2205; background: linear-gradient(180deg, #FFE3A3, #E5A84B); }
+.guide-steps b { color: #FFD98A; font-weight: 700; }
+.guide-switch, .guide-leo { display: block; width: 100%; margin-top: 14px; padding: 10px 6px; border: 0; background: none; font: inherit; font-size: 14px; color: #9FB0E8; text-decoration: underline; text-underline-offset: 3px; }
+.guide-leo { margin-top: 2px; font: italic 500 15px/1.2 "EB Garamond", Georgia, serif; color: #E3C27F; text-decoration: none; }
+.guide-close { position: absolute; top: -12px; right: -8px; background: #232955; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2), 0 4px 10px rgba(0, 0, 0, .5); }
+.hud-empty b { top: 20px; }
+.hud-l { left: 30px; }
+.hud-r { right: 30px; }
+.hud-sine path { opacity: .4; }
+.player[data-state="empty"] .empty-lead { text-shadow: 0 1px 6px #0B0E24, 0 0 12px #0B0E24; }
