@@ -795,17 +795,19 @@
   if (window.ResizeObserver) new ResizeObserver(sizeWave).observe($('waveWrap'));
   window.addEventListener('resize', sizeWave);
 
-  /* Poignée de hauteur : on tire pour agrandir ou réduire l'écran d'onde (retenu d'une fois sur l'autre) */
+  /* Écran d'onde : deux hauteurs seulement, normale ou agrandie (un toucher, ou on tire vers le bas / le haut) */
   (function () {
-    const hd = $('waveHandle'), MIN = 150, MAX = 460;
-    let h0 = clamp(+store.get('waveH', 190) || 190, MIN, MAX), y0 = 0, base = 0, drag = false;
-    const apply = (v, save) => { h0 = clamp(Math.round(v), MIN, MAX); player.style.setProperty('--wh', h0 + 'px'); hd.setAttribute('aria-valuenow', String(h0)); if (save) store.set('waveH', h0); };
-    apply(h0, false);
-    hd.addEventListener('pointerdown', (e) => { drag = true; y0 = e.clientY; base = h0; try { hd.setPointerCapture(e.pointerId); } catch (x) { /* ignoré */ } hd.classList.add('on'); e.preventDefault(); });
-    hd.addEventListener('pointermove', (e) => { if (drag) apply(base + (e.clientY - y0), false); });
-    const end = () => { if (!drag) return; drag = false; hd.classList.remove('on'); store.set('waveH', h0); };
-    hd.addEventListener('pointerup', end); hd.addEventListener('pointercancel', end);
-    hd.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { apply(h0 + 20, true); e.preventDefault(); } else if (e.key === 'ArrowUp') { apply(h0 - 20, true); e.preventDefault(); } });
+    const hd = $('waveHandle'), SIZES = { n: 180, l: 225 };
+    let size = store.get('waveSize', 'n') === 'l' ? 'l' : 'n', y0 = 0, drag = false, moved = 0;
+    const apply = (k, save) => { size = k; player.style.setProperty('--wh', SIZES[k] + 'px'); hd.setAttribute('aria-pressed', String(k === 'l')); hd.classList.toggle('big', k === 'l'); if (save) store.set('waveSize', k); };
+    apply(size, false);
+    hd.addEventListener('pointerdown', (e) => { drag = true; y0 = e.clientY; moved = 0; try { hd.setPointerCapture(e.pointerId); } catch (x) { /* ignoré */ } hd.classList.add('on'); });
+    hd.addEventListener('pointermove', (e) => { if (drag) moved = e.clientY - y0; });
+    const end = () => {
+      if (!drag) return; drag = false; hd.classList.remove('on');
+      if (Math.abs(moved) > 14) apply(moved > 0 ? 'l' : 'n', true); else apply(size === 'l' ? 'n' : 'l', true);
+    };
+    hd.addEventListener('pointerup', end); hd.addEventListener('pointercancel', () => { drag = false; hd.classList.remove('on'); });
   })();
 
   function drawWave(p) {

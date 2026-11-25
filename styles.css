@@ -2613,7 +2613,6 @@ body.lite .hud-sine path { animation: none; }
 .hud-empty .br.tl { left: 8px; top: 8px; border-right: 0; border-bottom: 0; } .hud-empty .br.tr { right: 8px; top: 8px; border-left: 0; border-bottom: 0; }
 .hud-empty .br.bl { left: 8px; bottom: 8px; border-right: 0; border-top: 0; } .hud-empty .br.bb { right: 8px; bottom: 8px; border-left: 0; border-top: 0; }
 @media (prefers-reduced-motion: reduce) { .rd-sweep, .hud-empty .cn { animation: none; } .rd-sweep { transform: rotate(-45deg); } .hud-empty .cn.c2 { color: #FFD98A; } }
-body.lite .rd-sweep, body.lite .hud-empty .cn { animation: none; }
 
 /* Ruban de vitesse : une plaque de verre, on voit à travers */
 .tempo.glass { position: relative; border-radius: 6px; padding: 14px 14px 12px; background-color: rgba(22, 27, 66, .28);
@@ -2649,7 +2648,7 @@ body.lite .rd-sweep, body.lite .hud-empty .cn { animation: none; }
 /* v66c : tout tient sur un écran une fois le morceau chargé */
 .pageB .player { margin-top: clamp(6px, 2vh, 22px); margin-bottom: 0; }
 .pageB { padding-top: max(4px, env(safe-area-inset-top, 0px)); }
-.player[data-state] .wave-wrap { height: var(--wh, 190px); }
+.player[data-state] .wave-wrap { height: var(--wh, 180px); }
 .player .deck-sub { margin: 0 0 8px; }
 .player-plaque { margin-bottom: 0; }
 .tempo.glass { padding: 10px 14px 10px; gap: 4px; }
@@ -2661,3 +2660,36 @@ body.lite .rd-sweep, body.lite .hud-empty .cn { animation: none; }
 .orig-tempo { min-height: 42px; }
 .orig-val input { font-size: 20px; }
 .player .info-row { margin-top: 2px; }
+
+/* v66d : formats détectés par le radar, plus discrets, deux hauteurs d'écran */
+.rd-plus { fill: none; stroke: rgba(235, 248, 255, .5); stroke-width: .9; stroke-linecap: round; }
+.rd-tag circle { fill: #fff; opacity: .9; }
+.rd-tag .rd-ring { fill: none; stroke: #9FFFD6; stroke-width: 1; }
+.rd-tag text { font: 700 9px "SF Mono", ui-monospace, monospace; letter-spacing: .14em; fill: #fff; }
+.rd-tag { opacity: .3; animation: tag-ping 8s ease-out infinite; }
+@keyframes tag-ping { 0% { opacity: 1; filter: drop-shadow(0 0 5px #9FFFD6); } 12% { opacity: 1; } 40%, 100% { opacity: .3; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .rd-tag { animation: none; opacity: .75; } }
+.wave-handle { border: 0; background: none; padding: 0; width: 160px; height: 28px; margin: 0 auto; display: grid; place-items: center; }
+.wave-handle i { width: 46px; height: 4px; }
+.wave-handle.big i { width: 64px; background: #FFE3A3; }
+.orig-val input { min-width: 7ch; font-size: 19px; text-overflow: clip; }
+
+/* v66e : gain de place, écran vide un peu plus haut pour la cible */
+.player[data-state="empty"] .wave-wrap { height: 230px; }
+.player[data-state="empty"] .wave-handle { display: none; }
+.player { gap: 8px; }
+.wave-handle { height: 22px; margin-top: -2px; margin-bottom: -4px; }
+.speed-row { margin: 0 0 32px; }
+.speed-scale { margin: -22px 8px 14px; }
+.tempo.glass { padding: 8px 14px 8px; }
+
+/* v68 : radar en rotation continue, avec son sillage lumineux */
+.rd-sweep { animation: rd-spin 8s linear infinite; }
+@keyframes rd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.rd-trail path { fill: #9FFFD6; opacity: .05; }
+.rd-line { stroke: #DFFFF1; stroke-width: 1.6; }
+.hud-empty .cn.c1 { animation-delay: 4.9s; } .hud-empty .cn.c2 { animation-delay: 6.9s; }
+.hud-empty .cn.c3 { animation-delay: .9s; } .hud-empty .cn.c4 { animation-delay: 2.9s; }
+@keyframes cn-lit { 0%, 3% { color: #FFD98A; text-shadow: 0 0 8px rgba(255, 200, 110, .8); } 28%, 100% { color: rgba(255, 255, 255, .55); text-shadow: none; } }
+@keyframes tag-ping { 0% { opacity: 1; filter: drop-shadow(0 0 5px #9FFFD6); } 4% { opacity: 1; } 40%, 100% { opacity: .3; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .rd-sweep { animation: none; transform: rotate(-40deg); } }
