@@ -1085,13 +1085,20 @@
   }
   $('installBtn').addEventListener('click', doInstall);
   $('installLink').addEventListener('click', doInstall);
-  $('installClose').addEventListener('click', hidePill);
+  $('installClose').addEventListener('click', () => { store.set('installBarOff', Date.now()); hidePill(); });
   installSheet.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeInstallSheet(); });
   if (!isStandalone() && !store.get('installed', false)) {
     $('installLink').hidden = false;
-    pill.hidden = false;
-    setTimeout(() => pill.classList.add('show'), 60);
-    pillTimer = setTimeout(hidePill, 60000);
+    pill.dataset.os = isIOS ? 'ios' : 'std';
+    // Bandeau d'accueil en haut de l'écran, après l'ouverture animée ; fermé, il ne revient qu'après 14 jours
+    if (Date.now() - store.get('installBarOff', 0) > 14 * 864e5) {
+      setTimeout(() => {
+        if (isStandalone() || store.get('installed', false)) return;
+        pill.hidden = false;
+        void pill.offsetWidth;
+        pill.classList.add('show');
+      }, 3800);
+    }
   }
   // Android/Chrome : appli déjà installée sur l'appareil ? On masque tout.
   if (!isStandalone() && navigator.getInstalledRelatedApps) {
@@ -1977,6 +1984,19 @@
   }
   /* Nom du mouvement, en italien, affiché dans la bulle pendant qu'on règle */
   function tempoName(b) { return b < 40 ? 'Grave' : b < 60 ? 'Largo' : b < 76 ? 'Adagio' : b < 108 ? 'Andante' : b < 120 ? 'Moderato' : b < 168 ? 'Allegro' : b < 200 ? 'Presto' : 'Prestissimo'; }
+  const REF_BPM = 121, REF_POS = bpmToPos(REF_BPM);          // repère de la réglette : le tempo « de départ »
+  let stepFlags = null, paintQ = 0;
+  /* Les chiffres, couleurs et le rapporteur ne sont redessinés qu'une fois par image d'écran :
+     la réglette reste fluide même quand le doigt envoie beaucoup de mesures. */
+  function schedulePaint() { if (!paintQ) paintQ = requestAnimationFrame(paintSlider); }
+  function paintSlider() {
+    paintQ = 0;
+    const s = $('mSlider'), pos = bpmToPos(metro.bpm), atRef = metro.bpm === REF_BPM;
+    if (Math.abs(+s.value - pos) > 0.5) s.value = Math.round(pos);
+    s.style.setProperty('--hi', 'calc(12px + (100% - 24px) * ' + (pos / 1000).toFixed(4) + ')');
+    $('mSliderMark').classList.toggle('lit', atRef);
+    if (PR && PR.root.classList.contains('on')) paintProt(pos, atRef);
+  }
   function setMetroBpm(v) {
     const prevBpm = metro.bpm;
     metro.bpm = clamp(Math.round(v), 30, 320);
@@ -1984,19 +2004,71 @@
     if (metro.bpm !== prevBpm && typeof peekTempo === 'function') peekTempo();
     const inp = $('mBpm');
     if (document.activeElement !== inp) inp.value = metro.bpm;
-    const s = $('mSlider'), pos = bpmToPos(metro.bpm);
-    if (Math.abs(+s.value - pos) > 0.5) s.value = Math.round(pos);
-    s.style.setProperty('--hi', (pos / 10) + '%');
-    s.setAttribute('aria-valuetext', metro.bpm + ' BPM');
-    const bb = $('mSliderBubble');
-    if (bb) { bb.innerHTML = metro.bpm + '<small>' + tempoName(metro.bpm) + '</small>'; bb.style.left = (pos / 10) + '%'; }
-    { const k = clamp(pos / 1000, 0, 1), c0 = [120, 175, 255], cm = [235, 228, 205], c1 = [255, 184, 90];    // du bleu calme (lent) au doré chaud (vif)
-      const a = k < 0.5 ? c0 : cm, b = k < 0.5 ? cm : c1, f = k < 0.5 ? k * 2 : (k - 0.5) * 2;
-      s.style.setProperty('--fill', 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',') + ')'); }
-    document.querySelectorAll('.mctl .step').forEach((b) => {
-      const st = +b.dataset.step;
-      b.disabled = (st < 0 && metro.bpm <= 30) || (st > 0 && metro.bpm >= 320);
-    });
+    $('mSlider').setAttribute('aria-valuetext', metro.bpm + ' BPM');
+    const fl = (metro.bpm <= 30 ? 'a' : '') + (metro.bpm >= 320 ? 'b' : '');
+    if (fl !== stepFlags) {
+      stepFlags = fl;
+      document.querySelectorAll('.mctl .step').forEach((b) => {
+        const st = +b.dataset.step;
+        b.disabled = (st < 0 && metro.bpm <= 30) || (st > 0 && metro.bpm >= 320);
+      });
+    }
+    schedulePaint();
+  }
+
+  /* Rapporteur : demi-cercle gradué ; la lunette pivote et vise le tempo, le 121 est tout en haut */
+  let PR = null;
+  const protAngle = (pos) => pos < REF_POS ? (pos - REF_POS) / REF_POS * 70 : (pos - REF_POS) / (1000 - REF_POS) * 70;
+  const pPt = (a, r) => { const t = a * Math.PI / 180; return [160 + r * Math.sin(t), 128 - r * Math.cos(t)]; };
+  const f1 = (n) => n.toFixed(1);
+  function buildProt() {
+    const root = $('mProt');
+    if (!root) return;
+    const R = 100;
+    const major = { 40: 1, 60: 1, 80: 1, 100: 1, 140: 1, 180: 1, 220: 1, 320: 1 };
+    let ticks = '', labels = '';
+    for (let b = 30; b <= 320; b += (b < 200 ? 10 : 20)) {
+      if (b === 120) continue;
+      const a = protAngle(bpmToPos(b)), mj = !!major[b];
+      const p1 = pPt(a, R - (mj ? 11 : 6)), p2 = pPt(a, R + (mj ? 3 : 1));
+      ticks += '<line x1="' + f1(p1[0]) + '" y1="' + f1(p1[1]) + '" x2="' + f1(p2[0]) + '" y2="' + f1(p2[1]) + '" stroke="' + (mj ? '#F2E6C4' : 'rgba(242,230,196,.5)') + '" stroke-width="' + (mj ? 2 : 1.2) + '" stroke-linecap="round"/>';
+      if (mj) { const q = pPt(a, R + 18); labels += '<text x="' + f1(q[0]) + '" y="' + f1(q[1]) + '" text-anchor="middle" dominant-baseline="middle">' + b + '</text>'; }
+    }
+    const L = pPt(-70, R), Rr = pPt(70, R);
+    const base = 'M' + f1(L[0]) + ' ' + f1(L[1]) + ' A' + R + ' ' + R + ' 0 0 1 ' + f1(Rr[0]) + ' ' + f1(Rr[1]);
+    root.innerHTML = '<svg viewBox="0 0 320 200" aria-hidden="true">'
+      + '<defs>'
+      + '<linearGradient id="pr-g" gradientUnits="userSpaceOnUse" x1="66" y1="0" x2="254" y2="0"><stop offset="0" stop-color="#8FE0FF"/><stop offset=".27" stop-color="#CDEFFF"/><stop offset=".5" stop-color="#F6EACB"/><stop offset=".78" stop-color="#FFC768"/><stop offset="1" stop-color="#FF7F4D"/></linearGradient>'
+      + '<linearGradient id="pr-t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A6A30"/><stop offset=".45" stop-color="#FBEBC0"/><stop offset="1" stop-color="#9A7433"/></linearGradient>'
+      + '<radialGradient id="pr-h" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#FFF3D6"/><stop offset=".6" stop-color="#C9A15A"/><stop offset="1" stop-color="#7A5A25"/></radialGradient>'
+      + '</defs>'
+      + '<path d="' + base + '" fill="none" stroke="url(#pr-g)" stroke-width="5" stroke-linecap="round" opacity=".38"/>'
+      + '<path class="p-prog" d="" fill="none" stroke="url(#pr-g)" stroke-width="6" stroke-linecap="round"/>'
+      + ticks
+      + '<g class="p-lab" font-size="11" font-weight="700" fill="#E3CC96" style="font-family:var(--f-num)">' + labels + '</g>'
+      + '<path class="p-star" d="M160 19 L162.4 25.6 L169 28 L162.4 30.4 L160 37 L157.6 30.4 L151 28 L157.6 25.6 Z"/>'
+      + '<circle class="p-dot" cx="160" cy="28" r="5"/>'
+      + '<g class="p-tel" transform="rotate(0 160 128)">'
+      + '<polygon points="156,116 164,116 167.5,48 152.5,48" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8" stroke-linejoin="round"/>'
+      + '<rect x="149.5" y="42" width="21" height="6.5" rx="2.4" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/>'
+      + '<rect x="154" y="118" width="12" height="13" rx="3" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/>'
+      + '<line x1="155.2" y1="96" x2="164.8" y2="96" stroke="rgba(25,14,0,.55)" stroke-width="1.2"/><line x1="153.8" y1="70" x2="166.2" y2="70" stroke="rgba(25,14,0,.55)" stroke-width="1.2"/>'
+      + '</g>'
+      + '<circle cx="160" cy="128" r="8" fill="url(#pr-h)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/><circle cx="160" cy="128" r="2.6" fill="#241707"/>'
+      + '<text class="p-num" x="160" y="175" text-anchor="middle" font-size="40" font-weight="700" fill="#FFF3D6" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">121</text>'
+      + '<text class="p-name" x="160" y="194" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2.4" fill="#E3CC96" style="font-family:var(--f-ui)"></text>'
+      + '</svg>';
+    PR = { root, tel: root.querySelector('.p-tel'), prog: root.querySelector('.p-prog'), dot: root.querySelector('.p-dot'), num: root.querySelector('.p-num'), name: root.querySelector('.p-name') };
+  }
+  function paintProt(pos, atRef) {
+    const a = protAngle(pos), p = pPt(a, 100);
+    PR.tel.setAttribute('transform', 'rotate(' + a.toFixed(2) + ' 160 128)');
+    PR.dot.setAttribute('cx', f1(p[0])); PR.dot.setAttribute('cy', f1(p[1]));
+    if (Math.abs(a) < 0.4) PR.prog.setAttribute('d', '');
+    else { const q = pPt(0, 100); PR.prog.setAttribute('d', 'M' + f1(q[0]) + ' ' + f1(q[1]) + ' A100 100 0 0 ' + (a > 0 ? 1 : 0) + ' ' + f1(p[0]) + ' ' + f1(p[1])); }
+    PR.num.textContent = metro.bpm;
+    PR.name.textContent = tempoName(metro.bpm).toUpperCase();
+    PR.root.classList.toggle('ref', atRef);
   }
   function commitMetroInput() {
     const v = parseInt(String($('mBpm').value).replace(/\D/g, ''), 10);
@@ -2523,18 +2595,29 @@
   document.querySelectorAll('.mctl .step').forEach((b) => holdRepeat(b, () => setMetroBpm(metro.bpm + +b.dataset.step)));
   $('mSlider').addEventListener('input', (e) => setMetroBpm(posToBpm(+e.target.value)));
   /* Glisser sur la réglette : geste rapide = le curseur suit le doigt ; geste lent = réglage fin, de 1 en 1.
-     Une bulle affiche le tempo au-dessus du doigt pendant le réglage. */
+     Le rapporteur s'ouvre au-dessus pendant le réglage. Un petit aimant retient le curseur sur 121. */
+  buildProt();
   (function sliderTouch() {
-    const hit = $('mSliderHit'), inp = $('mSlider'), bub = $('mSliderBubble');
+    const hit = $('mSliderHit'), inp = $('mSlider');
     if (!hit) return;
     const D = { id: null, x: 0, t: 0, acc: 0 };
+    const MAG = 14;                                          // rayon de l'aimant, en unités de réglette (≈ 4 px)
+    let wasRef = false;
     const posAt = (x) => { const r = inp.getBoundingClientRect(); return clamp((x - r.left - 11) / Math.max(1, r.width - 22), 0, 1) * 1000; };
+    const fx = () => {
+      const r = metro.bpm === REF_BPM;
+      if (r && !wasRef && navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* ignoré */ } }
+      wasRef = r;
+    };
+    const place = (p) => { setMetroBpm(posToBpm(Math.abs(p - REF_POS) < MAG ? REF_POS : p)); fx(); };
     hit.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0;
       try { hit.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
-      setMetroBpm(posToBpm(posAt(e.clientX)));
-      bub.hidden = false;
+      wasRef = metro.bpm === REF_BPM;
+      if (PR) PR.root.classList.add('on');
+      place(posAt(e.clientX));
+      paintSlider();
     });
     hit.addEventListener('pointermove', (e) => {
       if (e.pointerId !== D.id) return;
@@ -2542,10 +2625,10 @@
       D.x = e.clientX; D.t = e.timeStamp;
       if (Math.abs(dx) / dtm < 0.12) {                      // geste lent : réglage fin
         D.acc += dx;
-        while (Math.abs(D.acc) >= 7) { const sg = Math.sign(D.acc); setMetroBpm(metro.bpm + sg); D.acc -= sg * 7; }
-      } else { D.acc = 0; setMetroBpm(posToBpm(posAt(e.clientX))); }
+        while (Math.abs(D.acc) >= 7) { const sg = Math.sign(D.acc); setMetroBpm(metro.bpm + sg); fx(); D.acc -= sg * 7; }
+      } else { D.acc = 0; place(posAt(e.clientX)); }
     });
-    const end = (e) => { if (e.pointerId !== D.id) return; D.id = null; bub.hidden = true; };
+    const end = (e) => { if (e.pointerId !== D.id) return; D.id = null; if (PR) PR.root.classList.remove('on'); };
     hit.addEventListener('pointerup', end);
     hit.addEventListener('pointercancel', end);
   })();

@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v57';
+const CACHE = 'atelier-v59';
 const SHARE = 'atelier-share';
 const SHELL = [
   './',
@@ -19,8 +19,6 @@ const SHELL = [
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'icons/tortue.png',
-  'icons/lievre.png',
   'Sound/Clave.wav',
   'Sound/Conga.mp3',
   'Sound/Cowbell.wav',

@@ -2352,3 +2352,76 @@ html { scroll-snap-type: y proximity; }
 #metro { scroll-snap-align: start; scroll-margin-top: calc(max(10px, env(safe-area-inset-top, 0px)) + 4px); scroll-margin-bottom: -60px; }
 #player { scroll-snap-align: start; scroll-margin-top: 10px; }
 @media (max-height: 700px) { html { scroll-snap-type: none; } }   /* petit écran : le métronome défile librement */
+
+/* Retouches v58 : mots seuls, metro plus compact */
+.mslider-row { margin-top: 16px; }
+.mslider-ends .mends-side em { font-size: 15px; }
+.mslider-ends img { display: none; }
+@media (max-height: 760px) { .mslider-row { margin-top: 6px; } .metro .sounds { margin-top: 4px; } }
+
+/* ===== v59 : réglette en dégradé, signes − / +, repère 121, rapporteur à lunette, bandeau d'installation ===== */
+.mslider-row { flex-direction: row; align-items: center; gap: 12px; position: relative; margin-top: 22px; }
+.mslider-wrap { flex: 1; min-width: 0; }
+.mslider-sign { width: 22px; height: 22px; flex: none; fill: none; stroke-width: 2.8; stroke-linecap: round; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .7)); }
+.mslider-sign.minus { stroke: #9FE6FF; }
+.mslider-sign.plus { stroke: #FF9A5C; }
+.mslider-hit { top: -14px; bottom: -14px; }
+#mSlider { position: relative; z-index: 1; }
+#mSlider::-webkit-slider-runnable-track {
+  height: 7px; border-radius: 7px;
+  background:
+    linear-gradient(to right, rgba(12, 15, 38, 0) var(--hi), rgba(12, 15, 38, .5) var(--hi)),
+    linear-gradient(to right, #8FE0FF 0%, #CDEFFF 24%, #F6EACB 41.6%, #FFC768 70%, #FF7F4D 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .18);
+}
+#mSlider::-webkit-slider-thumb { margin-top: -8.5px; }
+#mSlider::-moz-range-track { height: 7px; border-radius: 7px; background: linear-gradient(to right, #8FE0FF 0%, #CDEFFF 24%, #F6EACB 41.6%, #FFC768 70%, #FF7F4D 100%); }
+#mSlider::-moz-range-progress { background: transparent; }
+/* Repère du tempo de départ (121) */
+.mslider-mark { position: absolute; top: 50%; left: calc(12px + (100% - 24px) * .4163); width: 3px; height: 30px; margin: -15px 0 0 -1.5px; border-radius: 2px; background: #FFF3D6; opacity: .9; pointer-events: none; z-index: 2; transition: box-shadow .15s, background .15s; box-shadow: 0 0 0 1px rgba(10, 12, 30, .55); }
+.mslider-mark.lit { background: #FFD36E; box-shadow: 0 0 0 1px rgba(10, 12, 30, .55), 0 0 10px 3px rgba(255, 205, 100, .95); }
+/* Rapporteur */
+.prot {
+  position: absolute; left: 50%; bottom: calc(100% + 12px); z-index: 30;
+  width: min(300px, calc(100vw - 28px)); aspect-ratio: 320 / 200; border-radius: 26px;
+  background: radial-gradient(90% 85% at 50% 72%, rgba(38, 44, 96, .97), rgba(9, 11, 30, .97) 82%);
+  box-shadow: inset 0 0 0 1px rgba(233, 211, 160, .42), 0 16px 40px rgba(0, 0, 0, .7);
+  opacity: 0; transform: translate(-50%, 10px) scale(.97); pointer-events: none;
+  transition: opacity .3s ease .22s, transform .3s ease .22s;
+}
+.prot.on { opacity: 1; transform: translate(-50%, 0) scale(1); transition: opacity .14s ease, transform .2s cubic-bezier(.2, .9, .3, 1); }
+.prot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.prot .p-star { fill: #F6EACB; opacity: .7; transform-box: fill-box; transform-origin: center; transition: transform .15s, opacity .15s, fill .15s; }
+.prot .p-dot { fill: #FFF3D6; filter: drop-shadow(0 0 4px rgba(255, 235, 190, .95)); }
+.prot.ref .p-star { fill: #FFD36E; opacity: 1; transform: scale(1.8); filter: drop-shadow(0 0 6px rgba(255, 200, 90, .95)); }
+.prot.ref .p-num { fill: #FFD98A; }
+/* Bandeau d'installation, en haut de l'écran */
+.install-bar[hidden] { display: none; }
+.install-bar {
+  position: fixed; left: 50%; top: calc(8px + env(safe-area-inset-top, 0px)); z-index: 60;
+  width: min(440px, calc(100vw - 16px)); box-sizing: border-box; padding: 16px 16px 14px;
+  border-radius: 22px;
+  background: radial-gradient(90% 60% at 0% 0%, rgba(139, 108, 255, .2), rgba(139, 108, 255, 0) 60%), linear-gradient(180deg, #262C5C, #181C3C);
+  box-shadow: inset 0 0 0 1px rgba(233, 211, 160, .45), 0 18px 44px rgba(0, 0, 0, .65);
+  transform: translate(-50%, -140%); opacity: 0; transition: transform .5s cubic-bezier(.2, .9, .3, 1), opacity .35s;
+}
+.install-bar.show { transform: translate(-50%, 0); opacity: 1; }
+.ib-x { position: absolute; top: 6px; right: 6px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: none; color: var(--dim); display: grid; place-items: center; }
+.ib-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.ib-title { padding-right: 34px; font: 600 16.5px/1.3 var(--f-ui); color: #F3E6C8; }
+.ib-title b { color: #F0D08A; font-weight: 800; }
+.ib-sub { margin: 6px 0 0; font: 500 13.5px/1.4 var(--f-ui); color: var(--dim); }
+.install-bar .install-go { width: 100%; justify-content: center; height: 48px; margin-top: 12px; font-size: 15.5px; }
+.ib-ios { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ib-ios li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .07); }
+.ib-n { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #F7E6BC, #C9A15A); color: #2E1F0A; font: 800 14px/1 var(--f-ui); }
+.ib-t { flex: 1; font: 500 15.5px/1.3 var(--f-ui); color: var(--ice); }
+.ib-t b { color: #FFF1CE; font-weight: 800; }
+.ib-ic { width: 28px; height: 28px; flex: none; fill: none; stroke: #F3E6C8; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ib-hint { margin: 8px 0 0; font: 500 12.5px/1.4 var(--f-ui); color: var(--dim); }
+.ib-by { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid rgba(233, 211, 160, .3); text-align: center; }
+.ib-by span { display: block; font: italic 500 13.5px/1.2 "EB Garamond", Garamond, "Times New Roman", serif; color: #CDBA8E; }
+.ib-by em { display: block; margin-top: 3px; font: italic 600 25px/1.15 "EB Garamond", Garamond, "Times New Roman", serif; letter-spacing: .04em; background: linear-gradient(180deg, #FFF0C4, #D9AE5E); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.install-bar[data-os="ios"] .ib-std { display: none; }
+.install-bar[data-os="std"] .ib-ios, .install-bar[data-os="std"] .ib-hint { display: none; }
+@media (max-height: 760px) { .mslider-row { margin-top: 12px; } }

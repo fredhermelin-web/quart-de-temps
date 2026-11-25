@@ -170,15 +170,15 @@
     </div>
 
     <div class="mslider-row">
+      <svg class="mslider-sign minus" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
       <div class="mslider-wrap">
-        <input type="range" id="mSlider" class="metro-slider" min="0" max="1000" step="1" value="500" aria-label="Tempo du métronome, de 30 à 320 BPM">
+        <span class="mslider-mark" id="mSliderMark" aria-hidden="true"></span>
+        <input type="range" id="mSlider" class="metro-slider" min="0" max="1000" step="1" value="416" aria-label="Tempo du métronome, de 30 à 320 BPM">
         <span class="mslider-hit" id="mSliderHit" aria-hidden="true"></span>
-        <span class="mslider-bubble" id="mSliderBubble" aria-hidden="true" hidden>121</span>
       </div>
-      <div class="mslider-ends" aria-hidden="true">
-        <span class="mends-side"><img src="icons/tortue.png" alt="" width="56" height="34" draggable="false"><em>moins vite</em></span>
-        <span class="mends-side"><em>plus vite</em><img src="icons/lievre.png" alt="" width="60" height="34" draggable="false"></span>
-      </div>
+      <svg class="mslider-sign plus" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>
+      <!-- Rapporteur : s'ouvre au-dessus de la réglette pendant qu'on règle, la lunette vise le tempo -->
+      <div class="prot" id="mProt" aria-hidden="true"></div>
     </div>
 
     <div class="sounds" role="radiogroup" aria-label="Son du métronome">
@@ -382,15 +382,26 @@
   </footer>
 </div>
 
-<!-- Bouton « Installer l'application » : visible à l'ouverture, disparaît seul au bout de 60 secondes -->
-<div class="install-pill" id="installPill" hidden>
-  <button type="button" id="installBtn" class="install-go">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
-    Installer l'application
-  </button>
-  <button type="button" id="installClose" class="install-x" aria-label="Masquer">
+<!-- Bandeau d'accueil en haut de l'écran : installer l'application (étapes simples sur iPhone, bouton direct ailleurs) -->
+<div class="install-bar" id="installPill" data-os="std" role="region" aria-label="Installer l'application" hidden>
+  <button type="button" id="installClose" class="ib-x" aria-label="Fermer">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
+  <div class="ib-title">Installer <b>Quart de temps</b> sur le téléphone</div>
+  <div class="ib-std">
+    <p class="ib-sub">Un accès direct sur l'écran d'accueil, même sans Internet.</p>
+    <button type="button" id="installBtn" class="install-go">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+      Installer l'application
+    </button>
+  </div>
+  <ol class="ib-ios">
+    <li><span class="ib-n">1</span><span class="ib-t">Toucher le bouton <b>Partager</b></span><svg class="ib-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0-12-4 4m4-4 4 4"/><path d="M7 10H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg></li>
+    <li><span class="ib-n">2</span><span class="ib-t">Choisir <b>Sur l'écran d'accueil</b></span><svg class="ib-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></li>
+    <li><span class="ib-n">3</span><span class="ib-t">Toucher <b>Ajouter</b></span><svg class="ib-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></li>
+  </ol>
+  <p class="ib-hint">Si le bouton Partager n'est pas visible : menu <b>⋯</b>, puis Partager.</p>
+  <p class="ib-by"><span>Cette application vous est proposée par</span><em>Frédéric Hermelin</em></p>
 </div>
 
 <!-- Aide à l'installation (iPhone, ou navigateur sans installation directe) -->
