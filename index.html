@@ -224,6 +224,7 @@
 
   <!-- Pied de page discret : installation (si l'appli n'est pas installée) et mentions légales -->
 
+  <div class="pageB" id="pageB">
   <!-- ============ LECTEUR ============ -->
   <section class="deck player" id="player" data-state="empty" aria-label="Ralentisseur">
     <h2 class="metro-plaque player-plaque"><i aria-hidden="true"></i><svg class="pl-spiral" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><span>Ralentisseur</span><svg class="pl-spiral pl-mirror" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><i aria-hidden="true"></i></h2>
@@ -351,10 +352,12 @@
       </div>
 
       <div class="speed-row">
-        <button type="button" id="spMinus" class="nudge" aria-label="Moins 5 points de vitesse">−5</button>
         <div class="speed-track">
           <input type="range" id="speed" min="50" max="150" step="1" value="100" aria-label="Vitesse de lecture, de 50 à 150 %">
         </div>
+      </div>
+      <div class="speed-nudges">
+        <button type="button" id="spMinus" class="nudge" aria-label="Moins 5 points de vitesse">−5</button>
         <button type="button" id="spPlus" class="nudge" aria-label="Plus 5 points de vitesse">+5</button>
       </div>
 
@@ -380,7 +383,14 @@
     <button type="button" id="installLink" class="foot-link" hidden>Installer l'application</button>
     <a class="foot-link" href="mentions-legales.html">Mentions légales et confidentialité</a>
   </footer>
+  </div>
 </div>
+
+<!-- Repère de page : deux pastilles sur le bord de l'écran (page A métronome, page B ralentisseur) -->
+<nav class="pager" id="pager" aria-label="Pages">
+  <button type="button" data-go="metro" class="on" aria-label="Page A : métronome"></button>
+  <button type="button" data-go="pageB" aria-label="Page B : ralentisseur"></button>
+</nav>
 
 <!-- Bandeau d'accueil en haut de l'écran : installer l'application (étapes simples sur iPhone, bouton direct ailleurs) -->
 <div class="install-bar" id="installPill" data-os="std" role="region" aria-label="Installer l'application" hidden>

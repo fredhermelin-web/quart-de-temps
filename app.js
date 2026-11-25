@@ -164,7 +164,7 @@
     nat.mozPreservesPitch = true;
     nat.webkitPreservesPitch = true;
     const et = new EventTarget();
-    const S = { mode: 'nat', node: null, nodeP: null, failed: false, dur: NaN, rate: 1, paused: true, ended: false,
+    const S = { mode: 'nat', node: null, nodeP: null, failed: false, dur: NaN, rate: 1, rateTarget: 1, paused: true, ended: false,
       pos: 0, p0: 0, t0: 0, lat: 0, timer: 0, token: 0, keep: null };
     const fire = (type) => et.dispatchEvent(new Event(type));
     ['play', 'pause', 'ended', 'timeupdate', 'loadedmetadata', 'seeked', 'error'].forEach((t) => {
@@ -195,6 +195,21 @@
       S.p0 = p;
       S.t0 = ctx.currentTime;
       S.node.schedule({ active: true, input: p, rate: S.rate, semitones: 0 });
+    }
+    /* Changement de vitesse en cours de lecture : on n'arrête plus le moteur, on lui glisse vers la nouvelle vitesse
+       (environ un dixième de seconde), sans saut ni craquement. */
+    let rampId = 0;
+    function ssRamp() {
+      cancelAnimationFrame(rampId);
+      const step = () => {
+        if (S.mode !== 'ss' || S.paused) return;
+        const d = S.rateTarget - S.rate, next = Math.abs(d) < 0.002 ? S.rateTarget : S.rate + d * 0.35;
+        S.p0 = ssPos(); S.t0 = ctx.currentTime - S.lat;      // on repart de la position exacte avant de changer de vitesse
+        S.rate = next;
+        S.node.schedule({ rate: next });
+        if (next !== S.rateTarget) rampId = requestAnimationFrame(step);
+      };
+      rampId = requestAnimationFrame(step);
     }
     function ssTick() {
       if (S.mode !== 'ss' || S.paused) return;
@@ -256,8 +271,9 @@
       get playbackRate() { return S.rate; },
       set playbackRate(v) {
         nat.playbackRate = v;
-        if (S.mode === 'ss' && !S.paused && v !== S.rate) { const p = ssPos(); S.rate = v; ssStart(p); }
-        else S.rate = v;
+        S.rateTarget = v;
+        if (S.mode === 'ss' && !S.paused && v !== S.rate) ssRamp();
+        else if (S.paused || S.mode !== 'ss') S.rate = v;
       },
       set defaultPlaybackRate(v) { nat.defaultPlaybackRate = v; },
       play() {
@@ -277,7 +293,9 @@
         if (S.mode !== 'ss') { nat.pause(); return; }
         if (S.paused) return;
         S.pos = ssPos();
+        if (S.rateTarget) S.rate = S.rateTarget;
         S.paused = true;
+        cancelAnimationFrame(rampId);
         ssStop();
         fire('pause');
       },
@@ -2025,16 +2043,22 @@
     const root = $('mProt');
     if (!root) return;
     const br = (x, y, dx, dy) => '<path d="M' + (x + dx * 11) + ' ' + y + ' L' + x + ' ' + y + ' L' + x + ' ' + (y + dy * 11) + '"/>';
+    let tk = '';
+    for (let j = -10; j <= 19; j++) { const m = ((j % 10) + 10) % 10; tk += '<line x1="' + (80 + 5 * j) + '" y1="4" x2="' + (80 + 5 * j) + '" y2="' + (4 + (m === 0 ? 9 : m === 5 ? 6 : 3.5)) + '" stroke-width="' + (m === 0 ? 1.5 : 1) + '"/>'; }
     root.innerHTML = '<svg viewBox="0 0 160 84" aria-hidden="true">'
-      + '<defs><filter id="pr-gl" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+      + '<defs><filter id="pr-gl" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+      + '<linearGradient id="pr-mg"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".25" stop-color="#fff"/><stop offset=".75" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+      + '<mask id="pr-mk" maskUnits="userSpaceOnUse" x="32" y="0" width="96" height="16"><rect x="32" y="0" width="96" height="16" fill="url(#pr-mg)"/></mask></defs>'
       + '<g class="p-brs" fill="none" stroke-width="1.7" stroke-linecap="square">' + br(3, 3, 1, 1) + br(157, 3, -1, 1) + br(3, 81, 1, -1) + br(157, 81, -1, -1) + '</g>'
-      + '<text class="p-u" x="14" y="18" font-size="8.5" font-weight="700" letter-spacing="1.6">BPM</text>'
-      + '<path class="p-dia" d="M80 5 L85.5 10.5 L80 16 L74.5 10.5Z"/>'
-      + '<text class="p-num" x="80" y="56" text-anchor="middle" font-size="35" font-weight="700" filter="url(#pr-gl)" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">121</text>'
-      + '<text class="p-name" x="80" y="75" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="2.6" style="font-family:var(--f-ui)"></text>'
+      + '<g class="p-tapewrap" mask="url(#pr-mk)"><g class="p-tape" stroke-linecap="butt">' + tk + '</g></g>'
+      + '<path class="p-dia" d="M80 18.5 L84 22.5 L80 26.5 L76 22.5Z"/>'
+      + '<text class="p-u" x="14" y="26" font-size="8.5" font-weight="700" letter-spacing="1.6">BPM</text>'
+      + '<g class="p-ret" fill="none" stroke-width="1.2" stroke-linecap="round"><path d="M9 47 H25 M9 44.5 V49.5"/><path d="M151 47 H135 M151 44.5 V49.5"/><path d="M28 47 H31 M129 47 H132" /></g>'
+      + '<text class="p-num" x="80" y="58" text-anchor="middle" font-size="33" font-weight="700" filter="url(#pr-gl)" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">121</text>'
+      + '<text class="p-name" x="80" y="76" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="2.6" style="font-family:var(--f-ui)"></text>'
       + '<path class="p-car" d="M-6 0 L6 0 L0 7Z" transform="translate(80 85)"/>'
       + '</svg>';
-    PR = { root, car: root.querySelector('.p-car'), num: root.querySelector('.p-num'), name: root.querySelector('.p-name'), left: 0, W: 300, vw: 400 };
+    PR = { root, tape: root.querySelector('.p-tape'), car: root.querySelector('.p-car'), num: root.querySelector('.p-num'), name: root.querySelector('.p-name'), left: 0, W: 300, vw: 400 };
   }
   function protGeo() {
     if (!PR) return;
@@ -2048,6 +2072,7 @@
     c = Math.max(w / 2 + 8 - PR.left, Math.min(PR.vw - w / 2 - 8 - PR.left, c));
     PR.root.style.setProperty('--pl', c.toFixed(1) + 'px');
     PR.car.setAttribute('transform', 'translate(' + Math.max(22, Math.min(138, 80 + (tx - c))).toFixed(1) + ' 85)');
+    PR.tape.setAttribute('transform', 'translate(' + (-(metro.bpm % 10) * 5) + ' 0)');
     PR.num.textContent = metro.bpm;
     PR.name.textContent = tempoName(metro.bpm).toUpperCase();
     PR.root.classList.toggle('ref', atRef);
@@ -2548,6 +2573,16 @@
   $('btnClear').addEventListener('click', () => { P.A = P.B = null; P.loop = false; renderLoop(); dirty = true; });
 
   $('speed').addEventListener('input', (e) => setSpeed(+e.target.value));
+  /* Pastilles de page : A (métronome) et B (ralentisseur) */
+  (function pager() {
+    const nav = $('pager'); if (!nav) return;
+    const dots = nav.querySelectorAll('button');
+    let q = 0;
+    const upd = () => { q = 0; const inB = $('pageB').getBoundingClientRect().top < window.innerHeight * 0.5; dots[0].classList.toggle('on', !inB); dots[1].classList.toggle('on', inB); };
+    window.addEventListener('scroll', () => { if (!q) q = requestAnimationFrame(upd); }, { passive: true });
+    dots.forEach((b) => b.addEventListener('click', () => $(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })));
+    upd();
+  })();
   holdRepeat($('spMinus'), () => setSpeed(P.speed - 5));
   holdRepeat($('spPlus'), () => setSpeed(P.speed + 5));
   $('spReset').addEventListener('click', () => setSpeed(100));
@@ -2577,24 +2612,36 @@
   document.querySelectorAll('.mctl .step').forEach((b) => holdRepeat(b, () => setMetroBpm(metro.bpm + +b.dataset.step)));
   $('mSlider').addEventListener('input', (e) => setMetroBpm(posToBpm(+e.target.value)));
   /* Glisser sur la réglette : geste rapide = le curseur suit le doigt ; geste lent = réglage fin, de 1 en 1.
-     Le rapporteur s'ouvre au-dessus pendant le réglage. Un petit aimant retient le curseur sur 121. */
+     L'affichage tête haute s'ouvre au-dessus pendant le réglage. Un tape sur le repère du milieu revient à 121. */
   buildProt();
   (function sliderTouch() {
     const hit = $('mSliderHit'), inp = $('mSlider');
     if (!hit) return;
-    const D = { id: null, x: 0, t: 0, acc: 0 };
-    const MAG = 14;                                          // rayon de l'aimant, en unités de réglette (≈ 4 px)
-    let wasRef = false;
+    const D = { id: null, x: 0, t: 0, acc: 0, sx: 0, t0: 0, moved: false };
+    let wasRef = false, glideId = 0;
     const posAt = (x) => { const r = inp.getBoundingClientRect(); return clamp((x - r.left - 11) / Math.max(1, r.width - 22), 0, 1) * 1000; };
     const fx = () => {
       const r = metro.bpm === REF_BPM;
       if (r && !wasRef && navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* ignoré */ } }
       wasRef = r;
     };
-    const place = (p) => { setMetroBpm(posToBpm(Math.abs(p - REF_POS) < MAG ? REF_POS : p)); fx(); };
+    const place = (p) => { setMetroBpm(posToBpm(p)); fx(); };
+    // Retour en douceur au tempo de départ (121)
+    function glideTo(target) {
+      cancelAnimationFrame(glideId);
+      const from = metro.bpm, t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / 240);
+        setMetroBpm(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+        fx();
+        if (k < 1) glideId = requestAnimationFrame(step);
+      };
+      glideId = requestAnimationFrame(step);
+    }
     hit.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
-      D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0;
+      cancelAnimationFrame(glideId);
+      D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0; D.sx = e.clientX; D.t0 = e.timeStamp; D.moved = false;
       try { hit.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
       wasRef = metro.bpm === REF_BPM;
       protGeo();
@@ -2604,6 +2651,7 @@
     });
     hit.addEventListener('pointermove', (e) => {
       if (e.pointerId !== D.id) return;
+      if (Math.abs(e.clientX - D.sx) > 8) D.moved = true;
       const dx = e.clientX - D.x, dtm = Math.max(1, e.timeStamp - D.t);
       D.x = e.clientX; D.t = e.timeStamp;
       if (Math.abs(dx) / dtm < 0.12) {                      // geste lent : réglage fin
@@ -2611,7 +2659,14 @@
         while (Math.abs(D.acc) >= 7) { const sg = Math.sign(D.acc); setMetroBpm(metro.bpm + sg); fx(); D.acc -= sg * 7; }
       } else { D.acc = 0; place(posAt(e.clientX)); }
     });
-    const end = (e) => { if (e.pointerId !== D.id) return; D.id = null; if (PR) PR.root.classList.remove('on'); };
+    const end = (e) => {
+      if (e.pointerId !== D.id) return;
+      D.id = null;
+      if (PR) PR.root.classList.remove('on');
+      // simple tape sur le repère du milieu : retour au tempo de départ
+      const r = inp.getBoundingClientRect();
+      if (e.type === 'pointerup' && !D.moved && e.timeStamp - D.t0 < 450 && Math.abs(e.clientX - (r.left + r.width / 2)) < 22 && metro.bpm !== REF_BPM) glideTo(REF_BPM);
+    };
     hit.addEventListener('pointerup', end);
     hit.addEventListener('pointercancel', end);
   })();
