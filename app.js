@@ -342,6 +342,7 @@
     if (!file) return;
     if (!isAudioFile(file)) { toast('Ce fichier n’est pas un son. Choisis un MP3, WAV ou M4A.'); return; }
     const token = ++P.token;
+    if (metro.running) stopMetro();   // on libère toute la machine pour charger le morceau
     audio.pause();
     if (P.url) URL.revokeObjectURL(P.url);
     P.url = URL.createObjectURL(file);
