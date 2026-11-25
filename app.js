@@ -1975,6 +1975,8 @@
     if (p <= 800) return 60 + (p - 120) / 680 * 140;
     return 200 + (p - 800) / 200 * 120;
   }
+  /* Nom du mouvement, en italien, affiché dans la bulle pendant qu'on règle */
+  function tempoName(b) { return b < 40 ? 'Grave' : b < 60 ? 'Largo' : b < 76 ? 'Adagio' : b < 108 ? 'Andante' : b < 120 ? 'Moderato' : b < 168 ? 'Allegro' : b < 200 ? 'Presto' : 'Prestissimo'; }
   function setMetroBpm(v) {
     const prevBpm = metro.bpm;
     metro.bpm = clamp(Math.round(v), 30, 320);
@@ -1987,7 +1989,10 @@
     s.style.setProperty('--hi', (pos / 10) + '%');
     s.setAttribute('aria-valuetext', metro.bpm + ' BPM');
     const bb = $('mSliderBubble');
-    if (bb) { bb.textContent = String(metro.bpm); bb.style.left = (pos / 10) + '%'; }
+    if (bb) { bb.innerHTML = metro.bpm + '<small>' + tempoName(metro.bpm) + '</small>'; bb.style.left = (pos / 10) + '%'; }
+    { const k = clamp(pos / 1000, 0, 1), c0 = [120, 175, 255], cm = [235, 228, 205], c1 = [255, 184, 90];    // du bleu calme (lent) au doré chaud (vif)
+      const a = k < 0.5 ? c0 : cm, b = k < 0.5 ? cm : c1, f = k < 0.5 ? k * 2 : (k - 0.5) * 2;
+      s.style.setProperty('--fill', 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',') + ')'); }
     document.querySelectorAll('.mctl .step').forEach((b) => {
       const st = +b.dataset.step;
       b.disabled = (st < 0 && metro.bpm <= 30) || (st > 0 && metro.bpm >= 320);

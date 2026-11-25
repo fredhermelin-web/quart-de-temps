@@ -2301,7 +2301,6 @@ html.intro .mini-mark { opacity: 0; }
 .beat[data-i="0"] .beat-n { color: var(--amber); }
 .mslider-row { margin-top: 24px; }
 .mslider-ends span { font: 600 11px/1 var(--f-num); color: #D8BE86; }
-.mslider-ends .mends-hint { font: italic 500 13px/1 "EB Garamond", Garamond, "Times New Roman", serif; letter-spacing: .02em; color: #CDBB98; }
 .tap span { font-size: 10px; color: #E6C27A; opacity: .85; }
 
 /* Le Play dit ce qu'il fait, et respire tant qu'on n'a jamais démarré */
@@ -2318,11 +2317,11 @@ html.intro .mini-mark { opacity: 0; }
 .metro[data-rpm="45"] .rpm-float .rpm-knob { background: linear-gradient(180deg, #FFD9A8, #F08A3C 55%, #B5531C); }
 .metro[data-rpm="45"] {
   background:
+    radial-gradient(135% 58% at 50% 106%, rgba(255, 246, 228, .92) 0%, rgba(255, 200, 115, .62) 32%, rgba(255, 140, 60, .3) 60%, rgba(255, 122, 58, 0) 82%),
     radial-gradient(110% 45% at 100% 0%, rgba(255, 205, 130, .26), rgba(255, 205, 130, 0) 60%),
     radial-gradient(90% 45% at 0% 100%, rgba(255, 122, 58, .38), rgba(255, 122, 58, 0) 62%),
-    radial-gradient(70% 35% at 100% 100%, rgba(232, 140, 130, .24), rgba(232, 140, 130, 0) 60%),
     linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
-  background-color: rgba(52, 30, 50, .86);
+  background-color: rgba(58, 30, 46, .88);
 }
 .metro[data-rpm="45"]::before {
   background:
@@ -2330,3 +2329,26 @@ html.intro .mini-mark { opacity: 0; }
     radial-gradient(90% 40% at 50% 100%, rgba(255, 122, 58, .2), rgba(255, 122, 58, 0) 70%);
 }
 .metro[data-rpm="45"] .metro-glow { background: radial-gradient(60% 34% at 50% 12%, rgba(255, 138, 61, .4), rgba(255, 138, 61, 0) 72%); }
+
+/* =================== v57 : réglette tortue / lièvre, lumière du 45, écran verrouillé =================== */
+.mslider-ends { align-items: center; padding: 0 2px; }
+.mslider-ends .mends-side { display: flex; align-items: center; gap: 8px; }
+.mslider-ends .mends-side em { font: italic 500 16px/1 "EB Garamond", Garamond, "Times New Roman", serif; letter-spacing: .02em; color: #E3CC96; }
+.mslider-ends img { height: 34px; width: auto; display: block; pointer-events: none; -webkit-user-select: none; user-select: none; }
+/* Bulle : le tempo et, dessous, le nom du mouvement */
+.mslider-row .mslider-wrap .mslider-bubble { font: 700 20px/1 var(--f-num); color: #2A1A06; text-align: center; }
+.mslider-row .mslider-wrap .mslider-bubble small { display: block; margin-top: 4px; font: 700 9.5px/1 var(--f-ui); letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+/* 45 tours : lampe allumée à l'intérieur, cadre cuivré, textes clairs avec un fin ombrage pour rester lisibles sur la lumière */
+.metro[data-rpm="45"] .deck-bevel .bv-outer { stroke: rgba(255, 214, 160, .85); }
+.metro[data-rpm="45"] .deck-bevel .bv-ridge { stroke: rgba(255, 170, 90, .6); }
+.metro[data-rpm="45"] .metro-glow { background: radial-gradient(70% 38% at 50% 10%, rgba(255, 150, 70, .5), rgba(255, 150, 70, 0) 72%); }
+.metro[data-rpm="45"] .mslider-ends .mends-side em,
+.metro[data-rpm="45"] .mctl .go .go-lbl { color: #FFF3D6; text-shadow: 0 1px 3px rgba(60, 20, 0, .9); }
+/* Écran calé : le métronome ne bouge plus quand on touche un bouton, le disque ou la réglette */
+.metro .mctl .step, .metro .mctl .go, .metro .tempo-win, .metro .mslider-hit,
+.metro .rpm, .metro .meter, .metro .mute, .metro .vol-btn, .metro .vol-pop { touch-action: none; }
+/* Deux « mondes » qui s'accrochent à l'écran : le métronome, puis le ralentisseur */
+html { scroll-snap-type: y proximity; }
+#metro { scroll-snap-align: start; scroll-margin-top: calc(max(10px, env(safe-area-inset-top, 0px)) + 4px); scroll-margin-bottom: -60px; }
+#player { scroll-snap-align: start; scroll-margin-top: 10px; }
+@media (max-height: 700px) { html { scroll-snap-type: none; } }   /* petit écran : le métronome défile librement */
