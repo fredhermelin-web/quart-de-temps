@@ -173,12 +173,12 @@
       <svg class="mslider-sign minus" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
       <div class="mslider-wrap">
         <span class="mslider-mark" id="mSliderMark" aria-hidden="true"></span>
-        <input type="range" id="mSlider" class="metro-slider" min="0" max="1000" step="1" value="416" aria-label="Tempo du métronome, de 30 à 320 BPM">
+        <input type="range" id="mSlider" class="metro-slider" min="0" max="1000" step="1" value="500" aria-label="Tempo du métronome, de 30 à 320 BPM">
         <span class="mslider-hit" id="mSliderHit" aria-hidden="true"></span>
+        <!-- Affichage tête haute : plaque vitrée au-dessus du curseur pendant le réglage -->
+        <div class="prot" id="mProt" aria-hidden="true"></div>
       </div>
       <svg class="mslider-sign plus" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>
-      <!-- Rapporteur : s'ouvre au-dessus de la réglette pendant qu'on règle, la lunette vise le tempo -->
-      <div class="prot" id="mProt" aria-hidden="true"></div>
     </div>
 
     <div class="sounds" role="radiogroup" aria-label="Son du métronome">

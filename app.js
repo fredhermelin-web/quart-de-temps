@@ -1972,15 +1972,18 @@
   }
 
   /* Réglette : la zone 60-200 BPM occupe les deux tiers de la course (on y vise plus juste) */
+  const SCALE = [[30, 0], [60, 100], [121, 500], [200, 820], [320, 1000]];   // 121 BPM pile au milieu de la réglette
   function bpmToPos(b) {
-    if (b <= 60) return (b - 30) / 30 * 120;
-    if (b <= 200) return 120 + (b - 60) / 140 * 680;
-    return 800 + (b - 200) / 120 * 200;
+    for (let i = 1; i < SCALE.length; i++) if (b <= SCALE[i][0] || i === SCALE.length - 1) {
+      const a = SCALE[i - 1], c = SCALE[i];
+      return a[1] + (b - a[0]) / (c[0] - a[0]) * (c[1] - a[1]);
+    }
   }
   function posToBpm(p) {
-    if (p <= 120) return 30 + p / 120 * 30;
-    if (p <= 800) return 60 + (p - 120) / 680 * 140;
-    return 200 + (p - 800) / 200 * 120;
+    for (let i = 1; i < SCALE.length; i++) if (p <= SCALE[i][1] || i === SCALE.length - 1) {
+      const a = SCALE[i - 1], c = SCALE[i];
+      return a[0] + (p - a[1]) / (c[1] - a[1]) * (c[0] - a[0]);
+    }
   }
   /* Nom du mouvement, en italien, affiché dans la bulle pendant qu'on règle */
   function tempoName(b) { return b < 40 ? 'Grave' : b < 60 ? 'Largo' : b < 76 ? 'Adagio' : b < 108 ? 'Andante' : b < 120 ? 'Moderato' : b < 168 ? 'Allegro' : b < 200 ? 'Presto' : 'Prestissimo'; }
@@ -2016,56 +2019,35 @@
     schedulePaint();
   }
 
-  /* Rapporteur : demi-cercle gradué ; la lunette pivote et vise le tempo, le 121 est tout en haut */
+  /* Affichage tête haute : une plaque vitrée suit le curseur pendant le réglage (tempo en gros, mouvement dessous) */
   let PR = null;
-  const protAngle = (pos) => pos < REF_POS ? (pos - REF_POS) / REF_POS * 70 : (pos - REF_POS) / (1000 - REF_POS) * 70;
-  const pPt = (a, r) => { const t = a * Math.PI / 180; return [160 + r * Math.sin(t), 128 - r * Math.cos(t)]; };
-  const f1 = (n) => n.toFixed(1);
   function buildProt() {
     const root = $('mProt');
     if (!root) return;
-    const R = 100;
-    const major = { 40: 1, 60: 1, 80: 1, 100: 1, 140: 1, 180: 1, 220: 1, 320: 1 };
-    let ticks = '', labels = '';
-    for (let b = 30; b <= 320; b += (b < 200 ? 10 : 20)) {
-      if (b === 120) continue;
-      const a = protAngle(bpmToPos(b)), mj = !!major[b];
-      const p1 = pPt(a, R - (mj ? 11 : 6)), p2 = pPt(a, R + (mj ? 3 : 1));
-      ticks += '<line x1="' + f1(p1[0]) + '" y1="' + f1(p1[1]) + '" x2="' + f1(p2[0]) + '" y2="' + f1(p2[1]) + '" stroke="' + (mj ? '#F2E6C4' : 'rgba(242,230,196,.5)') + '" stroke-width="' + (mj ? 2 : 1.2) + '" stroke-linecap="round"/>';
-      if (mj) { const q = pPt(a, R + 18); labels += '<text x="' + f1(q[0]) + '" y="' + f1(q[1]) + '" text-anchor="middle" dominant-baseline="middle">' + b + '</text>'; }
-    }
-    const L = pPt(-70, R), Rr = pPt(70, R);
-    const base = 'M' + f1(L[0]) + ' ' + f1(L[1]) + ' A' + R + ' ' + R + ' 0 0 1 ' + f1(Rr[0]) + ' ' + f1(Rr[1]);
-    root.innerHTML = '<svg viewBox="0 0 320 200" aria-hidden="true">'
-      + '<defs>'
-      + '<linearGradient id="pr-g" gradientUnits="userSpaceOnUse" x1="66" y1="0" x2="254" y2="0"><stop offset="0" stop-color="#8FE0FF"/><stop offset=".27" stop-color="#CDEFFF"/><stop offset=".5" stop-color="#F6EACB"/><stop offset=".78" stop-color="#FFC768"/><stop offset="1" stop-color="#FF7F4D"/></linearGradient>'
-      + '<linearGradient id="pr-t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A6A30"/><stop offset=".45" stop-color="#FBEBC0"/><stop offset="1" stop-color="#9A7433"/></linearGradient>'
-      + '<radialGradient id="pr-h" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#FFF3D6"/><stop offset=".6" stop-color="#C9A15A"/><stop offset="1" stop-color="#7A5A25"/></radialGradient>'
-      + '</defs>'
-      + '<path d="' + base + '" fill="none" stroke="url(#pr-g)" stroke-width="5" stroke-linecap="round" opacity=".38"/>'
-      + '<path class="p-prog" d="" fill="none" stroke="url(#pr-g)" stroke-width="6" stroke-linecap="round"/>'
-      + ticks
-      + '<g class="p-lab" font-size="11" font-weight="700" fill="#E3CC96" style="font-family:var(--f-num)">' + labels + '</g>'
-      + '<path class="p-star" d="M160 19 L162.4 25.6 L169 28 L162.4 30.4 L160 37 L157.6 30.4 L151 28 L157.6 25.6 Z"/>'
-      + '<circle class="p-dot" cx="160" cy="28" r="5"/>'
-      + '<g class="p-tel" transform="rotate(0 160 128)">'
-      + '<polygon points="156,116 164,116 167.5,48 152.5,48" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8" stroke-linejoin="round"/>'
-      + '<rect x="149.5" y="42" width="21" height="6.5" rx="2.4" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/>'
-      + '<rect x="154" y="118" width="12" height="13" rx="3" fill="url(#pr-t)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/>'
-      + '<line x1="155.2" y1="96" x2="164.8" y2="96" stroke="rgba(25,14,0,.55)" stroke-width="1.2"/><line x1="153.8" y1="70" x2="166.2" y2="70" stroke="rgba(25,14,0,.55)" stroke-width="1.2"/>'
-      + '</g>'
-      + '<circle cx="160" cy="128" r="8" fill="url(#pr-h)" stroke="rgba(25,14,0,.7)" stroke-width=".8"/><circle cx="160" cy="128" r="2.6" fill="#241707"/>'
-      + '<text class="p-num" x="160" y="175" text-anchor="middle" font-size="40" font-weight="700" fill="#FFF3D6" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">121</text>'
-      + '<text class="p-name" x="160" y="194" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2.4" fill="#E3CC96" style="font-family:var(--f-ui)"></text>'
+    const br = (x, y, dx, dy) => '<path d="M' + (x + dx * 11) + ' ' + y + ' L' + x + ' ' + y + ' L' + x + ' ' + (y + dy * 11) + '"/>';
+    root.innerHTML = '<svg viewBox="0 0 160 84" aria-hidden="true">'
+      + '<defs><filter id="pr-gl" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+      + '<g class="p-brs" fill="none" stroke-width="1.7" stroke-linecap="square">' + br(3, 3, 1, 1) + br(157, 3, -1, 1) + br(3, 81, 1, -1) + br(157, 81, -1, -1) + '</g>'
+      + '<text class="p-u" x="14" y="18" font-size="8.5" font-weight="700" letter-spacing="1.6">BPM</text>'
+      + '<path class="p-dia" d="M80 5 L85.5 10.5 L80 16 L74.5 10.5Z"/>'
+      + '<text class="p-num" x="80" y="56" text-anchor="middle" font-size="35" font-weight="700" filter="url(#pr-gl)" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">121</text>'
+      + '<text class="p-name" x="80" y="75" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="2.6" style="font-family:var(--f-ui)"></text>'
+      + '<path class="p-car" d="M-6 0 L6 0 L0 7Z" transform="translate(80 85)"/>'
       + '</svg>';
-    PR = { root, tel: root.querySelector('.p-tel'), prog: root.querySelector('.p-prog'), dot: root.querySelector('.p-dot'), num: root.querySelector('.p-num'), name: root.querySelector('.p-name') };
+    PR = { root, car: root.querySelector('.p-car'), num: root.querySelector('.p-num'), name: root.querySelector('.p-name'), left: 0, W: 300, vw: 400 };
+  }
+  function protGeo() {
+    if (!PR) return;
+    const r = $('mSlider').getBoundingClientRect();
+    PR.left = r.left; PR.W = r.width; PR.vw = document.documentElement.clientWidth;
   }
   function paintProt(pos, atRef) {
-    const a = protAngle(pos), p = pPt(a, 100);
-    PR.tel.setAttribute('transform', 'rotate(' + a.toFixed(2) + ' 160 128)');
-    PR.dot.setAttribute('cx', f1(p[0])); PR.dot.setAttribute('cy', f1(p[1]));
-    if (Math.abs(a) < 0.4) PR.prog.setAttribute('d', '');
-    else { const q = pPt(0, 100); PR.prog.setAttribute('d', 'M' + f1(q[0]) + ' ' + f1(q[1]) + ' A100 100 0 0 ' + (a > 0 ? 1 : 0) + ' ' + f1(p[0]) + ' ' + f1(p[1])); }
+    const k = pos / 1000, w = 156, tx = 12 + (PR.W - 24) * k;
+    // la plaque se décale du côté opposé au déplacement, sans jamais sortir de l'écran
+    let c = tx - (k - .5) * 2 * 34;
+    c = Math.max(w / 2 + 8 - PR.left, Math.min(PR.vw - w / 2 - 8 - PR.left, c));
+    PR.root.style.setProperty('--pl', c.toFixed(1) + 'px');
+    PR.car.setAttribute('transform', 'translate(' + Math.max(22, Math.min(138, 80 + (tx - c))).toFixed(1) + ' 85)');
     PR.num.textContent = metro.bpm;
     PR.name.textContent = tempoName(metro.bpm).toUpperCase();
     PR.root.classList.toggle('ref', atRef);
@@ -2615,6 +2597,7 @@
       D.id = e.pointerId; D.x = e.clientX; D.t = e.timeStamp; D.acc = 0;
       try { hit.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
       wasRef = metro.bpm === REF_BPM;
+      protGeo();
       if (PR) PR.root.classList.add('on');
       place(posAt(e.clientX));
       paintSlider();
