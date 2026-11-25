@@ -1247,6 +1247,7 @@
     getCtx();
     await unlock();
     metro.running = true;
+    store.set('started', true); $('mToggle').classList.remove('invite');   // le Play cesse de « respirer » dès le premier départ
     metro.beat = 0;
     metro.subIdx = 0;
     if (metro.pendingSub) { metro.sub = metro.pendingSub; metro.pendingSub = null; }
@@ -1820,7 +1821,7 @@
     const gapTop = (cyAbs - RING) - bx.bottom, gapBot = gb.top - (cyAbs + RING);
     const cs = getComputedStyle(metroEl);
     const curTop = parseFloat(cs.getPropertyValue('--beats-gap')) || 6, curRow = parseFloat(cs.getPropertyValue('--row-gap')) || 84;
-    const wantTop = Math.max(6, Math.round(curTop + (12 - gapTop))), wantRow = Math.max(24, Math.round(curRow + (14 - gapBot)));
+    const wantTop = Math.max(6, Math.round(curTop + (12 - gapTop))), wantRow = Math.max(24, Math.round(curRow + (22 - gapBot)));
     if (Math.abs(wantTop - curTop) > 1 || Math.abs(wantRow - curRow) > 1) {
       metroEl.style.setProperty('--beats-gap', wantTop + 'px');
       metroEl.style.setProperty('--row-gap', wantRow + 'px');
@@ -2725,6 +2726,7 @@
   // Nettoyage des anciennes mémoires de réglages (ils ne sont plus restaurés)
   ['bpm', 'sub', 'pattern', 'meter', 'beatsTip'].forEach((k) => { try { localStorage.removeItem('atelier.' + k); } catch (e) { /* ignoré */ } });
   $('knobClose').setAttribute('aria-disabled', 'true');
+  if (!store.get('started', false)) $('mToggle').classList.add('invite');   // tant qu'on n'a jamais démarré, le Play invite à l'appuyer
   renderSpeedWitness();
   renderTransport();
   renderLoop();

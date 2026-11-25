@@ -2294,3 +2294,39 @@ html.intro .mini-mark { opacity: 0; }
 
 /* le calque de la galaxie est rangé dans le cadre du métronome : il suit le disque quand on fait défiler */
 .metro > .dust { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 30; pointer-events: none; }
+
+/* =================== Retouches v56 : lisibilité, démarrage évident, 33/45 plus franc =================== */
+/* Chiffres et repères : crème doré au lieu du bleu éteint, un peu plus gros */
+.beat-n { font: 600 12px/1 var(--f-num); color: #D8BE86; }
+.beat[data-i="0"] .beat-n { color: var(--amber); }
+.mslider-row { margin-top: 24px; }
+.mslider-ends span { font: 600 11px/1 var(--f-num); color: #D8BE86; }
+.mslider-ends .mends-hint { font: italic 500 13px/1 "EB Garamond", Garamond, "Times New Roman", serif; letter-spacing: .02em; color: #CDBB98; }
+.tap span { font-size: 10px; color: #E6C27A; opacity: .85; }
+
+/* Le Play dit ce qu'il fait, et respire tant qu'on n'a jamais démarré */
+.mctl .go .go-lbl { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 10px/1 var(--f-ui); letter-spacing: .14em; text-transform: uppercase; color: #E6C27A; pointer-events: none; }
+@keyframes go-invite {
+  0%, 100% { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 6px rgba(242, 208, 138, .35), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 26px -6px rgba(255, 190, 100, .5); }
+  50% { box-shadow: 0 0 0 5px rgba(12, 15, 36, .55), 0 0 0 7px rgba(242, 208, 138, .8), 0 10px 22px -8px rgba(0, 0, 0, .9), 0 0 36px 2px rgba(255, 190, 100, .9); }
+}
+.mctl .go.invite:not(.running) { animation: go-invite 2.2s ease-in-out infinite; }
+
+/* 33/45 : plus grand, plus facile à toucher ; au 45 le curseur passe au cuivre et l'ambiance se réchauffe nettement */
+.metro .rpm-float { left: 12px; width: 46px !important; height: 96px; }
+.metro .rpm-float .rpm-opt { font-size: 16px; font-weight: 700; }
+.metro[data-rpm="45"] .rpm-float .rpm-knob { background: linear-gradient(180deg, #FFD9A8, #F08A3C 55%, #B5531C); }
+.metro[data-rpm="45"] {
+  background:
+    radial-gradient(110% 45% at 100% 0%, rgba(255, 205, 130, .26), rgba(255, 205, 130, 0) 60%),
+    radial-gradient(90% 45% at 0% 100%, rgba(255, 122, 58, .38), rgba(255, 122, 58, 0) 62%),
+    radial-gradient(70% 35% at 100% 100%, rgba(232, 140, 130, .24), rgba(232, 140, 130, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+  background-color: rgba(52, 30, 50, .86);
+}
+.metro[data-rpm="45"]::before {
+  background:
+    radial-gradient(75% 38% at 50% 14%, rgba(255, 197, 110, .28), rgba(255, 197, 110, 0) 72%),
+    radial-gradient(90% 40% at 50% 100%, rgba(255, 122, 58, .2), rgba(255, 122, 58, 0) 70%);
+}
+.metro[data-rpm="45"] .metro-glow { background: radial-gradient(60% 34% at 50% 12%, rgba(255, 138, 61, .4), rgba(255, 138, 61, 0) 72%); }
