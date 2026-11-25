@@ -226,9 +226,9 @@
 
   <div class="pageB" id="pageB">
   <!-- ============ LECTEUR ============ -->
-  <section class="deck player" id="player" data-state="empty" aria-label="Ralentisseur">
-    <h2 class="metro-plaque player-plaque"><i aria-hidden="true"></i><svg class="pl-spiral" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><span>Ralentisseur</span><svg class="pl-spiral pl-mirror" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><i aria-hidden="true"></i></h2>
-    <p class="deck-sub"><span aria-hidden="true">‹</span> moins vite <span class="dot" aria-hidden="true">·</span> plus vite <span aria-hidden="true">›</span></p>
+  <section class="deck player" id="player" data-state="empty" aria-label="Atelier : ralentir ou accélérer un morceau">
+    <h2 class="metro-plaque player-plaque"><i aria-hidden="true"></i><svg class="pl-spiral" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><span>Atelier</span><svg class="pl-spiral pl-mirror" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><i aria-hidden="true"></i></h2>
+    <p class="deck-sub"><span aria-hidden="true">‹</span> je ralentis <span class="dot" aria-hidden="true">·</span> j'accélère <span aria-hidden="true">›</span></p>
     <!-- Deux boutons de poste TSF, gravés de la spirale : gauche ouvre la vitesse, droite la referme -->
     <!-- Façade du poste : trois ronds alignés, même taille — bouton gauche · logo · bouton droit -->
     <div class="radio-top">
@@ -283,6 +283,7 @@
       </div>
     </div>
 
+    <button type="button" id="emptyImport" class="cta key"><span class="ki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14.5V17a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.5"/></svg><span>Importer un morceau</span></span></button>
     <div class="wave-wrap" id="waveWrap">
       <canvas id="wave" aria-label="Forme d'onde : touche pour te déplacer, glisse pour défiler, pince pour zoomer"></canvas>
       <div class="playhead" aria-hidden="true"></div>
@@ -292,18 +293,20 @@
         
         <span class="deco" aria-hidden="true"><i style="--h:30%;--d:-.2s"></i><i style="--h:55%;--d:-.9s"></i><i style="--h:40%;--d:-.4s"></i><i style="--h:80%;--d:-1.1s"></i><i style="--h:50%;--d:-.6s"></i><i style="--h:95%;--d:-1.4s"></i><i style="--h:60%;--d:-.3s"></i><i style="--h:35%;--d:-.8s"></i><i style="--h:70%;--d:-1.2s"></i><i style="--h:45%;--d:-.5s"></i><i style="--h:85%;--d:-1s"></i><i style="--h:55%;--d:-.1s"></i><i style="--h:30%;--d:-.7s"></i><i style="--h:65%;--d:-1.3s"></i><i style="--h:90%;--d:-.45s"></i><i style="--h:50%;--d:-.95s"></i><i style="--h:40%;--d:-1.25s"></i><i style="--h:75%;--d:-.35s"></i><i style="--h:35%;--d:-.85s"></i><i style="--h:60%;--d:-1.15s"></i><i style="--h:45%;--d:-.25s"></i><i style="--h:80%;--d:-.75s"></i><i style="--h:30%;--d:-1.05s"></i><i style="--h:55%;--d:-.55s"></i><i style="--h:70%;--d:-1.35s"></i><i style="--h:40%;--d:-.15s"></i><i style="--h:60%;--d:-.65s"></i><i style="--h:35%;--d:-1.2s"></i><i style="--h:50%;--d:-.4s"></i><i style="--h:30%;--d:-.9s"></i></span>
         <span class="hud-empty" aria-hidden="true">
-          <svg viewBox="0 0 320 120" preserveAspectRatio="none">
-            <g class="hud-br"><path d="M6 22V6h16M298 6h16v16M314 98v16h-16M22 114H6V98"/></g>
-            <g class="hud-grid"><path d="M0 60H320M80 8V112M160 8V112M240 8V112"/></g>
-            <g class="hud-sine"><path d="M-320 60C-280 14 -240 14 -200 60S-120 106 -80 60S0 14 40 60S120 106 160 60S240 14 280 60S360 106 400 60S480 14 520 60S600 106 640 60"/></g>
-            <g class="hud-tick"><path d="M20 112v-5M60 112v-5M100 112v-5M140 112v-5M180 112v-5M220 112v-5M260 112v-5M300 112v-5"/></g>
+          <svg viewBox="-186 -160 372 320" preserveAspectRatio="xMidYMid slice">
+            <defs><linearGradient id="rdSw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9FFFD6" stop-opacity="0"/><stop offset="1" stop-color="#9FFFD6" stop-opacity=".42"/></linearGradient>
+            <linearGradient id="rdSp" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFE3A3"/><stop offset="1" stop-color="#B89A58"/></linearGradient></defs>
+            <path d="M-180 -150v6M-180 150v-6M-160 -150v6M-160 150v-6M-140 -150v6M-140 150v-6M-120 -150v6M-120 150v-6M-100 -150v6M-100 150v-6M-80 -150v6M-80 150v-6M-60 -150v6M-60 150v-6M-40 -150v6M-40 150v-6M-20 -150v6M-20 150v-6M0 -150v6M0 150v-6M20 -150v6M20 150v-6M40 -150v6M40 150v-6M60 -150v6M60 150v-6M80 -150v6M80 150v-6M100 -150v6M100 150v-6M120 -150v6M120 150v-6M140 -150v6M140 150v-6M160 -150v6M160 150v-6M180 -150v6M180 150v-6M-186 -140h6M186 -140h-6M-186 -120h6M186 -120h-6M-186 -100h6M186 -100h-6M-186 -80h6M186 -80h-6M-186 -60h6M186 -60h-6M-186 -40h6M186 -40h-6M-186 -20h6M186 -20h-6M-186 0h6M186 0h-6M-186 20h6M186 20h-6M-186 40h6M186 40h-6M-186 60h6M186 60h-6M-186 80h6M186 80h-6M-186 100h6M186 100h-6M-186 120h6M186 120h-6M-186 140h6M186 140h-6" class="rd-tick"/>
+            <path d="M-186 0H186M0 -160V160" class="rd-cross"/>
+            <g transform="translate(-6.8 -6.8) scale(1.7)"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8" class="rd-spiral"/></g>
+            <g class="rd-sweep"><path d="M0 0 L190 0 A190 190 0 0 0 171 -82 Z" fill="url(#rdSw)"/><line x1="0" y1="0" x2="190" y2="0" class="rd-line"/></g>
+            <rect x="-6.8" y="-6.8" width="13.6" height="13.6" class="rd-sq"/>
+            <g class="rd-arms"><path d="M-11 -6.8H-3M-6.8 -11V-3"/><path d="M3 -6.8H11M6.8 -11V-3"/><path d="M3 6.8H11M6.8 3V11"/><path d="M-11 6.8H-3M-6.8 3V11"/></g>
+            <text x="0" y="2.4" text-anchor="middle" class="rd-44">4/4</text>
           </svg>
-          <b class="hud-l">ATELIER</b><b class="hud-r">RALENTIS · ACCÉLÈRE</b>
+          <b class="cn c1">1</b><b class="cn c2">2</b><b class="cn c3">3</b><b class="cn c4">4</b>
+          <i class="br tl"></i><i class="br tr"></i><i class="br bl"></i><i class="br bb"></i>
         </span>
-        <button type="button" id="emptyImport" class="cta">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14.5V17a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.5"/></svg>
-          Importer un morceau
-        </button>
         <p class="empty-lead">Ralentis ou accélère, sans changer la note</p>
         <p class="empty-note">MP3 · WAV · M4A</p>
         <span class="tsf-cloth" aria-hidden="true"></span>
@@ -314,6 +317,48 @@
         <span>Analyse du morceau…</span>
       </div>
     </div>
+    <div class="wave-handle" id="waveHandle" role="slider" tabindex="0" aria-label="Hauteur de l'écran d'onde" aria-valuemin="150" aria-valuemax="460"><i></i></div>
+
+        <!-- Volet caché du ralentisseur : s'ouvre avec le bouton de gauche, se ferme avec celui de droite -->
+    <div class="tempo-wrap" id="tempoWrap"><div class="tempo-in">
+    <div class="tempo glass" id="tempo">
+      <div class="tempo-head">
+        <div class="tempo-main">
+          <span class="eyebrow">Tempo du morceau</span>
+          <div class="bpm-now"><output id="playBpm">—</output><span class="unit">BPM</span></div>
+        </div>
+        <div class="tempo-side">
+          <span class="zone-chip" id="zoneLbl">Normal</span>
+          <output id="speedVal" class="pct">100 %</output>
+        </div>
+      </div>
+
+      <div class="speed-row">
+        <div class="speed-track">
+          <input type="range" id="speed" min="50" max="150" step="1" value="100" aria-label="Vitesse de lecture, de 50 à 150 %">
+        </div>
+      </div>
+      <div class="speed-scale" aria-hidden="true"><span style="left:0">50</span><span style="left:25%">75</span><span style="left:50%">100</span><span style="left:75%">125</span><span style="left:100%">150</span></div>
+      <div class="speed-nudges">
+        <button type="button" id="spMinus" class="nudge" aria-label="Moins 5 points de vitesse">−5</button>
+        <button type="button" id="spPlus" class="nudge" aria-label="Plus 5 points de vitesse">+5</button>
+      </div>
+
+      <div class="tempo-foot">
+        <button type="button" id="spReset" class="orig-tempo" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg>
+          <span>Tempo original</span><small>100 %</small>
+        </button>
+        <label class="orig-field" for="origBpm" title="Double-touche pour corriger le BPM d'origine">
+          <span class="orig-lbl">BPM d’origine</span>
+          <span class="orig-val">
+            <input id="origBpm" type="text" inputmode="decimal" autocomplete="off" placeholder="—" maxlength="5" readonly disabled aria-label="BPM d'origine du morceau. Double-touche pour le corriger.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+          </span>
+        </label>
+      </div>
+    </div>
+    </div></div>
 
     <div class="info-row">
       <span id="tCur" class="time">0:00</span>
@@ -347,45 +392,6 @@
       </button>
     </div>
 
-    <!-- Volet caché du ralentisseur : s'ouvre avec le bouton de gauche, se ferme avec celui de droite -->
-    <div class="tempo-wrap" id="tempoWrap"><div class="tempo-in">
-    <div class="tempo glass" id="tempo">
-      <div class="tempo-head">
-        <div class="tempo-main">
-          <span class="eyebrow">Tempo du morceau</span>
-          <div class="bpm-now"><output id="playBpm">—</output><span class="unit">BPM</span></div>
-        </div>
-        <div class="tempo-side">
-          <span class="zone-chip" id="zoneLbl">Normal</span>
-          <output id="speedVal" class="pct">100 %</output>
-        </div>
-      </div>
-
-      <div class="speed-row">
-        <div class="speed-track">
-          <input type="range" id="speed" min="50" max="150" step="1" value="100" aria-label="Vitesse de lecture, de 50 à 150 %">
-        </div>
-      </div>
-      <div class="speed-nudges">
-        <button type="button" id="spMinus" class="nudge" aria-label="Moins 5 points de vitesse">−5</button>
-        <button type="button" id="spPlus" class="nudge" aria-label="Plus 5 points de vitesse">+5</button>
-      </div>
-
-      <div class="tempo-foot">
-        <button type="button" id="spReset" class="orig-tempo" disabled>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg>
-          <span>Tempo original</span><small>100 %</small>
-        </button>
-        <label class="orig-field" for="origBpm" title="Double-touche pour corriger le BPM d'origine">
-          <span class="orig-lbl">BPM d’origine</span>
-          <span class="orig-val">
-            <input id="origBpm" type="text" inputmode="decimal" autocomplete="off" placeholder="—" maxlength="5" readonly disabled aria-label="BPM d'origine du morceau. Double-touche pour le corriger.">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
-          </span>
-        </label>
-      </div>
-    </div>
-    </div></div>
   </section>
 
   <footer class="site-foot">

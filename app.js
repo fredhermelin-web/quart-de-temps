@@ -795,6 +795,19 @@
   if (window.ResizeObserver) new ResizeObserver(sizeWave).observe($('waveWrap'));
   window.addEventListener('resize', sizeWave);
 
+  /* Poignée de hauteur : on tire pour agrandir ou réduire l'écran d'onde (retenu d'une fois sur l'autre) */
+  (function () {
+    const hd = $('waveHandle'), MIN = 150, MAX = 460;
+    let h0 = clamp(+store.get('waveH', 190) || 190, MIN, MAX), y0 = 0, base = 0, drag = false;
+    const apply = (v, save) => { h0 = clamp(Math.round(v), MIN, MAX); player.style.setProperty('--wh', h0 + 'px'); hd.setAttribute('aria-valuenow', String(h0)); if (save) store.set('waveH', h0); };
+    apply(h0, false);
+    hd.addEventListener('pointerdown', (e) => { drag = true; y0 = e.clientY; base = h0; try { hd.setPointerCapture(e.pointerId); } catch (x) { /* ignoré */ } hd.classList.add('on'); e.preventDefault(); });
+    hd.addEventListener('pointermove', (e) => { if (drag) apply(base + (e.clientY - y0), false); });
+    const end = () => { if (!drag) return; drag = false; hd.classList.remove('on'); store.set('waveH', h0); };
+    hd.addEventListener('pointerup', end); hd.addEventListener('pointercancel', end);
+    hd.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { apply(h0 + 20, true); e.preventDefault(); } else if (e.key === 'ArrowUp') { apply(h0 - 20, true); e.preventDefault(); } });
+  })();
+
   function drawWave(p) {
     const g = wctx;
     g.clearRect(0, 0, W, H);
@@ -996,7 +1009,7 @@
     player.classList.toggle('speed-off', off && !tempoOpen);
     $('radioLabel').classList.toggle('lit', tempoOpen);
   }
-  function setTempoOpen(open) {
+  function setTempoOpen(open, quiet) {
     if (open === tempoOpen) {
       // Le bouton « inutile » tourne quand même un peu : il répond au toucher
       const k = open ? $('knobOpen') : $('knobClose');
@@ -1013,7 +1026,7 @@
     renderSpeedWitness();
     dirty = true;
     // Panneau entièrement visible : si −5 / curseur / +5 sortent de l'écran, on fait défiler juste ce qu'il faut
-    if (open) setTimeout(() => {
+    if (open && !quiet) setTimeout(() => {
       if (!tempoOpen) return;
       const r = $('tempo').getBoundingClientRect(), vh = window.innerHeight || document.documentElement.clientHeight;
       if (r.bottom > vh - 8 || r.top < 0) $('tempo').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -2912,6 +2925,7 @@
   // Nettoyage des anciennes mémoires de réglages (ils ne sont plus restaurés)
   ['bpm', 'sub', 'pattern', 'meter', 'beatsTip'].forEach((k) => { try { localStorage.removeItem('atelier.' + k); } catch (e) { /* ignoré */ } });
   $('knobClose').setAttribute('aria-disabled', 'true');
+  setTempoOpen(true, true);   // l'Atelier arrive déployé : la vitesse est visible tout de suite
   if (!store.get('started', false)) $('mToggle').classList.add('invite');   // tant qu'on n'a jamais démarré, le Play invite à l'appuyer
   renderSpeedWitness();
   renderTransport();

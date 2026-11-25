@@ -2550,3 +2550,114 @@ body.lite .hud-sine path { animation: none; }
 .hud-r { right: 30px; }
 .hud-sine path { opacity: .4; }
 .player[data-state="empty"] .empty-lead { text-shadow: 0 1px 6px #0B0E24, 0 0 12px #0B0E24; }
+
+/* ================= v66 : l'Atelier, cockpit de Léonard ================= */
+.player { position: relative; }
+/* Titre plus grand, sous-titre plus lisible */
+.player-plaque { font-size: 24px; letter-spacing: .3em; margin-bottom: 0; }
+.player-plaque .pl-spiral { width: 16px; height: 16px; }
+.player .deck-sub { font-size: 18px; margin: 2px 0 10px; }
+/* Plus de boutons à ouvrir : seule reste la spirale, devenue bouton « Mode d'emploi » */
+.player .radio-top { position: absolute; left: 12px; top: 12px; z-index: 4; display: block; min-height: 0; margin: 0; }
+.player .radio-top .knob-wrap, .player .radio-top .radio-label { display: none; }
+.player .sig-emblem { width: 40px; height: 40px; }
+.sig-cap { font-size: 10.5px; left: -2px; transform: none; top: calc(100% + 2px); }
+/* L'Atelier arrive déployé */
+.tempo-wrap { margin-top: 0; grid-template-rows: 1fr; }
+.tempo-wrap .tempo { transform: none; opacity: 1; }
+.speed-nudges { display: none; }
+.speed-btn-hide { display: none; }
+
+/* Touche d'import : biseautée comme les cadres, contour or */
+.cta.key { display: block; width: 100%; height: 52px; padding: 0; margin: 0 0 12px; border: 0; animation: none; text-shadow: none; color: #FFD98A;
+  background: linear-gradient(110deg, #FFDA8A, #B89A58);
+  box-shadow: none;
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px); }
+.cta.key .ki { position: absolute; inset: 1.5px; display: flex; align-items: center; justify-content: center; gap: 10px; font: 700 14px/1 var(--f-ui, Inter, sans-serif); letter-spacing: .2em; text-transform: uppercase;
+  background: linear-gradient(180deg, #1E2450, #161B3E);
+  clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px); }
+.cta.key:active .ki { background: linear-gradient(180deg, #3A3150, #2A2542); }
+.cta.key svg { width: 20px; height: 20px; }
+.player:not([data-state="empty"]) #emptyImport { display: none; }
+
+/* Écran : hauteur réglable par la poignée */
+.player[data-state] .wave-wrap { height: var(--wh, 230px); border-radius: 8px; }
+.player[data-state="empty"] .wave-wrap { background: radial-gradient(60% 45% at 50% 50%, rgba(120, 170, 255, .22), rgba(120, 170, 255, 0) 70%), linear-gradient(180deg, #0E1230, #0B0E26); }
+.player[data-state="empty"] .wave-empty { padding: 0; display: block; }
+.player[data-state="empty"] .wave-empty::before, .player[data-state="empty"] .wave-empty::after { display: none; }
+.player[data-state="empty"] .wave-empty .deco, .player[data-state="empty"] .tsf-plate, .player[data-state="empty"] .tsf-cloth, .player[data-state="empty"] .empty-lead, .player[data-state="empty"] .empty-note { display: none; }
+.wave-handle { position: relative; height: 24px; margin: 2px auto 0; width: 120px; display: grid; place-items: center; touch-action: none; cursor: ns-resize; outline: 0; }
+.wave-handle i { display: block; width: 46px; height: 4px; border-radius: 2px; background: rgba(233, 203, 140, .75); transition: background .2s, width .2s; }
+.wave-handle.on i, .wave-handle:focus-visible i { background: #FFE3A3; width: 64px; }
+
+/* Radar : un faisceau qui balaye les quatre quarts de temps */
+.hud-empty { z-index: 0; }
+.hud-empty svg { inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.rd-tick { fill: none; stroke: rgba(235, 248, 255, .35); stroke-width: 1; }
+.rd-cross { fill: none; stroke: rgba(235, 248, 255, .12); stroke-width: 1; stroke-dasharray: 1 5; }
+.rd-spiral { fill: none; stroke: url(#rdSp); stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-width: 1.7px; filter: drop-shadow(0 0 4px rgba(255, 200, 110, .45)); }
+.rd-line { stroke: #C9FFE8; stroke-width: 1.5; filter: drop-shadow(0 0 4px #9FFFD6); }
+.rd-sq { fill: rgba(20, 24, 51, .7); stroke: rgba(227, 194, 127, .9); stroke-width: 1; }
+.rd-arms { fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(255, 255, 255, .7)); }
+.rd-44 { font: 700 6.5px Georgia, serif; fill: #FFD98A; }
+.rd-sweep { transform-box: view-box; transform-origin: 0px 0px; animation: rd-sweep 8s ease-in-out infinite; }
+@keyframes rd-sweep {
+  0%, 20% { transform: rotate(-135deg); } 25%, 45% { transform: rotate(-45deg); }
+  50%, 70% { transform: rotate(45deg); } 75%, 95% { transform: rotate(135deg); } 100% { transform: rotate(225deg); }
+}
+.hud-empty .cn { position: absolute; font: 700 17px Georgia, serif; color: rgba(255, 255, 255, .55); animation: cn-lit 8s infinite; }
+.hud-empty .cn.c1 { left: 38px; top: 11px; } .hud-empty .cn.c2 { right: 38px; top: 11px; animation-delay: 2s; }
+.hud-empty .cn.c3 { right: 38px; bottom: 9px; animation-delay: 4s; } .hud-empty .cn.c4 { left: 38px; bottom: 9px; animation-delay: 6s; }
+@keyframes cn-lit { 0%, 22% { color: #FFD98A; text-shadow: 0 0 8px rgba(255, 200, 110, .8); } 28%, 100% { color: rgba(255, 255, 255, .55); text-shadow: none; } }
+.hud-empty .br { position: absolute; width: 22px; height: 22px; border: 1.5px solid rgba(143, 224, 255, .85); }
+.hud-empty .br.tl { left: 8px; top: 8px; border-right: 0; border-bottom: 0; } .hud-empty .br.tr { right: 8px; top: 8px; border-left: 0; border-bottom: 0; }
+.hud-empty .br.bl { left: 8px; bottom: 8px; border-right: 0; border-top: 0; } .hud-empty .br.bb { right: 8px; bottom: 8px; border-left: 0; border-top: 0; }
+@media (prefers-reduced-motion: reduce) { .rd-sweep, .hud-empty .cn { animation: none; } .rd-sweep { transform: rotate(-45deg); } .hud-empty .cn.c2 { color: #FFD98A; } }
+body.lite .rd-sweep, body.lite .hud-empty .cn { animation: none; }
+
+/* Ruban de vitesse : une plaque de verre, on voit à travers */
+.tempo.glass { position: relative; border-radius: 6px; padding: 14px 14px 12px; background-color: rgba(22, 27, 66, .28);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .012) 45%, rgba(255, 255, 255, .035));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .17), inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -1px 0 rgba(255, 255, 255, .14), 0 16px 30px -18px #000;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.tempo.glass::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 38%; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, 0)); pointer-events: none; }
+.tempo .eyebrow { font-size: 12.5px; letter-spacing: .2em; color: rgba(255, 255, 255, .78); }
+.tempo .bpm-now .unit { font-size: 14px; letter-spacing: .14em; color: rgba(255, 255, 255, .78); }
+.tempo .pct { font-size: 40px; font-weight: 600; letter-spacing: .01em; }
+.tempo .zone-chip { font-size: 12.5px; padding: 6px 12px 5px; }
+.speed-row { margin-bottom: 34px; margin-top: 6px; }
+.speed-track::after { top: auto; bottom: -15px; height: 12px; margin: 0; left: 8px; right: 8px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .6) 0 1px, transparent 1px 5%) left bottom / 100% 6px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .95) 0 1.5px, transparent 1.5px 25%) left bottom / 100% 12px no-repeat,
+    linear-gradient(rgba(255, 255, 255, .95), rgba(255, 255, 255, .95)) right bottom / 1.5px 12px no-repeat; }
+.speed-scale { position: relative; height: 14px; margin: -46px 8px 30px; pointer-events: none; }
+.speed-scale span { position: absolute; top: 0; transform: translateX(-50%); font: 600 11px var(--f-num, monospace); color: rgba(255, 255, 255, .78); }
+.tempo-foot { align-items: flex-end; gap: 14px; margin-top: 2px; }
+.orig-tempo { min-height: 46px; padding: 0 16px; font-size: 15px; }
+.orig-tempo small { font-size: 13px; }
+.orig-lbl { font-size: 12px; letter-spacing: .1em; }
+.orig-val input { font-size: 22px; }
+.cta.key { position: relative; }
+.player .player-plaque i { display: none; }
+.hud-empty .cn { top: auto; }
+.hud-empty .cn.c1, .hud-empty .cn.c2 { top: 11px; }
+.hud-empty .cn.c3, .hud-empty .cn.c4 { bottom: 9px; }
+.speed-row { margin-bottom: 46px; }
+.speed-scale { margin: -28px 8px 30px; }
+
+/* v66c : tout tient sur un écran une fois le morceau chargé */
+.pageB .player { margin-top: clamp(6px, 2vh, 22px); margin-bottom: 0; }
+.pageB { padding-top: max(4px, env(safe-area-inset-top, 0px)); }
+.player[data-state] .wave-wrap { height: var(--wh, 190px); }
+.player .deck-sub { margin: 0 0 8px; }
+.player-plaque { margin-bottom: 0; }
+.tempo.glass { padding: 10px 14px 10px; gap: 4px; }
+.tempo .bpm-now output { font-size: 36px; }
+.tempo .pct { font-size: 34px; }
+.speed-row { margin: 2px 0 36px; }
+.speed-scale { margin: -22px 8px 22px; }
+.tempo-foot { margin-top: 0; }
+.orig-tempo { min-height: 42px; }
+.orig-val input { font-size: 20px; }
+.player .info-row { margin-top: 2px; }
