@@ -2971,3 +2971,6 @@
 
 /* v71 : si l'appareil demande moins de mouvement, la spirale du radar reste immobile */
 try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hud-empty animateTransform').forEach((n) => n.remove()); } catch (e) { /* ignoré */ }
+
+/* v72 : la pastille « Mode d'emploi » ouvre aussi le mode d'emploi */
+try { const sc = document.getElementById('sigCap'), se = document.getElementById('sigEmblem'); if (sc && se) sc.addEventListener('click', () => se.click()); } catch (e) { /* ignoré */ }

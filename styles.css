@@ -2903,3 +2903,44 @@ body { background-image: radial-gradient(120% 60% at 50% 0%, rgba(120, 130, 255,
     radial-gradient(70% 35% at 100% 100%, rgba(255, 94, 126, .14), rgba(255, 94, 126, 0) 60%),
     linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
 }
+
+/* ===================== v72 : points lumineux, trajectoires, spirale plus vive, pastille « ? » ===================== */
+/* Avions = points lumineux qui clignotent, avec une traînée et le format en texte seul */
+.rd-dot { fill: #F2FFF9; animation: rd-blink var(--bk, 1.6s) ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.rd-halo { fill: rgba(159, 255, 214, .38); animation: rd-halo var(--bk, 1.6s) ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.rd-tag text { font: 700 15px "SF Mono", ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; fill: #EAF6FF;
+  paint-order: stroke; stroke: #070B24; stroke-width: 3.4px; stroke-linejoin: round; }
+@keyframes rd-blink { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes rd-halo { 0%, 100% { opacity: .9; transform: scale(.85); } 50% { opacity: .12; transform: scale(1.7); } }
+/* Trajectoires : une descend, une monte, une ondule, une monte doucement */
+.rd-tag { animation: rd-bob var(--bob, 6s) ease-in-out infinite alternate; }
+.rd-fly.f0 { animation: rd-cross-dn 26s linear -4s infinite; }
+.rd-fly.f1 { animation: rd-cross-up 31s linear -19s infinite; }
+.rd-fly.f2 { animation: rd-cross 22s linear -9s infinite; }
+.rd-fly.f3 { animation: rd-cross-up2 28s linear -22s infinite; }
+@keyframes rd-cross-dn { from { transform: translate(-250px, -26px); } to { transform: translate(250px, 26px); } }
+@keyframes rd-cross-up { from { transform: translate(-250px, 30px); } to { transform: translate(250px, -30px); } }
+@keyframes rd-cross-up2 { from { transform: translate(-250px, 14px); } to { transform: translate(250px, -14px); } }
+.rd-tag { --amp: 4px; }
+@keyframes rd-bob { from { transform: translateY(-4px); } to { transform: translateY(4px); } }
+.rd-tag:has(.f2) { animation-name: rd-wave; }
+@keyframes rd-wave { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) {
+  .rd-dot, .rd-halo, .rd-tag, .rd-fly.f0, .rd-fly.f1, .rd-fly.f2, .rd-fly.f3 { animation: none; }
+  .rd-fly.f0 { transform: translate(-70px, -10px); } .rd-fly.f1 { transform: translate(60px, -6px); }
+  .rd-fly.f2 { transform: translate(-20px, 0); } .rd-fly.f3 { transform: translate(80px, -4px); }
+}
+
+/* « Mode d'emploi » : pastille avec un « ? » doré, dans la bande libre sous l'en-tête (écran vide) */
+.player[data-state="empty"] .sig-cap { display: inline-flex; align-items: center; gap: 7px; left: -2px; top: calc(100% + 18px);
+  padding: 3px 13px 3px 4px; border-radius: 999px; font: italic 500 13.5px/1 "EB Garamond", Georgia, serif; color: #FFE9BE; opacity: 1;
+  background: rgba(255, 201, 77, .13); box-shadow: inset 0 0 0 1px rgba(255, 214, 150, .6); text-shadow: none; pointer-events: auto; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; }
+.player[data-state="empty"] .sig-cap::before { content: "?"; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  font: 700 13px/1 var(--f-ui, Inter, sans-serif); color: #2A1A06; background: linear-gradient(180deg, #FFE08A, #F0B83A); }
+.player[data-state="empty"] .sig-cap.call { animation: none; box-shadow: inset 0 0 0 1px rgba(255, 214, 150, .6), 0 0 12px rgba(255, 190, 90, .45); }
+/* v72b : traînée pleine et fondue, halo plus discret */
+.rd-tag .rd-ct { fill: url(#rdCt); stroke: none; animation: none; }
+.rd-halo { fill: rgba(159, 255, 214, .28); }
+.rd-halo, .rd-dot { filter: none; }
+@keyframes rd-halo { 0%, 100% { opacity: .75; transform: scale(.8); } 50% { opacity: .1; transform: scale(1.5); } }
