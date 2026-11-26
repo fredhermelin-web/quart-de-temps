@@ -90,8 +90,8 @@
   </section>
 
   <!-- Retour à l'atelier (accueil) depuis chaque atelier -->
-  <button type="button" class="back-atelier" id="backAtelier" data-open="hub" aria-label="Retour à l'atelier musical">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>L'atelier</span>
+  <button type="button" class="back-atelier" id="backAtelier" data-open="hub" aria-label="Retour à l'atelier musical (accueil)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg><span>Atelier</span>
   </button>
 
   <!-- ============ SOLFÈGE (en préparation) ============ -->
@@ -103,6 +103,9 @@
 
   <!-- ============ MÉTRONOME ============ -->
   <section class="deck metro" id="metro" aria-label="Métronome">
+    <button type="button" class="back-atelier in-deck" data-open="hub" aria-label="Retour à l'atelier musical (accueil)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg><span>Atelier</span>
+  </button>
     <span class="metro-glow" id="metroGlow" aria-hidden="true"></span>
     <span class="record" id="record" aria-hidden="true"><span class="record-disc" id="recordDisc"></span><span class="record-sheen"></span><span class="record-ring"></span><span class="record-strobe"></span></span>
     <!-- Titre de la section, plein centre, entre deux filets à losange (écho du logo) -->
@@ -278,6 +281,9 @@
   <div class="pageB" id="pageB">
   <!-- ============ LECTEUR ============ -->
   <section class="deck player" id="player" data-state="empty" aria-label="Atelier : ralentir ou accélérer un morceau">
+    <button type="button" class="back-atelier in-deck" data-open="hub" aria-label="Retour à l'atelier musical (accueil)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg><span>Atelier</span>
+  </button>
     <h2 class="metro-plaque player-plaque"><i aria-hidden="true"></i><svg class="pl-spiral" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><span>Atelier</span><svg class="pl-spiral pl-mirror" viewBox="-80 -80 160 160" aria-hidden="true"><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72"/></svg><i aria-hidden="true"></i></h2>
     <p class="deck-sub">Vitesse</p>
     <!-- Deux boutons de poste TSF, gravés de la spirale : gauche ouvre la vitesse, droite la referme -->
@@ -325,11 +331,11 @@
       <div class="track-actions">
         <button type="button" id="importBtn" class="btn-change" aria-label="Changer de morceau">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5"/><path d="M20 3.5v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5"/><path d="M4 20.5v-5h5"/></svg>
-          <span class="long">Changer de morceau</span><span class="short">Changer</span>
+          <span class="long">Changer</span><span class="short">Changer</span>
         </button>
-        <button type="button" id="removeBtn" class="remove" aria-label="Retirer le morceau">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 5 13h14z"/><path d="M5 18h14"/></svg>
-          <span class="long">Retirer le morceau</span><span class="short">Retirer</span>
+        <button type="button" id="removeBtn" class="remove" aria-label="Fermer le morceau">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          <span class="long">Fermer</span><span class="short">Fermer</span>
         </button>
       </div>
     </div>
@@ -350,7 +356,7 @@
             <linearGradient id="rdCt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#EAF6FF" stop-opacity="0"/><stop offset="1" stop-color="#EAF6FF" stop-opacity=".7"/></linearGradient></defs>
             <path d="M-180 -150v6M-180 150v-6M-160 -150v6M-160 150v-6M-140 -150v6M-140 150v-6M-120 -150v6M-120 150v-6M-100 -150v6M-100 150v-6M-80 -150v6M-80 150v-6M-60 -150v6M-60 150v-6M-40 -150v6M-40 150v-6M-20 -150v6M-20 150v-6M0 -150v6M0 150v-6M20 -150v6M20 150v-6M40 -150v6M40 150v-6M60 -150v6M60 150v-6M80 -150v6M80 150v-6M100 -150v6M100 150v-6M120 -150v6M120 150v-6M140 -150v6M140 150v-6M160 -150v6M160 150v-6M180 -150v6M180 150v-6M-186 -140h6M186 -140h-6M-186 -120h6M186 -120h-6M-186 -100h6M186 -100h-6M-186 -80h6M186 -80h-6M-186 -60h6M186 -60h-6M-186 -40h6M186 -40h-6M-186 -20h6M186 -20h-6M-186 0h6M186 0h-6M-186 20h6M186 20h-6M-186 40h6M186 40h-6M-186 60h6M186 60h-6M-186 80h6M186 80h-6M-186 100h6M186 100h-6M-186 120h6M186 120h-6M-186 140h6M186 140h-6" class="rd-tick"/>
             <path d="M-172.4 0h4.8M-170 -2.4v4.8M-155.4 0h4.8M-153 -2.4v4.8M-138.4 0h4.8M-136 -2.4v4.8M-121.4 0h4.8M-119 -2.4v4.8M-104.4 0h4.8M-102 -2.4v4.8M-87.4 0h4.8M-85 -2.4v4.8M-70.4 0h4.8M-68 -2.4v4.8M-53.4 0h4.8M-51 -2.4v4.8M-36.4 0h4.8M-34 -2.4v4.8M31.6 0h4.8M34 -2.4v4.8M48.6 0h4.8M51 -2.4v4.8M65.6 0h4.8M68 -2.4v4.8M82.6 0h4.8M85 -2.4v4.8M99.6 0h4.8M102 -2.4v4.8M116.6 0h4.8M119 -2.4v4.8M133.6 0h4.8M136 -2.4v4.8M150.6 0h4.8M153 -2.4v4.8M167.6 0h4.8M170 -2.4v4.8M-2.4 -136h4.8M0 -138.4v4.8M-2.4 -119h4.8M0 -121.4v4.8M-2.4 -102h4.8M0 -104.4v4.8M-2.4 -85h4.8M0 -87.4v4.8M-2.4 -68h4.8M0 -70.4v4.8M-2.4 -51h4.8M0 -53.4v4.8M-2.4 -34h4.8M0 -36.4v4.8M-2.4 34h4.8M0 31.6v4.8M-2.4 51h4.8M0 48.6v4.8M-2.4 68h4.8M0 65.6v4.8M-2.4 85h4.8M0 82.6v4.8M-2.4 102h4.8M0 99.6v4.8M-2.4 119h4.8M0 116.6v4.8M-2.4 136h4.8M0 133.6v4.8" class="rd-plus"/>
-            <g transform="translate(-6.8 -6.8) scale(1.7)"><g><animateTransform attributeName="transform" type="rotate" from="0 4 4" to="360 4 4" dur="10s" repeatCount="indefinite"/><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8" class="rd-spiral"/></g></g>
+            <g transform="translate(-4.8 -4.8) scale(1.2)"><g><animateTransform attributeName="transform" type="rotate" from="0 4 4" to="360 4 4" dur="120s" repeatCount="indefinite"/><path d="M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8" class="rd-spiral"/></g></g>
             <g transform="translate(-80 -52)"><g class="pl" style="--dx:3.6s;--dy:2.3s;--dz:4.4s;--dl:0s"><g class="pl-y"><g class="pl-z"><circle class="rd-halo" r="8" cx="-27" style="--bk:1.5s"/><circle class="rd-dot" r="3.6" cx="-27" style="--bk:1.5s"/><text x="4" y="7" text-anchor="middle">MP3</text></g></g></g></g><g transform="translate(80 -52)"><g class="pl" style="--dx:4.3s;--dy:2.9s;--dz:3.8s;--dl:-1.7s"><g class="pl-y"><g class="pl-z"><circle class="rd-halo" r="8" cx="-27" style="--bk:1.9s"/><circle class="rd-dot" r="3.6" cx="-27" style="--bk:1.9s"/><text x="4" y="7" text-anchor="middle">WAV</text></g></g></g></g><g transform="translate(-80 30)"><g class="pl" style="--dx:3.9s;--dy:2.6s;--dz:4.8s;--dl:-2.6s"><g class="pl-y"><g class="pl-z"><circle class="rd-halo" r="8" cx="-27" style="--bk:1.7s"/><circle class="rd-dot" r="3.6" cx="-27" style="--bk:1.7s"/><text x="4" y="7" text-anchor="middle">M4A</text></g></g></g></g><g transform="translate(80 30)"><g class="pl" style="--dx:3.3s;--dy:3.1s;--dz:4.1s;--dl:-0.9s"><g class="pl-y"><g class="pl-z"><circle class="rd-halo" r="8" cx="-27" style="--bk:2.1s"/><circle class="rd-dot" r="3.6" cx="-27" style="--bk:2.1s"/><text x="4" y="7" text-anchor="middle">AAC</text></g></g></g></g>
             <rect x="-6.8" y="-6.8" width="13.6" height="13.6" class="rd-sq"/>
             <g class="rd-arms"><path d="M-11 -6.8H-3M-6.8 -11V-3"/><path d="M3 -6.8H11M6.8 -11V-3"/><path d="M3 6.8H11M6.8 3V11"/><path d="M-11 6.8H-3M-6.8 3V11"/></g>
@@ -369,7 +375,6 @@
         <span>Analyse du morceau…</span>
       </div>
     </div>
-    <button type="button" class="wave-handle" id="waveHandle" aria-label="Écran d'onde : normal ou agrandi" aria-pressed="false"><i></i></button>
 
         <!-- Volet caché du ralentisseur : s'ouvre avec le bouton de gauche, se ferme avec celui de droite -->
     <div class="tempo-wrap" id="tempoWrap"><div class="tempo-in">
@@ -387,7 +392,7 @@
 
       <div class="speed-row">
         <div class="speed-track">
-          <div class="sprot" id="sProt" aria-hidden="true"><b id="sProtV">100 %</b><small id="sProtZ">Normal</small></div>
+          <div class="sprot" id="sProt" aria-hidden="true"><svg viewBox="0 0 160 84" aria-hidden="true"><defs><filter id="sp-gl" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="sp-mg"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".25" stop-color="#fff"/><stop offset=".75" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="sp-mk" maskUnits="userSpaceOnUse" x="32" y="0" width="96" height="16"><rect x="32" y="0" width="96" height="16" fill="url(#sp-mg)"/></mask></defs><g class="p-brs" fill="none" stroke-width="1.7" stroke-linecap="square"><path d="M14 3 L3 3 L3 14"/><path d="M146 3 L157 3 L157 14"/><path d="M14 81 L3 81 L3 70"/><path d="M146 81 L157 81 L157 70"/></g><g class="p-tapewrap" mask="url(#sp-mk)"><g class="p-tape" id="sProtTape" stroke-linecap="butt"><line x1="30" y1="4" x2="30" y2="13.0" stroke-width="1.5"/><line x1="35" y1="4" x2="35" y2="7.5" stroke-width="1"/><line x1="40" y1="4" x2="40" y2="7.5" stroke-width="1"/><line x1="45" y1="4" x2="45" y2="7.5" stroke-width="1"/><line x1="50" y1="4" x2="50" y2="7.5" stroke-width="1"/><line x1="55" y1="4" x2="55" y2="10.0" stroke-width="1"/><line x1="60" y1="4" x2="60" y2="7.5" stroke-width="1"/><line x1="65" y1="4" x2="65" y2="7.5" stroke-width="1"/><line x1="70" y1="4" x2="70" y2="7.5" stroke-width="1"/><line x1="75" y1="4" x2="75" y2="7.5" stroke-width="1"/><line x1="80" y1="4" x2="80" y2="13.0" stroke-width="1.5"/><line x1="85" y1="4" x2="85" y2="7.5" stroke-width="1"/><line x1="90" y1="4" x2="90" y2="7.5" stroke-width="1"/><line x1="95" y1="4" x2="95" y2="7.5" stroke-width="1"/><line x1="100" y1="4" x2="100" y2="7.5" stroke-width="1"/><line x1="105" y1="4" x2="105" y2="10.0" stroke-width="1"/><line x1="110" y1="4" x2="110" y2="7.5" stroke-width="1"/><line x1="115" y1="4" x2="115" y2="7.5" stroke-width="1"/><line x1="120" y1="4" x2="120" y2="7.5" stroke-width="1"/><line x1="125" y1="4" x2="125" y2="7.5" stroke-width="1"/><line x1="130" y1="4" x2="130" y2="13.0" stroke-width="1.5"/><line x1="135" y1="4" x2="135" y2="7.5" stroke-width="1"/><line x1="140" y1="4" x2="140" y2="7.5" stroke-width="1"/><line x1="145" y1="4" x2="145" y2="7.5" stroke-width="1"/><line x1="150" y1="4" x2="150" y2="7.5" stroke-width="1"/><line x1="155" y1="4" x2="155" y2="10.0" stroke-width="1"/><line x1="160" y1="4" x2="160" y2="7.5" stroke-width="1"/><line x1="165" y1="4" x2="165" y2="7.5" stroke-width="1"/><line x1="170" y1="4" x2="170" y2="7.5" stroke-width="1"/><line x1="175" y1="4" x2="175" y2="7.5" stroke-width="1"/></g></g><path class="p-dia" d="M80 18.5 L84 22.5 L80 26.5 L76 22.5Z"/><text class="p-u" x="14" y="26" font-size="8.5" font-weight="700" letter-spacing="1.6">VITESSE</text><g class="p-ret" fill="none" stroke-width="1.2" stroke-linecap="round"><path d="M9 47 H25 M9 44.5 V49.5"/><path d="M151 47 H135 M151 44.5 V49.5"/><path d="M28 47 H31 M129 47 H132"/></g><text class="p-num" id="sProtV" x="80" y="58" text-anchor="middle" font-size="33" font-weight="700" filter="url(#sp-gl)" style="font-family:var(--f-num);font-variant-numeric:tabular-nums">100 %</text><text class="p-name" id="sProtZ" x="80" y="76" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="2.6" style="font-family:var(--f-ui)">NORMAL</text><path class="p-car" id="sProtCar" d="M-6 0 L6 0 L0 7Z" transform="translate(80 85)"/></svg></div>
           <input type="range" id="speed" min="50" max="150" step="1" value="100" aria-label="Vitesse de lecture, de 50 à 150 %">
         </div>
       </div>

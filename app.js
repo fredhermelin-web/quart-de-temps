@@ -796,21 +796,6 @@
   if (window.ResizeObserver) new ResizeObserver(sizeWave).observe($('waveWrap'));
   window.addEventListener('resize', sizeWave);
 
-  /* Écran d'onde : deux hauteurs seulement, normale ou agrandie (un toucher, ou on tire vers le bas / le haut) */
-  (function () {
-    const hd = $('waveHandle'), SIZES = { n: 165, l: 205 };
-    let size = store.get('waveSize', 'n') === 'l' ? 'l' : 'n', y0 = 0, drag = false, moved = 0;
-    const apply = (k, save) => { size = k; player.style.setProperty('--wh', SIZES[k] + 'px'); hd.setAttribute('aria-pressed', String(k === 'l')); hd.classList.toggle('big', k === 'l'); if (save) store.set('waveSize', k); };
-    apply(size, false);
-    hd.addEventListener('pointerdown', (e) => { drag = true; y0 = e.clientY; moved = 0; try { hd.setPointerCapture(e.pointerId); } catch (x) { /* ignoré */ } hd.classList.add('on'); });
-    hd.addEventListener('pointermove', (e) => { if (drag) moved = e.clientY - y0; });
-    const end = () => {
-      if (!drag) return; drag = false; hd.classList.remove('on');
-      if (Math.abs(moved) > 14) apply(moved > 0 ? 'l' : 'n', true); else apply(size === 'l' ? 'n' : 'l', true);
-    };
-    hd.addEventListener('pointerup', end); hd.addEventListener('pointercancel', () => { drag = false; hd.classList.remove('on'); });
-  })();
-
   function drawWave(p) {
     const g = wctx;
     g.clearRect(0, 0, W, H);
@@ -2632,11 +2617,19 @@
     const sp = $('speed'), pr = $('sProt'), pv = $('sProtV'), pz = $('sProtZ'), tr = sp.parentElement;
     const SNAP = 3;
     let down = false, moved = false, sx = 0, t0 = 0, wasHome = P.speed === 100;
+    const tape = $('sProtTape'), car = $('sProtCar');
     function paint() {
-      const w = tr.getBoundingClientRect().width, f = (P.speed - 50) / 100;
-      pr.style.setProperty('--pl', clamp(11 + f * (w - 22), 54, w - 54) + 'px');
+      const w = tr.getBoundingClientRect().width, f = (P.speed - 50) / 100, half = 68;
+      const tx = 11 + f * (w - 22);
+      // la plaque se décale du côté opposé au déplacement, sans sortir de la zone
+      let cx = tx - (f - .5) * 2 * 30;
+      cx = clamp(cx, half - 6, w - half + 6);
+      pr.style.setProperty('--pl', cx.toFixed(1) + 'px');
+      if (car) car.setAttribute('transform', 'translate(' + clamp(80 + (tx - cx), 22, 138).toFixed(1) + ' 85)');
+      if (tape) tape.setAttribute('transform', 'translate(' + (-(P.speed % 10) * 5) + ' 0)');
       pv.textContent = P.speed + ' %';
-      pz.textContent = P.speed === 100 ? 'Normal' : P.speed < 100 ? 'Ralenti' : 'Accéléré';
+      pz.textContent = P.speed === 100 ? 'NORMAL' : P.speed < 100 ? 'RALENTI' : 'ACCÉLÉRÉ';
+      pr.classList.toggle('ref', P.speed === 100);
     }
     function fx() {
       const home = P.speed === 100;
