@@ -229,13 +229,15 @@
     }
     // Égaliseur 3 bandes (grave, médium, aigu) entre le moteur et la sortie ; la baisse de gain évite la saturation
     const EQ = { b: Object.assign({ lo: 0, mid: 0, hi: 0 }, store.get('eq', {})), f: null, trim: null };
-    const eqTrim = () => Math.pow(10, -Math.max(0, EQ.b.lo, EQ.b.mid, EQ.b.hi) / 20);
+    const eqTrim = () => Math.pow(10, -Math.min(1.5, 0.17 * Math.max(0, EQ.b.lo, EQ.b.mid, EQ.b.hi)) / 20);
     function eqBuild(c, node) {
       const lo = c.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 180; lo.gain.value = EQ.b.lo;
       const mid = c.createBiquadFilter(); mid.type = 'peaking'; mid.frequency.value = 1200; mid.Q.value = 0.7; mid.gain.value = EQ.b.mid;
       const hi = c.createBiquadFilter(); hi.type = 'highshelf'; hi.frequency.value = 4500; hi.gain.value = EQ.b.hi;
       const trim = c.createGain(); trim.gain.value = eqTrim();
-      node.connect(lo); lo.connect(mid); mid.connect(hi); hi.connect(trim); trim.connect(c.destination);
+      // Limiteur doux en bout de chaîne : une montée de graves ou d'aigus ne sature plus, sans baisser le volume
+      const lim = c.createDynamicsCompressor(); lim.threshold.value = -3; lim.knee.value = 4; lim.ratio.value = 14; lim.attack.value = 0.004; lim.release.value = 0.15;
+      node.connect(lo); lo.connect(mid); mid.connect(hi); hi.connect(trim); trim.connect(lim); lim.connect(c.destination);
       EQ.f = { lo, mid, hi }; EQ.trim = trim;
     }
     function eqApply() {
@@ -486,6 +488,39 @@
       const g = audio.eqGet();
       Object.keys(faders).forEach((k) => { faders[k].value = g[k]; vals[k].textContent = fmt(g[k]); vals[k].classList.toggle('on', g[k] !== 0); });
       btn.classList.toggle('on', g.lo !== 0 || g.mid !== 0 || g.hi !== 0);
+      hud(g);
+    }
+    /* Courbe HUD : réponse réelle des trois filtres (grave 180 Hz, médium 1,2 kHz, aigu 4,5 kHz), axe des fréquences en échelle log */
+    const hudEl = $('eqHud');
+    function bq(type, f0, G, Q, f, fs) {
+      const A = Math.pow(10, G / 40), w0 = 2 * Math.PI * f0 / fs, cw = Math.cos(w0), sw = Math.sin(w0);
+      let b0, b1, b2, a0, a1, a2;
+      if (type === 'peak') {
+        const al = sw / (2 * Q);
+        b0 = 1 + al * A; b1 = -2 * cw; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * cw; a2 = 1 - al / A;
+      } else {
+        const al = sw / 2 * Math.SQRT2, k = 2 * Math.sqrt(A) * al;
+        if (type === 'low') { b0 = A * ((A + 1) - (A - 1) * cw + k); b1 = 2 * A * ((A - 1) - (A + 1) * cw); b2 = A * ((A + 1) - (A - 1) * cw - k); a0 = (A + 1) + (A - 1) * cw + k; a1 = -2 * ((A - 1) + (A + 1) * cw); a2 = (A + 1) + (A - 1) * cw - k; }
+        else { b0 = A * ((A + 1) + (A - 1) * cw + k); b1 = -2 * A * ((A - 1) + (A + 1) * cw); b2 = A * ((A + 1) + (A - 1) * cw - k); a0 = (A + 1) - (A - 1) * cw + k; a1 = 2 * ((A - 1) - (A + 1) * cw); a2 = (A + 1) - (A - 1) * cw - k; }
+      }
+      const w = 2 * Math.PI * f / fs, c1 = Math.cos(w), s1 = Math.sin(w), c2 = Math.cos(2 * w), s2 = Math.sin(2 * w);
+      const nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2), dr = a0 + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2);
+      return 10 * Math.log10((nr * nr + ni * ni) / (dr * dr + di * di));
+    }
+    const yOf = (db) => 9 + (9 - db) / 18 * 132;
+    function hud(g) {
+      if (!hudEl) return;
+      const fq = (x) => 100 * Math.pow(10, (x - 50) / 100);
+      const resp = (f) => bq('low', 180, g.lo, 1, f, 48000) + bq('peak', 1200, g.mid, 0.7, f, 48000) + bq('high', 4500, g.hi, 1, f, 48000);
+      let d = '';
+      for (let x = 0; x <= 300; x += 5) d += (x ? 'L' : 'M') + x + ' ' + yOf(Math.max(-9, Math.min(9, resp(fq(x))))).toFixed(1) + ' ';
+      let grid = '';
+      for (let i = 0; i < 7; i++) { const y = yOf(9 - i * 3); grid += '<line x1="0" x2="300" y1="' + y + '" y2="' + y + '" stroke="#2EE6D0" stroke-width=".8" stroke-opacity="' + (i === 3 ? '.28' : '.08') + '"' + (i === 3 ? ' stroke-dasharray="4 5"' : '') + '/>'; }
+      let marks = '';
+      [50, 150, 250].forEach((x) => { const y = yOf(Math.max(-9, Math.min(9, resp(fq(x))))); marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="150" stroke="#2EE6D0" stroke-opacity=".1"/><circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="4.5" fill="none" stroke="#FFB547" stroke-width="1.2"/>'; });
+      const lab = '<g font-size="7.5" fill="#2EE6D0" fill-opacity=".6" letter-spacing=".08em"><text x="76" y="12">100 Hz</text><text x="176" y="12">1 kHz</text><text x="270" y="12">10 kHz</text></g>';
+      const br = '<g fill="none" stroke="#2EE6D0" stroke-opacity=".7" stroke-width="1.2"><path d="M3 10V3h7"/><path d="M297 10V3h-7"/><path d="M3 140v7h7"/><path d="M297 140v7h-7"/></g>';
+      hudEl.innerHTML = grid + marks + '<path d="' + d + '" fill="none" stroke="#2EE6D0" stroke-opacity=".2" stroke-width="5" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="#2EE6D0" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>' + lab + br;
     }
     function sync() {
       const ready = player.dataset.state === 'ready';

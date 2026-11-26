@@ -3261,3 +3261,36 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
   .eq-row { padding-top: 2px; }
   .pill.eq { height: 34px; }
 }
+
+/* v83 — égaliseur « cockpit » : panneau graphite, bandes argentées gravées, capuchons sombres, courbe HUD en fond */
+.eq-card { max-width: 340px; padding: 12px 14px 10px; border-radius: 16px; background: linear-gradient(180deg, #6E737E, #3E414A); border: 1px solid #B9BDC6; box-shadow: 0 18px 40px -10px #000, inset 0 1px 0 rgba(255, 255, 255, .25); }
+.eq-title { color: #E4E7EC; font-size: 12px; letter-spacing: .2em; }
+.eq-flat { height: 26px; padding: 0 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, .28); background: rgba(0, 0, 0, .18); color: #E4E7EC; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; }
+.eq-x { width: 26px; height: 26px; border-radius: 6px; border-color: rgba(255, 255, 255, .28); background: rgba(0, 0, 0, .18); color: #E4E7EC; }
+.eq-bands { position: relative; margin-top: 12px; justify-content: space-around; }
+.eq-hud { position: absolute; left: 0; top: 0; width: 100%; height: 150px; border-radius: 6px; background: linear-gradient(180deg, rgba(10, 20, 24, .78), rgba(10, 20, 24, .35)); pointer-events: none; }
+.eq-band { position: relative; z-index: 1; gap: 6px; }
+.eq-fader { width: 38px; height: 150px; border-radius: 5px; background: linear-gradient(90deg, #A9AEB8, #EEF0F4 35%, #B9BDC6 75%, #8A8F99); border: 1px solid #4A4D55; box-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.eq-fader::before { content: ""; position: absolute; right: 8px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: #101216; }
+.eq-scale { position: absolute; inset: 0; font-style: normal; pointer-events: none; }
+.eq-scale span { position: absolute; left: 3px; font: 500 8px/1 var(--f-ui); color: #1B1D23; transform: translateY(-50%); }
+.eq-scale span::after { content: ""; position: absolute; left: 15px; top: 50%; width: 5px; height: 1px; background: #1B1D23; }
+.eq-scale span:nth-child(4) { color: #9A5A00; font-weight: 700; }
+.eq-scale span:nth-child(4)::after { width: 9px; height: 2px; background: #9A5A00; }
+.eq-scale span:nth-child(1) { top: 9px; } .eq-scale span:nth-child(2) { top: 31px; } .eq-scale span:nth-child(3) { top: 53px; } .eq-scale span:nth-child(4) { top: 75px; }
+.eq-scale span:nth-child(5) { top: 97px; } .eq-scale span:nth-child(6) { top: 119px; } .eq-scale span:nth-child(7) { top: 141px; }
+.eq-fader input { width: 150px; height: 44px; z-index: 2; }
+.eq-fader input::-webkit-slider-runnable-track { height: 4px; background: transparent; }
+.eq-fader input::-moz-range-track { height: 4px; background: transparent; }
+.eq-fader input::-webkit-slider-thumb { width: 20px; height: 42px; margin-top: -19px; border-radius: 4px; transform: none; background: linear-gradient(180deg, #6F737F, #32353D 50%, #1B1D22); border: 1px solid #B8BCC6; box-shadow: 0 3px 6px rgba(0, 0, 0, .55), inset 0 0 0 0 transparent;
+  background-image: linear-gradient(90deg, transparent 47%, #FFB547 47%, #FFB547 53%, transparent 53%), linear-gradient(180deg, #6F737F, #32353D 50%, #1B1D22); }
+.eq-fader input::-moz-range-thumb { width: 18px; height: 40px; border-radius: 4px; border: 1px solid #B8BCC6; background-image: linear-gradient(90deg, transparent 47%, #FFB547 47%, #FFB547 53%, transparent 53%), linear-gradient(180deg, #6F737F, #32353D 50%, #1B1D22); }
+.eq-db { min-width: 46px; padding: 5px 0; text-align: center; border-radius: 4px; background: #0E1014; border: 1px solid #7C808B; color: #7C808B; font: 700 12px/1 var(--f-ui); }
+.eq-db.on { color: #FFB547; }
+.eq-name { height: 20px; padding: 0 4px; color: #DADDE3; font: 600 9px/1 var(--f-ui); letter-spacing: .16em; text-transform: uppercase; }
+.eq-note { color: #C9CDD5; }
+
+/* v83 — carte Métronome du hub : 1 2 3 4, le 1 en ambre */
+.hc-beats { gap: 7px; }
+.hc-beats i { width: auto; height: auto; border-radius: 0; background: none; font: 700 15px/1 var(--f-ui); font-style: normal; color: rgba(255, 255, 255, .5); }
+.hc-beats i.on { background: none; color: #FFB547; }
