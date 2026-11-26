@@ -3297,3 +3297,24 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 
 /* v83 — carte Rythmes du hub : sous-titre */
 .hc-name small { display: block; margin-top: 3px; font: 400 11.5px/1.1 var(--f-ui); letter-spacing: .02em; color: rgba(248, 244, 234, .62); }
+
+/* v84 — accueil : métronome lisible et vivant, façade d'ampli (liseré doré, vis, deux boutons de réglage) */
+.hc-logo { width: 36px; height: 36px; }
+.hc-metro-ic .hc-pend { transform-origin: 32px 50px; animation: hcSwing .75s ease-in-out infinite alternate; }
+@keyframes hcSwing { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+.hc-beats i { --b: rgba(255, 255, 255, .5); --l: #FFFFFF; display: inline-block; color: var(--b); animation: hcBeat 3s infinite; }
+.hc-beats i.on { --b: #FFB547; --l: #FFE2A8; }
+.hc-beats i:nth-child(2) { animation-delay: .75s; } .hc-beats i:nth-child(3) { animation-delay: 1.5s; } .hc-beats i:nth-child(4) { animation-delay: 2.25s; }
+@keyframes hcBeat { 0%, 20% { color: var(--l); transform: scale(1.3); } 30%, 100% { color: var(--b); transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .hc-metro-ic .hc-pend, .hc-beats i { animation: none; } .hc-metro-ic .hc-pend { transform: rotate(14deg); } }
+.hub-trim { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.hub-trim::before { content: ""; position: absolute; inset: 7px 7px 0; border: 1px solid rgba(227, 194, 127, .6); border-bottom: 0; border-radius: 19px 19px 0 0; box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(0, 0, 0, .25); }
+.hub-trim .hv { position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  background: linear-gradient(35deg, transparent 45%, rgba(60, 38, 8, .85) 45% 55%, transparent 55%), radial-gradient(circle at 35% 30%, #FFF3CC 0%, #E3C27F 40%, #8E6A28 100%); box-shadow: 0 1px 2px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(60, 38, 8, .5); }
+.hub-trim .tl { top: 12px; left: 12px; } .hub-trim .tr { top: 12px; right: 12px; transform: rotate(60deg); }
+.hub-trim .bl { bottom: 14px; left: 12px; transform: rotate(120deg); } .hub-trim .br { bottom: 14px; right: 12px; transform: rotate(20deg); }
+.hub-trim .hk { position: absolute; top: 12px; width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(0deg, transparent 38%, #3A2508 38% 62%, transparent 62%) center / 3px 46% no-repeat, radial-gradient(circle at 50% 50%, #F4D993 0 26%, #B98A38 27% 62%, transparent 63%), repeating-conic-gradient(#C99A45 0 6deg, #6B4A16 6deg 12deg);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, .7), 0 0 0 2px rgba(20, 12, 4, .8); }
+.hub-trim .hk::after { content: ""; position: absolute; left: 50%; top: 4px; width: 2.5px; height: 9px; margin-left: -1.25px; border-radius: 2px; background: #2A1A06; }
+.hub-trim .kl { left: 24%; transform: rotate(-35deg); } .hub-trim .kr { right: 24%; transform: rotate(50deg); }
