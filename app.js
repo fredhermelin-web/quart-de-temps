@@ -970,9 +970,9 @@
   /* ---------- Vitesse ---------- */
   const zoneOf = (s) => (s === 100 ? 'normal' : s < 100 ? 'slow' : 'fast');
   function zoneHex(s) {
-    // Palette A : lilas (lent), or clair (normal), menthe (rapide) — toute la barre prend la couleur
+    // Palette A : bleu pastel (lent), or clair (normal), menthe (rapide) — toute la barre prend la couleur
     if (s === 100) return '#FFD98A';
-    if (s < 100) return '#C9A7FF';
+    if (s < 100) return '#A8D8FF';
     return '#7DF2B8';
   }
   function setSpeed(v) {

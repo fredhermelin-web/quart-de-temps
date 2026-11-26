@@ -2983,3 +2983,8 @@ body { background-image: radial-gradient(120% 60% at 50% 0%, rgba(120, 130, 255,
 .track-title.scroll .mq { animation: mq var(--mqd, 8s) ease-in-out 1.2s infinite alternate; }
 @keyframes mq { from { transform: translateX(0); } to { transform: translateX(var(--mq)); } }
 .player[data-state="empty"] #emptyImport { margin-top: 38px; }
+
+/* v74 : lettres des avions plus fines */
+.pl text { font-weight: 500; font-size: 19px; letter-spacing: .1em; stroke-width: 2.4px; }
+/* v74 : « Mode d'emploi » décalé à gauche, fond sombre pour bien le lire sur le filigrane */
+.player[data-state="empty"] .sig-cap { transform: translateX(-46px); color: #FFF1CC; background: linear-gradient(rgba(255, 201, 77, .16), rgba(255, 201, 77, .16)), #12163A; font-size: 16px; }
