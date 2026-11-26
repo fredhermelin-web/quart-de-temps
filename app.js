@@ -371,6 +371,7 @@
     P.name = cleanName(file.name);
     $('trackTitle').textContent = P.name;
     $('trackTitle').title = P.name;
+    if (window.fitTitle) window.fitTitle();
     document.body.classList.add('has-track');
     resetView();
     setState('loading');
@@ -969,9 +970,10 @@
   /* ---------- Vitesse ---------- */
   const zoneOf = (s) => (s === 100 ? 'normal' : s < 100 ? 'slow' : 'fast');
   function zoneHex(s) {
-    if (s === 100) return C.gold;
-    if (s < 100) return mixHex(C.slowLight, C.slowDeep, (100 - s) / 50);
-    return mixHex(C.fastDeep, C.fastLight, (s - 100) / 50);
+    // Palette A : lilas (lent), or clair (normal), menthe (rapide) — toute la barre prend la couleur
+    if (s === 100) return '#FFD98A';
+    if (s < 100) return '#C9A7FF';
+    return '#7DF2B8';
   }
   function setSpeed(v) {
     P.speed = clamp(Math.round(v), 50, 150);
@@ -2660,7 +2662,7 @@
   (function pager() {
     const nav = $('pager'); if (!nav) return;
     const dots = nav.querySelectorAll('button');
-    let q = 0, cur = 'A', landed = 'A', endT = 0;
+    let q = 0, cur = 'A';
     const where = () => $('pageB').getBoundingClientRect().top < window.innerHeight * 0.5 ? 'B' : 'A';
     const upd = () => {
       q = 0;
@@ -2673,22 +2675,9 @@
         if (w === 'A' && !audio.paused) audio.pause();
       }
     };
-    // Calage : quand la page s'immobilise, elle se pose avec un petit rebond (et une courte vibration sur Android)
-    const dock = () => {
-      const w = where();
-      if (w === landed) return;
-      landed = w;
-      if (reduceMotion) return;
-      const el = w === 'A' ? $('metro') : $('player');
-      el.classList.remove('dock'); void el.offsetWidth; el.classList.add('dock');
-      setTimeout(() => el.classList.remove('dock'), 700);
-      if (!isIOS && navigator.vibrate) { try { navigator.vibrate(16); } catch (err) { /* ignoré */ } }
-    };
     window.addEventListener('scroll', () => {
       if (!q) q = requestAnimationFrame(upd);
-      clearTimeout(endT); endT = setTimeout(dock, 140);     // arrêt du défilement (repli si « scrollend » n'existe pas)
     }, { passive: true });
-    if ('onscrollend' in window) window.addEventListener('scrollend', () => { clearTimeout(endT); dock(); });
     dots.forEach((b) => b.addEventListener('click', () => $(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })));
     upd();
   })();
@@ -2974,3 +2963,24 @@ try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').ma
 
 /* v72 : la pastille « Mode d'emploi » ouvre aussi le mode d'emploi */
 try { const sc = document.getElementById('sigCap'), se = document.getElementById('sigEmblem'); if (sc && se) sc.addEventListener('click', () => se.click()); } catch (e) { /* ignoré */ }
+
+/* v73 : titre du morceau — s'il est trop long, il défile en boucle */
+window.fitTitle = function () {
+  const t = document.getElementById('trackTitle'); if (!t) return;
+  const txt = t.title || t.textContent;
+  t.classList.remove('scroll'); t.style.removeProperty('--mq'); t.style.removeProperty('--mqd');
+  t.textContent = txt;
+  requestAnimationFrame(() => {
+    if (!txt || t.scrollWidth <= t.clientWidth + 1) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const inner = document.createElement('span');
+    inner.className = 'mq'; inner.textContent = txt;
+    t.textContent = ''; t.appendChild(inner);
+    const dist = Math.ceil(inner.scrollWidth - t.clientWidth + 16);
+    t.style.setProperty('--mq', '-' + dist + 'px');
+    t.style.setProperty('--mqd', Math.max(6, dist / 28 + 3).toFixed(1) + 's');
+    t.classList.add('scroll');
+  });
+};
+
+try { const sc = document.getElementById('sigCap'); if (sc) { sc.removeAttribute('aria-hidden'); sc.setAttribute('role', 'button'); sc.setAttribute('tabindex', '0'); sc.setAttribute('aria-label', "Mode d'emploi"); sc.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sc.click(); } }); } } catch (e) { /* ignoré */ }

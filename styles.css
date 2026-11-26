@@ -2944,3 +2944,42 @@ body { background-image: radial-gradient(120% 60% at 50% 0%, rgba(120, 130, 255,
 .rd-halo { fill: rgba(159, 255, 214, .28); }
 .rd-halo, .rd-dot { filter: none; }
 @keyframes rd-halo { 0%, 100% { opacity: .75; transform: scale(.8); } 50% { opacity: .1; transform: scale(1.5); } }
+
+/* ===== v73 ===== */
+/* Avions : des mots qui restent à l'écran, filent comme des soucoupes et zooment (chacun dans son quart) */
+.pl text { font: 700 20px "SF Mono", ui-monospace, Menlo, Consolas, monospace; letter-spacing: .06em; fill: #FFFFFF; paint-order: stroke; stroke: #070B24; stroke-width: 4px; stroke-linejoin: round; }
+.pl .rd-halo { fill: rgba(159, 255, 214, .3); }
+.pl .rd-dot { fill: #F2FFF9; }
+.pl { animation: pl-x var(--dx) ease-in-out var(--dl) infinite alternate; }
+.pl-y { animation: pl-y var(--dy) ease-in-out var(--dl) infinite alternate; }
+.pl-z { animation: pl-z var(--dz) ease-in-out var(--dl) infinite alternate; transform-box: view-box; }
+@keyframes pl-x { from { transform: translateX(-40px); } to { transform: translateX(40px); } }
+@keyframes pl-y { from { transform: translateY(-20px); } to { transform: translateY(20px); } }
+@keyframes pl-z { from { transform: scale(.85); } to { transform: scale(1.5); } }
+@media (prefers-reduced-motion: reduce) { .pl, .pl-y, .pl-z { animation: none; } }
+
+/* En-tête : plus de bouton spirale ; la pastille « ? Mode d'emploi » est le seul bouton d'aide */
+.player .sig-emblem { display: none; }
+.player .sig-cap::before { content: "?"; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 15px/1 var(--f-ui, Inter, sans-serif); color: #2A1A06; background: linear-gradient(180deg, #FFE08A, #F0B83A); }
+.player:not([data-state="empty"]) .sig-cap { position: static; transform: none; display: grid; width: 26px; height: 26px; padding: 0; font-size: 0; opacity: 1; background: none; box-shadow: none; text-shadow: none; pointer-events: auto; cursor: pointer; }
+.player[data-state="empty"] .radio-top { left: 0; right: 0; top: 76px; display: flex; justify-content: center; }
+.player[data-state="empty"] .sig { position: static; display: block; }
+.player[data-state="empty"] .sig-cap { position: static; transform: none; left: auto; top: auto; font-size: 15.5px; padding: 4px 16px 4px 5px; gap: 8px; }
+.player[data-state="empty"] .sig-cap::before { width: 26px; height: 26px; font-size: 15px; }
+/* Logo gravé en filigrane, derrière « ATELIER · VITESSE » */
+.player-plaque { position: relative; }
+.player-plaque > * { position: relative; z-index: 1; }
+.player[data-state="empty"] .player-plaque::before { content: ""; position: absolute; z-index: 0; left: 50%; top: calc(50% + 14px); width: 118px; height: 118px; transform: translate(-50%, -50%); pointer-events: none; opacity: .3;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-80 -80 160 160' fill='none' stroke-linecap='round'><g transform='translate(-12 4)'><path transform='translate(-1.6 -1.6)' stroke='rgba(0,0,0,.6)' stroke-width='5' d='M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8'/><path transform='translate(1.6 1.6)' stroke='rgba(255,236,190,.55)' stroke-width='5' d='M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8'/><path stroke='%23C9A25A' stroke-width='4.5' d='M0 0 A8 8 0 0 1 8 -8 A16 16 0 0 1 24 8 A24 24 0 0 1 0 32 A32 32 0 0 1 -32 0 A40 40 0 0 1 8 -40 A48 48 0 0 1 56 8 A56 56 0 0 1 0 64 A64 64 0 0 1 -64 0 A72 72 0 0 1 8 -72 A80 80 0 0 1 88 8'/></g></svg>") center / contain no-repeat; }
+.player[data-state="empty"] .deck-sub { position: relative; z-index: 1; }
+
+/* Barre de vitesse : toute la barre prend la couleur de la zone (lilas / or / menthe) */
+#speed::-webkit-slider-runnable-track { background: var(--zone); box-shadow: 0 0 10px -2px var(--zone); opacity: .9; }
+#speed::-moz-range-track { background: var(--zone); box-shadow: 0 0 10px -2px var(--zone); }
+
+/* Titre du morceau : défile en boucle s'il est trop long */
+.track-title .mq { display: inline-block; padding-right: 16px; }
+.track-title.scroll { text-overflow: clip; }
+.track-title.scroll .mq { animation: mq var(--mqd, 8s) ease-in-out 1.2s infinite alternate; }
+@keyframes mq { from { transform: translateX(0); } to { transform: translateX(var(--mq)); } }
+.player[data-state="empty"] #emptyImport { margin-top: 38px; }
