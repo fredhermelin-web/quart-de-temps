@@ -402,7 +402,7 @@
       P.bpm = res.bpm;
       if (VIEW.span > maxSpan()) VIEW.span = maxSpan();
       setState('ready');
-      if (P.bpm == null) toast('BPM non détecté : double-touche « BPM d’origine » pour le saisir.', 3800);
+      if (P.bpm == null) toast('BPM non détecté : touche le grand chiffre BPM pour le saisir.', 3800);
       // Chaque morceau ouvert : le ralentisseur s'ouvre, la vitesse est directement accessible
       hideSpeedHint();
       setTempoOpen(true);
@@ -797,7 +797,7 @@
 
   /* Écran d'onde : deux hauteurs seulement, normale ou agrandie (un toucher, ou on tire vers le bas / le haut) */
   (function () {
-    const hd = $('waveHandle'), SIZES = { n: 180, l: 225 };
+    const hd = $('waveHandle'), SIZES = { n: 165, l: 205 };
     let size = store.get('waveSize', 'n') === 'l' ? 'l' : 'n', y0 = 0, drag = false, moved = 0;
     const apply = (k, save) => { size = k; player.style.setProperty('--wh', SIZES[k] + 'px'); hd.setAttribute('aria-pressed', String(k === 'l')); hd.classList.toggle('big', k === 'l'); if (save) store.set('waveSize', k); };
     apply(size, false);
@@ -2684,6 +2684,8 @@
     if (now - obLastTap < 350) { obLastTap = 0; editOrig(); } else obLastTap = now;
   });
   ob.addEventListener('dblclick', (e) => { e.preventDefault(); if (ob.readOnly) editOrig(); });
+  const bigBpm = document.querySelector('.bpm-now');
+  if (bigBpm) { bigBpm.setAttribute('role', 'button'); bigBpm.setAttribute('tabindex', '0'); bigBpm.setAttribute('aria-label', 'Tempo du morceau. Touche pour corriger le BPM d\'origine.'); bigBpm.addEventListener('click', () => { if (player.dataset.state === 'ready') editOrig(); }); bigBpm.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (player.dataset.state === 'ready') editOrig(); } }); }
   ob.addEventListener('change', commitOrig);
   ob.addEventListener('keydown', (e) => { if (e.key === 'Enter') ob.blur(); });
   ob.addEventListener('blur', () => { commitOrig(); ob.readOnly = true; ob.closest('.orig-field').classList.remove('editing'); });
