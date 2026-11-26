@@ -2626,7 +2626,36 @@
   });
   $('btnClear').addEventListener('click', () => { P.A = P.B = null; P.loop = false; renderLoop(); dirty = true; });
 
-  $('speed').addEventListener('input', (e) => setSpeed(+e.target.value));
+  (function speedTouch() {
+    const sp = $('speed'), pr = $('sProt'), pv = $('sProtV'), pz = $('sProtZ'), tr = sp.parentElement;
+    const SNAP = 3;
+    let down = false, moved = false, sx = 0, t0 = 0, wasHome = P.speed === 100;
+    function paint() {
+      const w = tr.getBoundingClientRect().width, f = (P.speed - 50) / 100;
+      pr.style.setProperty('--pl', clamp(11 + f * (w - 22), 54, w - 54) + 'px');
+      pv.textContent = P.speed + ' %';
+      pz.textContent = P.speed === 100 ? 'Normal' : P.speed < 100 ? 'Ralenti' : 'Accéléré';
+    }
+    function fx() {
+      const home = P.speed === 100;
+      if (home && !wasHome && navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* ignoré */ } }
+      wasHome = home;
+    }
+    sp.addEventListener('input', (e) => {
+      let v = +e.target.value;
+      if (down && Math.abs(v - 100) <= SNAP) v = 100;        // aimant sur le 100
+      setSpeed(v); fx(); paint();
+    });
+    sp.addEventListener('pointerdown', (e) => { down = true; moved = false; sx = e.clientX; t0 = e.timeStamp; paint(); pr.classList.add('on'); });
+    sp.addEventListener('pointermove', (e) => { if (down && Math.abs(e.clientX - sx) > 8) moved = true; });
+    const end = (e) => {
+      if (!down) return; down = false; pr.classList.remove('on');
+      const r = sp.getBoundingClientRect();
+      // simple tape sur le repère du milieu : retour pile à 100 %
+      if (e.type === 'pointerup' && !moved && e.timeStamp - t0 < 450 && Math.abs(e.clientX - (r.left + r.width / 2)) < 26 && P.speed !== 100) { setSpeed(100); fx(); }
+    };
+    sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+  })();
   /* Pastilles de page : A (métronome) et B (ralentisseur) */
   (function pager() {
     const nav = $('pager'); if (!nav) return;

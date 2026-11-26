@@ -2751,3 +2751,90 @@ body { background-image: radial-gradient(120% 60% at 50% 0%, rgba(120, 130, 255,
 .orig-tempo:disabled { color: var(--dim); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
 .tempo-foot { justify-content: flex-start; flex-wrap: wrap; }
 .tempo .eyebrow { white-space: nowrap; font-size: 11.5px; letter-spacing: .13em; }
+
+/* ===================== v70 ===================== */
+/* Haut compact : plus de sous-titre, titre du morceau + deux vraies touches sur une ligne */
+.player .deck-sub { display: none; }
+body.has-track .track-row { flex-direction: row; align-items: center; gap: 8px; }
+.track-row .track-line { flex: 1 1 auto; min-width: 0; }
+.track-row .track-actions { flex: none; gap: 8px; align-items: center; }
+.track-row .btn-change, .track-row .remove {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; border: 0; border-radius: 12px;
+  font: 700 13px/1 var(--f-ui); letter-spacing: .02em; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.track-row .btn-change { padding: 0 14px; color: #1B1405; background: linear-gradient(180deg, #FFE08A, #F0B83A);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 0 0 1px rgba(255, 220, 140, .7), 0 6px 14px -8px rgba(255, 190, 60, .7); }
+.track-row .btn-change svg { display: block; width: 18px; height: 18px; stroke-width: 2.4; }
+.track-row .btn-change:active { filter: brightness(.92); }
+.track-row .btn-change .long { display: none; } .track-row .btn-change .short { display: inline; }
+.track-row .remove { width: 44px; padding: 0; color: #FF9AA6; background: rgba(255, 111, 145, .12);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 130, 150, .75); }
+.track-row .remove svg { width: 19px; height: 19px; }
+.track-row .remove .long, .track-row .remove .short { display: none; }
+.track-row .remove:active { background: rgba(255, 111, 145, .28); }
+.track-title { font-size: 15px; }
+
+/* Panneau de vitesse : la pastille d'état monte sur la ligne du titre */
+.tempo-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "eyebrow chip" "bpm pct"; align-items: end; column-gap: 8px; row-gap: 2px; }
+.tempo-main, .tempo-side { display: contents; }
+.tempo-head .eyebrow { grid-area: eyebrow; align-self: center; }
+.tempo-head .zone-chip { grid-area: chip; justify-self: end; align-self: center; }
+.tempo-head .bpm-now { grid-area: bpm; min-width: 0; }
+.tempo-head .pct { grid-area: pct; justify-self: end; }
+
+/* Grand bouton « Revenir à 100 % » : clé du Rafale */
+.tempo-foot { justify-content: center; margin-top: 2px; }
+.rst { position: relative; width: min(100%, 250px); height: 46px; padding: 0; border: 0; cursor: pointer; background: linear-gradient(180deg, #FFE08A, #E9A92B);
+  clip-path: polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
+  -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 0 8px rgba(255, 201, 77, .45)); transition: filter .25s; }
+.rst .ki { position: absolute; inset: 1.5px; display: flex; align-items: center; justify-content: center; gap: 9px; color: #FFE3A3;
+  font: 700 14px/1 var(--f-ui); letter-spacing: .1em; text-transform: uppercase; background: linear-gradient(180deg, #2A2F5E, #1B2048);
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px); }
+.rst svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.rst .t-off { display: none; }
+.rst:active .ki { background: linear-gradient(180deg, #4A3F2A, #2E2A22); }
+.rst:disabled { background: rgba(255, 255, 255, .22); filter: none; cursor: default; }
+.rst:disabled .ki { color: var(--dim); background: linear-gradient(180deg, #232850, #1A1F40); }
+.rst:disabled .t-on, .rst:disabled svg { display: none; } .rst:disabled .t-off { display: inline; }
+.rst:not(:disabled) .ki { animation: rst-glow 2.4s ease-in-out infinite; }
+@keyframes rst-glow { 0%, 100% { color: #FFE3A3; } 50% { color: #FFFFFF; } }
+
+/* Plaque d'affichage pendant le glissement */
+.speed-track { touch-action: none; }
+.sprot { position: absolute; left: var(--pl, 50%); bottom: calc(100% + 10px); transform: translate(-50%, 6px) scale(.9); opacity: 0; pointer-events: none; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 16px 6px; border-radius: 9px; min-width: 96px;
+  background: rgba(12, 16, 42, .94); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28), 0 0 0 1px rgba(255, 201, 77, .45), 0 10px 22px -8px #000;
+  transition: opacity .14s ease, transform .2s cubic-bezier(.2, .9, .3, 1); }
+.sprot.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.sprot b { font: 600 30px/1 var(--f-num); color: var(--zone); text-shadow: 0 0 12px rgba(255, 255, 255, .18); white-space: nowrap; }
+.sprot small { font: 700 10.5px/1 var(--f-ui); letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .8); }
+
+/* Bas de l'écran : Boucle / Effacer plus fins */
+.pill { height: 36px; }
+
+/* Radar : formats lisibles, toujours là, suréclairés au passage du faisceau */
+.rd-tag { opacity: 1; animation: none; filter: none; }
+.rd-tag rect { fill: rgba(8, 12, 34, .88); stroke: rgba(235, 248, 255, .55); stroke-width: 1; animation: tag-box 8s linear infinite var(--dl, 0s); }
+.rd-tag circle { fill: #B9C6F2; opacity: 1; animation: tag-dot 8s linear infinite var(--dl, 0s); }
+.rd-tag text { font: 700 11px "SF Mono", ui-monospace, Menlo, Consolas, monospace; letter-spacing: .1em; fill: #EAF0FF; animation: tag-txt 8s linear infinite var(--dl, 0s); }
+.rd-tag { animation: tag-glow 8s linear infinite var(--dl, 0s); }
+@keyframes tag-glow { 0% { filter: drop-shadow(0 0 7px #9FFFD6); } 18% { filter: drop-shadow(0 0 4px #9FFFD6); } 36%, 100% { filter: none; } }
+@keyframes tag-box { 0% { stroke: #C9FFE8; fill: rgba(30, 90, 76, .95); } 30%, 100% { stroke: rgba(235, 248, 255, .55); fill: rgba(8, 12, 34, .88); } }
+@keyframes tag-dot { 0% { fill: #FFFFFF; } 30%, 100% { fill: #B9C6F2; } }
+@keyframes tag-txt { 0% { fill: #FFFFFF; } 30%, 100% { fill: #EAF0FF; } }
+.rd-fly { animation: fly 14s ease-in-out infinite alternate; }
+.rd-fly.f1 { animation-duration: 17s; animation-delay: -4s; } .rd-fly.f2 { animation-duration: 15s; animation-delay: -8s; } .rd-fly.f3 { animation-duration: 19s; animation-delay: -2s; }
+@keyframes fly { 0% { transform: translate(-7px, 3px); } 33% { transform: translate(5px, -5px); } 66% { transform: translate(8px, 4px); } 100% { transform: translate(-5px, -3px); } }
+@media (prefers-reduced-motion: reduce) { .rd-fly, .rd-tag, .rd-tag rect, .rd-tag text, .rd-tag circle { animation: none; } }
+
+/* Barres d'ondes radio en bas du radar */
+.player[data-state="empty"] .wave-empty .deco { display: flex; position: absolute; z-index: 2; left: 66px; right: 66px; bottom: 8px; height: 26px; opacity: 1;
+  -webkit-mask-image: none; mask-image: none; }
+.player[data-state="empty"] .wave-empty .deco i { width: 3px; border-radius: 2px; background: #CFE6FF; box-shadow: 0 0 5px rgba(160, 210, 255, .5);
+  animation: deco 1.5s ease-in-out infinite var(--d, 0s), bar-lit 8s linear infinite var(--bd, 0s); }
+@keyframes bar-lit { 0% { background: #9FFFD6; box-shadow: 0 0 9px #9FFFD6; } 22%, 100% { background: #CFE6FF; box-shadow: 0 0 5px rgba(160, 210, 255, .5); } }
+@media (prefers-reduced-motion: reduce) { .player[data-state="empty"] .wave-empty .deco i { animation: none; } }
+/* v70b : respiration sous « Mode d'emploi », plaque de glissement nette */
+body.has-track .track-row { margin-top: 12px; }
+.player #emptyImport { margin-top: 14px; }
+.tempo:has(.sprot.on) .pct, .tempo:has(.sprot.on) .zone-chip, .tempo:has(.sprot.on) .bpm-now { opacity: .12; transition: opacity .12s; }
+.sprot { background: #0C102A; }
