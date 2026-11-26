@@ -2968,3 +2968,6 @@
   requestAnimationFrame(frame);
   checkShared();
 })();
+
+/* v71 : si l'appareil demande moins de mouvement, la spirale du radar reste immobile */
+try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hud-empty animateTransform').forEach((n) => n.remove()); } catch (e) { /* ignoré */ }

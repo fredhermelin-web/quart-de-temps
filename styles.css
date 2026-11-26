@@ -2838,3 +2838,68 @@ body.has-track .track-row { margin-top: 12px; }
 .player #emptyImport { margin-top: 14px; }
 .tempo:has(.sprot.on) .pct, .tempo:has(.sprot.on) .zone-chip, .tempo:has(.sprot.on) .bpm-now { opacity: .12; transition: opacity .12s; }
 .sprot { background: #0C102A; }
+
+/* ===================== v71 : avions qui volent, spirale qui tourne, en-tête, lueurs ===================== */
+
+/* --- Radar : le balayage vert est mis de côté (ARCHIVE). Pour le remettre : supprimer la ligne « display: none » ci-dessous. */
+.rd-sweep { display: none; }
+/* La spirale tourne lentement (animation dans index.html, <animateTransform>, 48 s par tour) */
+.rd-spiral { filter: none; stroke-width: 2px; }
+
+/* --- Avions : beaucoup plus gros, ils traversent l'écran de gauche à droite --- */
+.rd-tag, .rd-tag rect, .rd-tag circle, .rd-tag text { filter: none; }
+.rd-tag { opacity: 1; animation: rd-bob var(--bob, 6s) ease-in-out infinite alternate; }
+.rd-chip { fill: rgba(8, 14, 40, .92); stroke: rgba(235, 248, 255, .85); stroke-width: 1.4; stroke-linejoin: round; animation: none; }
+.rd-tag circle { fill: #9FFFD6; opacity: 1; animation: none; }
+.rd-tag text { font: 700 18px "SF Mono", ui-monospace, Menlo, Consolas, monospace; letter-spacing: .06em; fill: #FFFFFF; animation: none; }
+.rd-ct { animation: none; }
+.rd-fly { animation: rd-cross 26s linear infinite; }
+.rd-fly.f0 { animation: rd-cross 26s linear -4s infinite; }
+.rd-fly.f1 { animation: rd-cross 31s linear -19s infinite; }
+.rd-fly.f2 { animation: rd-cross 22s linear -9s infinite; }
+.rd-fly.f3 { animation: rd-cross 28s linear -22s infinite; }
+@keyframes rd-cross { from { transform: translateX(-250px); } to { transform: translateX(250px); } }
+@keyframes rd-bob { from { transform: translateY(-4px); } to { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .rd-tag, .rd-fly, .rd-fly.f0, .rd-fly.f1, .rd-fly.f2, .rd-fly.f3 { animation: none; }
+  .rd-fly.f0 { transform: translateX(-70px); } .rd-fly.f1 { transform: translateX(60px); }
+  .rd-fly.f2 { transform: translateX(-20px); } .rd-fly.f3 { transform: translateX(80px); }
+}
+/* Les chiffres 1-2-3-4 des coins s'allument dans l'ordre, comme des temps */
+.hud-empty .cn.c1 { animation-delay: 0s; } .hud-empty .cn.c2 { animation-delay: 2s; }
+.hud-empty .cn.c3 { animation-delay: 4s; } .hud-empty .cn.c4 { animation-delay: 6s; }
+
+/* --- Vu-mètre : les barres montent un peu plus haut --- */
+.player[data-state="empty"] .wave-empty .deco { height: 38px; }
+
+/* --- En-tête : « VITESSE » sous « ATELIER », « Mode d'emploi » lisible --- */
+.player[data-state="empty"] .deck-sub { display: block; margin: 0 0 4px; padding-left: .45em; text-align: center;
+  font: italic 500 17px/1.1 "EB Garamond", Garamond, serif; letter-spacing: .45em; text-transform: uppercase; color: #FFC27A; opacity: 1;
+  text-shadow: 0 0 12px rgba(255, 160, 70, .35); }
+.sig-cap { font-size: 13px; left: -6px; top: calc(100% + 3px); color: #FFE3A3; opacity: 1; text-shadow: 0 1px 4px #0B0E24, 0 0 8px rgba(11, 14, 36, .9); }
+
+/* --- Bouton « Importer un morceau » : plus bas, orange comme le « 45 » --- */
+.player #emptyImport { margin-top: 30px; height: 56px; background: linear-gradient(110deg, #FFE3AE, #FF9A4A); }
+.player #emptyImport .ki { background: linear-gradient(180deg, #FFBE63, #F28434 68%, #DB6A22); color: #2A1406; }
+.player #emptyImport:active .ki { background: linear-gradient(180deg, #F0A94F, #D9702A 70%, #BF5A1A); }
+
+/* --- Lueur de lever / coucher de soleil, comme sur le métronome en 45 tours --- */
+.player.deck {
+  background-image:
+    radial-gradient(125% 46% at 50% 106%, rgba(255, 238, 205, .62) 0%, rgba(255, 176, 90, .46) 30%, rgba(255, 120, 60, .22) 58%, rgba(255, 120, 60, 0) 82%),
+    radial-gradient(120% 50% at 0% 0%, rgba(139, 108, 255, .14), rgba(139, 108, 255, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+}
+.pageB .foot-sign { text-shadow: 0 1px 6px rgba(11, 14, 36, .9); }
+body { background-image: radial-gradient(120% 60% at 50% 0%, rgba(120, 130, 255, .13), rgba(120, 130, 255, 0) 60%), radial-gradient(90% 40% at 50% 100%, rgba(255, 190, 90, .15), rgba(255, 190, 90, 0) 70%); }
+
+/* --- Métronome en 33 tours : plus de lumière, tout en restant bleu nuit en haut --- */
+.metro:not([data-rpm="45"]) {
+  background-image:
+    radial-gradient(130% 52% at 50% 106%, rgba(255, 220, 160, .5) 0%, rgba(255, 150, 70, .4) 30%, rgba(255, 112, 60, .18) 58%, rgba(255, 112, 60, 0) 82%),
+    radial-gradient(75% 30% at 0% 42%, rgba(255, 160, 80, .2), rgba(255, 160, 80, 0) 62%),
+    radial-gradient(110% 45% at 100% 0%, rgba(86, 193, 255, .16), rgba(86, 193, 255, 0) 60%),
+    radial-gradient(90% 45% at 0% 100%, rgba(255, 130, 70, .24), rgba(255, 130, 70, 0) 62%),
+    radial-gradient(70% 35% at 100% 100%, rgba(255, 94, 126, .14), rgba(255, 94, 126, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+}
