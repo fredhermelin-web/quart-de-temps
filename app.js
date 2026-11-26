@@ -1874,9 +1874,9 @@
     // Le métronome tient dans l'écran dès l'ouverture : si les sons dépassent le bas, le disque se réduit un peu
     if (fitTries < 6 && !fitLocked) {
       const snd = metroEl.getBoundingClientRect();          // tout le cadre, biseau compris
-      const excess = (snd.bottom + window.scrollY) + 6 - window.innerHeight;
+      const excess = (snd.bottom + window.scrollY) + 12 - window.innerHeight;     // + marge basse de la page
       let want = DISC;
-      if (excess > 2) want = Math.max(0.62, DISC - excess / 344);
+      if (excess > 2) want = Math.max(0.42, DISC - excess / 344);
       else if (excess < -24 && DISC < 0.85) want = Math.min(0.85, DISC + (-excess - 12) / 344);
       if (Math.abs(want - DISC) > 0.004) {
         DISC = want; fitTries++;
