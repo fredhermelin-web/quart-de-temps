@@ -3321,3 +3321,7 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 .hub-trim .bl { bottom: 13px; } .hub-trim .br { bottom: 13px; }
 .hub-foot { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 20px); }
 .hub-spk { bottom: 68px; }
+
+/* v87 — mode d'emploi : petite ligne « sinon » sous les étapes */
+.guide-alt { margin: 12px 4px 0; font-size: 14px; line-height: 1.4; text-align: center; color: rgba(242, 238, 226, .72); }
+.guide-alt b { color: #FFD98A; font-weight: 700; }

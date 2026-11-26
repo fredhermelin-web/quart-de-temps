@@ -2490,16 +2490,18 @@
       'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
       'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'] },
     android: { who: 'Sur Android', other: 'Je suis sur iPhone', steps: [
-      'Dans WhatsApp, touche la flèche pour <b>télécharger</b> le morceau reçu.',
-      'Ici, touche <b>Importer un morceau</b> et choisis-le dans tes fichiers (Téléchargements).',
+      'Dans WhatsApp, appuie longuement sur le morceau reçu, puis touche les <b>trois points ⋮</b> en haut à droite et <b>Partager</b>.',
+      'Choisis <b>Quart de temps</b> : le morceau s’ouvre directement dans le changeur de vitesse.',
       'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
-      'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'] }
+      'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'],
+      alt: 'Sinon, touche <b>Importer un morceau</b> pour le chercher dans tes fichiers.' }
   };
   function paintGuide() {
     const g = GUIDE[guideOS];
     $('guideOs').textContent = g.who;
     guideSteps.innerHTML = g.steps.map((s) => '<li><span>' + s + '</span></li>').join('');
     $('guideSwitch').textContent = g.other;
+    const alt = $('guideAlt'); if (alt) { alt.innerHTML = g.alt || ''; alt.hidden = !g.alt; }
   }
   function openGuide() {
     guideReturn = document.activeElement;
