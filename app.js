@@ -2651,6 +2651,77 @@
     };
     sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
   })();
+  /* Logo « hélice-croche » : un anneau de trois arcs (un par atelier), la croche-flèche au centre,
+     des demi-cercles estompés pour suggérer le mouvement. Il s'élance à l'accueil puis se pose. */
+  (function helice() {
+    const COL = ['#FFB547', '#2EE6D0', '#FF7A6B'], GOLD = '#E3C27F', REST = 42;
+    const arcp = (r, a0, a1) => {
+      a0 *= Math.PI / 180; a1 *= Math.PI / 180;
+      return 'M' + (50 + r * Math.cos(a0)).toFixed(1) + ' ' + (50 + r * Math.sin(a0)).toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + (50 + r * Math.cos(a1)).toFixed(1) + ' ' + (50 + r * Math.sin(a1)).toFixed(1);
+    };
+    function ring(act) {
+      let h = '';
+      for (let i = 0; i < 3; i++) {
+        const on = i === act, none = act < 0, c = -90 + 120 * i, w = on ? 9 : none ? 6.5 : 5, ha = on ? 50 : none ? 46 : 42, op = on ? 1 : none ? 0.85 : 0.4;
+        h += '<path d="' + arcp(42, c - ha, c + ha) + '" fill="none" stroke="' + COL[i] + '" stroke-width="' + w + '" stroke-linecap="round" opacity="' + op + '"/>';
+      }
+      return h + '<circle cx="50" cy="50" r="14" fill="none" stroke="' + GOLD + '" stroke-width="1.2" opacity=".45"/><circle cx="50" cy="50" r="4" fill="#FFF3D6"/>';
+    }
+    const len = 62;
+    const NOTE = '<g fill="' + GOLD + '"><ellipse cx="0" cy="0" rx="8.5" ry="6.2" transform="rotate(-20)"/><rect x="6.2" y="-' + len + '" width="3.4" height="' + len + '" rx="1.5"/><path d="M9.6 -' + len + ' C19 -' + (len - 5) + ' 22 -' + (len - 14) + ' 18 -' + (len - 24) + ' C17 -' + (len - 14) + ' 13 -' + (len - 10) + ' 9.6 -' + (len - 12) + 'Z"/></g>';
+    const arrowAt = (a, op) => '<g opacity="' + op.toFixed(2) + '" transform="translate(50 50) rotate(' + a.toFixed(1) + ') scale(.9) translate(-8 31)">' + NOTE + '</g>';
+    function swish(op, small) {
+      if (op <= 0.01) return '';
+      const R = small ? [[23, 70], [29, 58]] : [[23, 70], [29, 58], [35, 46]];
+      let h = '';
+      R.forEach((r, jx) => {
+        for (let side = 0; side < 2; side++) {
+          const start = side === 0 ? 262 : 84, n = 5, seg = r[1] / n;
+          for (let k = 0; k < n; k++) {
+            const a0 = start - (k + 1) * seg, a1 = start - k * seg;
+            const o = (0.62 - k * 0.12) * (1 - jx * 0.14) * op;
+            if (o > 0.02) h += '<path d="' + arcp(r[0], a0, a1) + '" fill="none" stroke="#FFF3D6" stroke-width="' + ((1.9 - jx * 0.25) * (small ? 1.35 : 1)).toFixed(2) + '" stroke-linecap="round" opacity="' + o.toFixed(2) + '"/>';
+          }
+        }
+      });
+      return h;
+    }
+    const still = (act, small) => ring(act) + swish(1, small) + arrowAt(REST, 1);
+    // Petits logos des boutons « Atelier » : fixes, avec l'arc de l'atelier en cours allumé
+    document.querySelectorAll('.back-atelier svg.hel').forEach((sv) => { sv.innerHTML = still(+sv.dataset.act, true); });
+    const hub = document.getElementById('hubMark');
+    if (!hub) return;
+    const hubStill = still(-1, false);
+    hub.innerHTML = hubStill;
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let st = null, raf = 0;
+    const tgt = (na) => REST + 360 * Math.round((na - REST) / 360);
+    function paint() {
+      const sp = Math.min(1, Math.abs(st.w) / 900);
+      let h = ring(-1);
+      if (Math.abs(st.w) > 100) for (let k = 9; k >= 1; k--) h += arrowAt(st.na - k * st.w * 0.0068, 0.4 * (1 - k / 10) * sp);
+      hub.innerHTML = h + swish(1 - sp, false) + arrowAt(st.na, 1);
+    }
+    function loop(t) {
+      const dt = Math.min(0.05, (t - st.last) / 1000); st.last = t;
+      if (st.ph === 0) { st.na += st.w * dt; st.w *= Math.exp(-dt / 0.8); if (Math.abs(st.w) < 70) { st.w = 0; st.ph = 1; } }
+      else st.na += (tgt(st.na) - st.na) * Math.min(1, dt * 6);
+      paint();
+      if (st.ph === 1 && Math.abs(tgt(st.na) - st.na) < 0.2) { hub.innerHTML = hubStill; raf = 0; st = null; return; }
+      raf = requestAnimationFrame(loop);
+    }
+    window.hubSpin = function () {
+      if (reduce) return;
+      st = { na: st ? st.na : REST, w: 1400, ph: 0, last: performance.now() };
+      if (!raf) raf = requestAnimationFrame(loop);
+    };
+    hub.addEventListener('click', window.hubSpin);
+    const root = document.documentElement;
+    const go = () => { if (document.body.dataset.view === 'hub') window.hubSpin(); };
+    if (root.classList.contains('intro')) {
+      new MutationObserver((m, ob) => { if (!root.classList.contains('intro')) { ob.disconnect(); setTimeout(go, 300); } }).observe(root, { attributes: true, attributeFilter: ['class'] });
+    } else setTimeout(go, 500);
+  })();
   /* Navigation : l'atelier musical (accueil) et ses ateliers. Chaque atelier est un écran fixe ;
      le geste « retour » d'Android ramène à l'accueil. En quittant un atelier, il se tait. */
   (function nav() {
@@ -2662,7 +2733,8 @@
       if (v === cur && body.dataset.view === v) return;
       if (cur === 'metro' && v !== 'metro' && metro.running) stopMetro();
       if (cur === 'speed' && v !== 'speed' && !audio.paused) audio.pause();
-      cur = v; body.dataset.view = v;
+      const prev = cur; cur = v; body.dataset.view = v;
+      if (v === 'hub' && prev !== 'hub' && window.hubSpin) window.hubSpin();
       window.scrollTo(0, 0);
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event('resize'));

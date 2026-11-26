@@ -3177,3 +3177,16 @@ body.has-track .track-row .track-actions .btn-change svg { width: 13px; height: 
 .tempo-wrap:has(.sprot.on), .tempo-in:has(.sprot.on), .tempo:has(.sprot.on) { overflow: visible; }
 .tempo:has(.sprot.on) { z-index: 5; }
 .player[data-state="empty"] .player-plaque::before { opacity: .14; }
+
+/* =================== v79 : logo hélice-croche, bouton « Atelier » à logo, atelier vitesse apaisé =================== */
+.hub-mark { width: 64px; height: 64px; cursor: pointer; }
+.back-atelier svg.hel, .back-atelier.in-deck svg.hel { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .55)); }
+.back-atelier.in-deck { top: 6px; left: 8px; font-size: 9px; gap: 1px; }
+.back-atelier.in-deck svg.hel { width: 42px; height: 42px; }
+/* Atelier vitesse à vide : lueur du bas plus douce, spirale du titre presque effacée */
+.player.deck[data-state="empty"] { background-image:
+  radial-gradient(125% 36% at 50% 104%, rgba(255, 238, 205, .3) 0%, rgba(255, 176, 90, .22) 32%, rgba(255, 120, 60, .1) 60%, rgba(255, 120, 60, 0) 84%),
+  radial-gradient(120% 50% at 0% 0%, rgba(139, 108, 255, .14), rgba(139, 108, 255, 0) 60%),
+  linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015)); }
+.player[data-state="empty"] .player-plaque::before { opacity: .08; }
+.back-atelier.in-deck { top: 10px; left: 12px; }
