@@ -518,7 +518,7 @@
       for (let i = 0; i < 7; i++) { const y = yOf(9 - i * 3); grid += '<line x1="0" x2="300" y1="' + y + '" y2="' + y + '" stroke="#2EE6D0" stroke-width=".8" stroke-opacity="' + (i === 3 ? '.28' : '.08') + '"' + (i === 3 ? ' stroke-dasharray="4 5"' : '') + '/>'; }
       let marks = '';
       [50, 150, 250].forEach((x) => { const y = yOf(Math.max(-9, Math.min(9, resp(fq(x))))); marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="150" stroke="#2EE6D0" stroke-opacity=".1"/><circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="4.5" fill="none" stroke="#FFB547" stroke-width="1.2"/>'; });
-      const lab = '<g font-size="7.5" fill="#2EE6D0" fill-opacity=".6" letter-spacing=".08em"><text x="76" y="12">100 Hz</text><text x="176" y="12">1 kHz</text><text x="270" y="12">10 kHz</text></g>';
+      const lab = '<g font-size="7" fill="#2EE6D0" fill-opacity=".6"><text x="76" y="22">100 Hz</text><text x="176" y="22">1 kHz</text><text x="268" y="22">10 kHz</text></g>';
       const br = '<g fill="none" stroke="#2EE6D0" stroke-opacity=".7" stroke-width="1.2"><path d="M3 10V3h7"/><path d="M297 10V3h-7"/><path d="M3 140v7h7"/><path d="M297 140v7h-7"/></g>';
       hudEl.innerHTML = grid + marks + '<path d="' + d + '" fill="none" stroke="#2EE6D0" stroke-opacity=".2" stroke-width="5" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="#2EE6D0" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>' + lab + br;
     }

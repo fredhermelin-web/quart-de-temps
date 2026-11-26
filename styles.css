@@ -3294,3 +3294,6 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 .hc-beats { gap: 7px; }
 .hc-beats i { width: auto; height: auto; border-radius: 0; background: none; font: 700 15px/1 var(--f-ui); font-style: normal; color: rgba(255, 255, 255, .5); }
 .hc-beats i.on { background: none; color: #FFB547; }
+
+/* v83 — carte Rythmes du hub : sous-titre */
+.hc-name small { display: block; margin-top: 3px; font: 400 11.5px/1.1 var(--f-ui); letter-spacing: .02em; color: rgba(248, 244, 234, .62); }
