@@ -3313,8 +3313,11 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
   background: linear-gradient(35deg, transparent 45%, rgba(60, 38, 8, .85) 45% 55%, transparent 55%), radial-gradient(circle at 35% 30%, #FFF3CC 0%, #E3C27F 40%, #8E6A28 100%); box-shadow: 0 1px 2px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(60, 38, 8, .5); }
 .hub-trim .tl { top: 12px; left: 12px; } .hub-trim .tr { top: 12px; right: 12px; transform: rotate(60deg); }
 .hub-trim .bl { bottom: 14px; left: 12px; transform: rotate(120deg); } .hub-trim .br { bottom: 14px; right: 12px; transform: rotate(20deg); }
-.hub-trim .hk { position: absolute; top: 12px; width: 30px; height: 30px; border-radius: 50%;
-  background: linear-gradient(0deg, transparent 38%, #3A2508 38% 62%, transparent 62%) center / 3px 46% no-repeat, radial-gradient(circle at 50% 50%, #F4D993 0 26%, #B98A38 27% 62%, transparent 63%), repeating-conic-gradient(#C99A45 0 6deg, #6B4A16 6deg 12deg);
-  box-shadow: 0 3px 5px rgba(0, 0, 0, .7), 0 0 0 2px rgba(20, 12, 4, .8); }
-.hub-trim .hk::after { content: ""; position: absolute; left: 50%; top: 4px; width: 2.5px; height: 9px; margin-left: -1.25px; border-radius: 2px; background: #2A1A06; }
-.hub-trim .kl { left: 24%; transform: rotate(-35deg); } .hub-trim .kr { right: 24%; transform: rotate(50deg); }
+
+/* v86 — façade d'ampli : cadre fermé et net en bas, liseré doré uniforme sur les quatre côtés, quatre vis (plus de boutons) */
+.hub-fabric { margin-bottom: max(10px, env(safe-area-inset-bottom, 0px)); border-bottom: 4px solid #2C1E13; border-radius: 26px;
+  box-shadow: 0 0 0 1px rgba(201, 162, 90, .45), 0 -8px 18px rgba(0, 0, 0, .55), 0 6px 14px rgba(0, 0, 0, .5), inset 0 0 0 1.5px rgba(222, 180, 100, .85), inset 0 14px 26px rgba(0, 0, 0, .6); }
+.hub-trim::before { inset: 8px; border: 1px solid rgba(227, 194, 127, .55); border-radius: 18px; box-shadow: none; }
+.hub-trim .bl { bottom: 13px; } .hub-trim .br { bottom: 13px; }
+.hub-foot { bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 20px); }
+.hub-spk { bottom: 68px; }

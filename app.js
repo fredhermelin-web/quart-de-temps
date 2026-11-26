@@ -372,7 +372,7 @@
     return String(n || 'Morceau').replace(/\.[a-z0-9]{2,4}$/i, '').replace(/[_]+/g, ' ').trim() || 'Morceau';
   }
   function isAudioFile(file) {
-    return /\.(mp3|wav|wave|m4a|mp4|aac)$/i.test(file.name || '') || /^audio\//.test(file.type || '');
+    return /\.(mp3|wav|wave|m4a|mp4|aac|opus|ogg|oga|flac|weba|webm)$/i.test(file.name || '') || /^audio\//.test(file.type || '');
   }
 
   /* Fenêtre visible de l'onde (en secondes) et curseur fixe à 40 % */
@@ -382,7 +382,7 @@
 
   async function loadFile(file) {
     if (!file) return;
-    if (!isAudioFile(file)) { toast('Ce fichier n’est pas un son. Choisis un MP3, WAV ou M4A.'); return; }
+    if (!isAudioFile(file)) { toast('Ce fichier n’est pas un son. Choisis un MP3, M4A, WAV, OPUS, OGG ou FLAC.'); return; }
     const token = ++P.token;
     if (metro.running) stopMetro();   // on libère toute la machine pour charger le morceau
     audio.pause();

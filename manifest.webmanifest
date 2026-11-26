@@ -24,7 +24,7 @@
     "enctype": "multipart/form-data",
     "params": {
       "files": [
-        { "name": "audio", "accept": ["audio/*", ".mp3", ".wav", ".m4a"] }
+        { "name": "audio", "accept": ["audio/*", ".mp3", ".wav", ".m4a", ".aac", ".opus", ".ogg", ".oga", ".flac"] }
       ]
     }
   },
@@ -34,7 +34,10 @@
       "accept": {
         "audio/mpeg": [".mp3"],
         "audio/wav": [".wav"],
-        "audio/mp4": [".m4a"]
+        "audio/mp4": [".m4a"],
+        "audio/aac": [".aac"],
+        "audio/ogg": [".opus", ".ogg", ".oga"],
+        "audio/flac": [".flac"]
       }
     }
   ]
