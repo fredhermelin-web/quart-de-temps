@@ -1778,7 +1778,7 @@
   (function intro() {
     const root = document.documentElement;
     if (!root.classList.contains('intro')) return;
-    const top = $('top'), wm = top.querySelector('.wordmark'), logo = $('introLogo'), bg = $('introBg'), mini = $('miniMark');
+    const top = $('top'), wm = top.querySelector('.wordmark'), logo = $('introLogo'), bg = $('introBg'), mini = $('hubMark') || $('miniMark');
     const sp = logo.querySelector('.il-spiral'), q = logo.querySelector('.il-quarter');
     const parts = [wm.querySelector('.wm-qu'), wm.querySelector('.wm-a'), wm.querySelector('.wm-rt'), wm.querySelector('.wm-line2'), wm.querySelector('.wm-rule'), wm.querySelector('.wm-devise')].filter(Boolean);
     let done = false, started = false;
@@ -1808,7 +1808,7 @@
       done = true;
       timers.forEach(clearTimeout);
       parts.forEach((el) => { el.style.opacity = ''; });
-      const decks = document.querySelectorAll('.app > .deck');
+      const decks = document.querySelectorAll('.app > .deck, .app > .hub');
       const end = () => {
         root.classList.remove('intro');
         [wm, logo, bg].forEach((el) => el.getAnimations().forEach((x) => x.cancel()));
@@ -2658,28 +2658,39 @@
     };
     sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
   })();
-  /* Pastilles de page : A (métronome) et B (ralentisseur) */
-  (function pager() {
-    const nav = $('pager'); if (!nav) return;
-    const dots = nav.querySelectorAll('button');
-    let q = 0, cur = 'A';
-    const where = () => $('pageB').getBoundingClientRect().top < window.innerHeight * 0.5 ? 'B' : 'A';
-    const upd = () => {
-      q = 0;
-      const w = where();
-      dots[0].classList.toggle('on', w === 'A'); dots[1].classList.toggle('on', w === 'B');
-      if (w !== cur) {
-        cur = w;
-        // Chaque page est un monde à part : en changeant de page, l'autre se tait
-        if (w === 'B' && metro.running) stopMetro();
-        if (w === 'A' && !audio.paused) audio.pause();
+  /* Navigation : l'atelier musical (accueil) et ses ateliers. Chaque atelier est un écran fixe ;
+     le geste « retour » d'Android ramène à l'accueil. En quittant un atelier, il se tait. */
+  (function nav() {
+    const body = document.body;
+    let cur = 'hub';
+    const ok = (v) => v === 'hub' || v === 'metro' || v === 'speed' || v === 'solfege';
+    function apply(v) {
+      if (!ok(v)) v = 'hub';
+      if (v === cur && body.dataset.view === v) return;
+      if (cur === 'metro' && v !== 'metro' && metro.running) stopMetro();
+      if (cur === 'speed' && v !== 'speed' && !audio.paused) audio.pause();
+      cur = v; body.dataset.view = v;
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('resize'));
+        try { if (window.fitTitle) window.fitTitle(); } catch (e) { /* ignoré */ }
+      });
+    }
+    window.goView = (v) => {
+      if (!ok(v) || v === cur) return;
+      if (v === 'hub') {
+        if (history.state && history.state.v && history.state.v !== 'hub') { history.back(); return; }
+        apply('hub'); return;
       }
+      try { history.pushState({ v }, ''); } catch (e) { /* ignoré */ }
+      apply(v);
     };
-    window.addEventListener('scroll', () => {
-      if (!q) q = requestAnimationFrame(upd);
-    }, { passive: true });
-    dots.forEach((b) => b.addEventListener('click', () => $(b.dataset.go).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })));
-    upd();
+    try { history.replaceState({ v: 'hub' }, ''); } catch (e) { /* ignoré */ }
+    window.addEventListener('popstate', (e) => apply((e.state && e.state.v) || 'hub'));
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('[data-open]');
+      if (b) window.goView(b.dataset.open);
+    });
   })();
   holdRepeat($('spMinus'), () => setSpeed(P.speed - 5));
   holdRepeat($('spPlus'), () => setSpeed(P.speed + 5));
@@ -2905,7 +2916,7 @@
   if ('launchQueue' in window) {
     try {
       window.launchQueue.setConsumer(async (params) => {
-        if (params && params.files && params.files.length) loadFile(await params.files[0].getFile());
+        if (params && params.files && params.files.length) { if (window.goView) window.goView('speed'); loadFile(await params.files[0].getFile()); }
       });
     } catch (e) { /* ignoré */ }
   }
@@ -2921,6 +2932,7 @@
       const blob = await r.blob();
       const name = decodeURIComponent(r.headers.get('x-filename') || 'Morceau partagé');
       await cache.delete('shared-audio');
+      if (window.goView) window.goView('speed');
       loadFile(new File([blob], name, { type: blob.type || 'audio/mpeg' }));
     } catch (e) { /* ignoré */ }
   }
