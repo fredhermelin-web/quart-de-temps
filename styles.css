@@ -3190,3 +3190,17 @@ body.has-track .track-row .track-actions .btn-change svg { width: 13px; height: 
   linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015)); }
 .player[data-state="empty"] .player-plaque::before { opacity: .08; }
 .back-atelier.in-deck { top: 10px; left: 12px; }
+
+/* =================== v80 : Solfège pleine hauteur, logo au même endroit partout =================== */
+body[data-view="solfege"] #solfege { min-height: calc(100svh - 16px); box-sizing: border-box; }
+.back-atelier.in-deck { top: 10px; left: 12px; }
+.back-atelier.in-deck svg.hel { width: 42px; height: 42px; }
+
+/* v80 : boutons son du métronome plus gros (muet = haut-parleur, devient sombre + croix quand le son est coupé ; volume = haut-parleur à ondes) */
+.metro .mute, .metro .vol-btn { width: 54px; height: 34px; }
+.metro .mute svg { width: 27px; height: 27px; }
+.metro .vol-btn .vol-ic { width: 28px; height: 28px; }
+.metro .mute .wv, .metro .mute .x { stroke-width: 2.1; }
+.vol-anchor { margin-left: -27px; }
+.back-atelier.in-deck { top: 8px; left: 10px; }
+.back-atelier.in-deck svg.hel { width: 50px; height: 50px; }

@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v79';
+const CACHE = 'atelier-v80';
 const SHARE = 'atelier-share';
 const SHELL = [
   './',
