@@ -227,13 +227,30 @@
       if (S.node) S.node.schedule({ active: false });
       keepAlive(false);
     }
+    // Égaliseur 3 bandes (grave, médium, aigu) entre le moteur et la sortie ; la baisse de gain évite la saturation
+    const EQ = { b: Object.assign({ lo: 0, mid: 0, hi: 0 }, store.get('eq', {})), f: null, trim: null };
+    const eqTrim = () => Math.pow(10, -Math.max(0, EQ.b.lo, EQ.b.mid, EQ.b.hi) / 20);
+    function eqBuild(c, node) {
+      const lo = c.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 180; lo.gain.value = EQ.b.lo;
+      const mid = c.createBiquadFilter(); mid.type = 'peaking'; mid.frequency.value = 1200; mid.Q.value = 0.7; mid.gain.value = EQ.b.mid;
+      const hi = c.createBiquadFilter(); hi.type = 'highshelf'; hi.frequency.value = 4500; hi.gain.value = EQ.b.hi;
+      const trim = c.createGain(); trim.gain.value = eqTrim();
+      node.connect(lo); lo.connect(mid); mid.connect(hi); hi.connect(trim); trim.connect(c.destination);
+      EQ.f = { lo, mid, hi }; EQ.trim = trim;
+    }
+    function eqApply() {
+      if (!EQ.f) return;
+      const t = ctx ? ctx.currentTime : 0;
+      ['lo', 'mid', 'hi'].forEach((k) => EQ.f[k].gain.setTargetAtTime(EQ.b[k], t, 0.02));
+      EQ.trim.gain.setTargetAtTime(eqTrim(), t, 0.02);
+    }
     function ensureNode() {
       if (S.nodeP) return S.nodeP;
       S.nodeP = (async () => {
         if (typeof window.SignalsmithStretch !== 'function' || !window.AudioWorkletNode) throw new Error('moteur indisponible');
         const c = getCtx();
         const node = await window.SignalsmithStretch(c, { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] });
-        node.connect(c.destination);
+        eqBuild(c, node);
         if (document.body.classList.contains('lite')) { try { await node.configure({ preset: 'cheaper' }); } catch (e) { /* défaut */ } }
         try { S.lat = Math.max(0, Math.min(0.5, +(await node.latency()) || 0)); } catch (e) { S.lat = 0; }
         S.node = node;
@@ -250,6 +267,11 @@
       addEventListener: (t, f, o) => et.addEventListener(t, f, o),
       removeEventListener: (t, f, o) => et.removeEventListener(t, f, o),
       get engine() { return S.mode === 'ss' ? 'signalsmith' : 'natif'; },
+      get eqReady() { return !!EQ.f && S.mode === 'ss'; },
+      get eqFailed() { return S.failed; },
+      eqGet() { return Object.assign({}, EQ.b); },
+      eqSet(band, db) { if (!(band in EQ.b)) return; EQ.b[band] = clamp(Math.round(+db || 0), -9, 9); store.set('eq', EQ.b); eqApply(); },
+      eqReset() { EQ.b.lo = EQ.b.mid = EQ.b.hi = 0; store.set('eq', EQ.b); eqApply(); },
       get src() { return nat.src; },
       set src(v) { S.token++; toNative(); nat.src = v; },
       removeAttribute(a) { S.token++; toNative(); if (S.node) S.node.dropBuffers().catch(() => {}); nat.removeAttribute(a); },
@@ -449,6 +471,48 @@
     if (!reduceMotion) { glass.classList.remove('sweep'); void glass.offsetWidth; glass.classList.add('sweep'); }
   });
   audio.addEventListener('pause', () => { renderPlay(); updateWake(); dirty = true; });
+
+  /* ===================================================================== */
+  /* Égaliseur : bouton en bas de l'atelier vitesse, petite fenêtre à trois curseurs */
+  (function eqUi() {
+    const btn = $('eqBtn'), sheet = $('eqPanel');
+    if (!btn || !sheet) return;
+    const faders = { lo: $('eqLo'), mid: $('eqMid'), hi: $('eqHi') };
+    const vals = { lo: $('eqLoV'), mid: $('eqMidV'), hi: $('eqHiV') };
+    const note = $('eqNote');
+    const fmt = (v) => (v > 0 ? '+' + v : v < 0 ? '−' + Math.abs(v) : '0');
+    let timer = 0;
+    function paint() {
+      const g = audio.eqGet();
+      Object.keys(faders).forEach((k) => { faders[k].value = g[k]; vals[k].textContent = fmt(g[k]); vals[k].classList.toggle('on', g[k] !== 0); });
+      btn.classList.toggle('on', g.lo !== 0 || g.mid !== 0 || g.hi !== 0);
+    }
+    function sync() {
+      const ready = player.dataset.state === 'ready';
+      btn.disabled = !ready;
+      if (!ready && !sheet.hidden) close();
+      const ok = audio.eqReady;
+      Object.keys(faders).forEach((k) => { faders[k].disabled = !ok; });
+      sheet.classList.toggle('off', !ok);
+      note.textContent = ok ? 'Touche le nom d\u2019une bande pour la remettre à 0.' : (audio.eqFailed ? 'L\u2019égaliseur n\u2019est pas disponible sur cet appareil.' : 'L\u2019égaliseur s\u2019active dès que le morceau est prêt.');
+      paint();
+    }
+    function open() { sheet.hidden = false; btn.setAttribute('aria-expanded', 'true'); sync(); clearInterval(timer); timer = setInterval(sync, 500); }
+    function close() { sheet.hidden = true; btn.setAttribute('aria-expanded', 'false'); clearInterval(timer); }
+    btn.addEventListener('click', () => { if (sheet.hidden) open(); else close(); });
+    $('eqClose').addEventListener('click', close);
+    $('eqScrim').addEventListener('click', close);
+    $('eqFlat').addEventListener('click', () => { audio.eqReset(); paint(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) close(); });
+    Object.keys(faders).forEach((k) => {
+      faders[k].addEventListener('input', () => { audio.eqSet(k, faders[k].value); paint(); });
+    });
+    sheet.querySelectorAll('.eq-name').forEach((b) => b.addEventListener('click', () => { audio.eqSet(b.dataset.band, 0); paint(); }));
+    new MutationObserver(sync).observe(player, { attributes: true, attributeFilter: ['data-state'] });
+    audio.addEventListener('loadedmetadata', sync);
+    sync();
+  })();
+
   audio.addEventListener('ended', () => { renderPlay(); updateWake(); dirty = true; });
   audio.addEventListener('timeupdate', checkLoop);
   audio.addEventListener('seeked', () => { dirty = true; });
