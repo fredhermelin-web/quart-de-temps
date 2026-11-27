@@ -3423,3 +3423,38 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
   .hc-leds i { width: 5px; height: 5px; }
   .hc-leds i:nth-child(4n+1):not(:first-child) { margin-left: 3.5px; }
 }
+
+/* =================== v99 : diodes plus vives, écran vitesse moins haut, spirale qui respire, formats qui s'effacent =================== */
+/* Rythmes : diodes éteintes un peu plus grosses et plus claires ; diode allumée plus grosse, détourée d'or clair, flash plus fort */
+.hc-leds { gap: 1.5px; height: 28px; }
+.hc-leds i { width: 7px; height: 7px; background: rgba(255, 255, 255, .27); }
+.hc-leds i:nth-child(4n+1):not(:first-child) { margin-left: 4px; }
+.hc-leds i.x::before { inset: -1.8px; background: #FFFFFF; box-shadow: 0 0 0 1.5px rgba(255, 220, 150, .95); }
+.hc-leds i.x::after { inset: -9px; background: radial-gradient(circle, rgba(255, 255, 255, .85), rgba(255, 236, 190, .3) 45%, rgba(255, 255, 255, 0) 72%); }
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes hcLed { 0%, 5% { opacity: 1; } 11%, 100% { opacity: 0; } }
+}
+@media (max-width: 370px) {
+  .hc-leds { gap: 1.5px; }
+  .hc-leds i { width: 5.5px; height: 5.5px; }
+  .hc-leds i:nth-child(4n+1):not(:first-child) { margin-left: 3.5px; }
+  .hc-leds i.x::before { inset: -1.5px; }
+  .hc-leds i.x::after { inset: -7px; }
+}
+
+/* Atelier vitesse (à vide) : écran moins haut (environ 20 %) */
+.player[data-state="empty"] .wave-wrap { height: clamp(150px, calc(100svh - 500px), 285px); }
+
+/* Spirale fixe qui respire : elle s'allume, presque disparaît, revient (un cycle lent) */
+.hud-empty .rd-spiral { stroke: #F4FAFF; stroke-width: 1.1px; opacity: .06; filter: blur(.5px); }
+@media (prefers-reduced-motion: no-preference) {
+  .hud-empty .rd-spiral { animation: rdBreath 7s ease-in-out infinite; }
+  @keyframes rdBreath { 0%, 100% { opacity: .04; } 50% { opacity: .5; } }
+}
+@media (prefers-reduced-motion: reduce) { .hud-empty .rd-spiral { opacity: .3; } }
+
+/* Formats : moins gros de près, ils s'éteignent en s'éloignant (et se rallument en revenant), points vert menthe */
+@keyframes pl-z { from { transform: scale(.7); opacity: .1; } to { transform: scale(1.25); opacity: 1; } }
+.pl .rd-dot { fill: #9CF9D2; }
+.pl .rd-halo { fill: rgba(120, 255, 200, .42); }
+@media (prefers-reduced-motion: reduce) { .pl-z { opacity: 1; transform: scale(1); } }
