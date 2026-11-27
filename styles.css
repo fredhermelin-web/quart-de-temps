@@ -3343,31 +3343,41 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
   .hc-wave.fast rect { animation: hcBar .5s ease-in-out infinite alternate; }
   .hc-wave rect:nth-child(2n) { animation-delay: -.3s; } .hc-wave rect:nth-child(3n) { animation-delay: -.6s; }
   @keyframes hcBar { from { transform: scaleY(.45); } to { transform: scaleY(1.35); } }
-  .hc-rhythm { animation: hcRyFade 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm { animation: hcRyFade 9s linear infinite; }
   @keyframes hcRyFade { 0%, 82% { opacity: 1; } 90%, 100% { opacity: 0; } }
-  .hc-rhythm .g1 .st { animation: hcSt1 9s linear infinite; }
-  .hc-rhythm .g1 .bm { animation: hcBm1 9s linear infinite; }
-  .hc-rhythm .g1 .hd, .hc-rhythm .g1 .tr { animation: hcHd1 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .st { animation: hcSt1 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .bm { animation: hcBm1 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .tr { animation: hcHd1 9s linear infinite; }
   @keyframes hcSt1 { 0%, 2% { stroke-dashoffset: 1; } 7%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcBm1 { 0%, 6% { stroke-dashoffset: 1; } 10%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcHd1 { 0%, 5% { opacity: 0; } 8%, 100% { opacity: 1; } }
-  .hc-rhythm .g2 .st { animation: hcSt2 9s linear infinite; }
-  .hc-rhythm .g2 .bm { animation: hcBm2 9s linear infinite; }
-  .hc-rhythm .g2 .hd, .hc-rhythm .g2 .tr { animation: hcHd2 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .st { animation: hcSt2 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .bm { animation: hcBm2 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .tr { animation: hcHd2 9s linear infinite; }
   @keyframes hcSt2 { 0%, 17% { stroke-dashoffset: 1; } 22%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcBm2 { 0%, 21% { stroke-dashoffset: 1; } 25%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcHd2 { 0%, 20% { opacity: 0; } 23%, 100% { opacity: 1; } }
-  .hc-rhythm .g3 .st { animation: hcSt3 9s linear infinite; }
-  .hc-rhythm .g3 .bm { animation: hcBm3 9s linear infinite; }
-  .hc-rhythm .g3 .hd, .hc-rhythm .g3 .tr { animation: hcHd3 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .st { animation: hcSt3 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .bm { animation: hcBm3 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .tr { animation: hcHd3 9s linear infinite; }
   @keyframes hcSt3 { 0%, 33% { stroke-dashoffset: 1; } 38%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcBm3 { 0%, 37% { stroke-dashoffset: 1; } 41%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcHd3 { 0%, 36% { opacity: 0; } 39%, 100% { opacity: 1; } }
-  .hc-rhythm .g4 .st { animation: hcSt4 9s linear infinite; }
-  .hc-rhythm .g4 .bm { animation: hcBm4 9s linear infinite; }
-  .hc-rhythm .g4 .hd, .hc-rhythm .g4 .tr { animation: hcHd4 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .st { animation: hcSt4 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .bm { animation: hcBm4 9s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .tr { animation: hcHd4 9s linear infinite; }
   @keyframes hcSt4 { 0%, 52% { stroke-dashoffset: 1; } 57%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcBm4 { 0%, 56% { stroke-dashoffset: 1; } 60%, 100% { stroke-dashoffset: 0; } }
   @keyframes hcHd4 { 0%, 55% { opacity: 0; } 58%, 100% { opacity: 1; } }
-  body:not([data-view="hub"]) .hc-rhythm, body:not([data-view="hub"]) .hc-rhythm * { animation-play-state: paused; }
+}
+
+/* v90 — rythmes : la ligne défile, chaque figure s'écrit à droite puis tout glisse d'un cran vers la gauche */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .sc { animation: hcScroll 9s linear infinite; }
+  @keyframes hcScroll {
+    0%, 11% { transform: translateX(106px); animation-timing-function: ease-in-out; }
+    16%, 27% { transform: translateX(78px); animation-timing-function: ease-in-out; }
+    32%, 44% { transform: translateX(42px); animation-timing-function: ease-in-out; }
+    49%, 100% { transform: translateX(0); }
+  }
 }
