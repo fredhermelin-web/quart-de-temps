@@ -1,24 +1,29 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v93';
+const CACHE = 'atelier-v94';
 const SHARE = 'atelier-share';
+// Fichiers indispensables : s'il en manque un, la nouvelle version n'est pas installée (l'ancienne continue de servir).
 const SHELL = [
   './',
   'index.html',
-  'mentions-legales.html',
   'styles.css',
   'fonts.css',
+  'sounds.js',
+  'vendor/signalsmith-stretch-1.3.2.js',
+  'app.js',
+  'manifest.webmanifest'
+];
+// Fichiers secondaires : gardés hors ligne s'ils sont disponibles, sans bloquer l'installation.
+const EXTRA = [
+  'mentions-legales.html',
   'fonts/ebgaramond-italic-500.woff2',
   'fonts/ebgaramond-normal-500.woff2',
   'fonts/manrope-normal-500.woff2',
   'fonts/unbounded-normal-400.woff2',
-  'sounds.js',
-  'vendor/signalsmith-stretch-1.3.2.js',
-  'app.js',
-  'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'icons/icon-512-maskable.png',
   'Sound/Clave.wav',
   'Sound/Conga.mp3',
   'Sound/Cowbell.wav',
@@ -26,13 +31,16 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(async (c) => {
+    await c.addAll(SHELL);
+    await Promise.all(EXTRA.map((u) => c.add(u).catch(() => {})));
+  }).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== SHARE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => /^atelier-v\d+$/.test(k) && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -67,8 +75,13 @@ self.addEventListener('fetch', (e) => {
   const isLegal = /mentions-legales\.html$/.test(url.pathname);
   const key = req.mode === 'navigate' ? (isLegal ? 'mentions-legales.html' : 'index.html') : req;
   // cache: 'no-cache' : on revalide toujours auprès du serveur, jamais de vieille copie du cache HTTP.
-  e.respondWith(fetch(req, { cache: 'no-cache' }).then((res) => {
-    if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(key, copy)); }
-    return res;
-  }).catch(() => caches.match(key, { ignoreSearch: true })));
+  // Si le serveur répond par une erreur ou ne répond pas assez vite, on sert la copie gardée plutôt qu'une page cassée.
+  const fromCache = () => caches.open(CACHE).then((c) => c.match(key, { ignoreSearch: true }));
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), 8000) : 0;
+  e.respondWith(fetch(req, ctl ? { cache: 'no-cache', signal: ctl.signal } : { cache: 'no-cache' }).then(async (res) => {
+    clearTimeout(timer);
+    if (res && res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(key, copy)); return res; }
+    return (await fromCache()) || res;
+  }).catch(async () => { clearTimeout(timer); return (await fromCache()) || Response.error(); }));
 });

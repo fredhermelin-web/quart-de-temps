@@ -213,6 +213,8 @@
     }
     function ssTick() {
       if (S.mode !== 'ss' || S.paused) return;
+      // Boucle A-B : le retour à A passe avant la fin du morceau (B peut coïncider avec la fin du fichier)
+      if (P.loop && P.A != null && P.B != null && P.B > P.A && ssPos() >= P.B - 0.02) { audio.currentTime = P.A; return; }
       if (ssPos() >= S.dur - 0.02) {
         S.pos = S.dur; S.paused = true; S.ended = true;
         S.node.schedule({ active: false });
@@ -723,19 +725,34 @@
     return { analyse: analyse };
   }
 
-  let analysisWorker = null;
+  let analysisWorker = null, analysisId = 0;
+  const analysisWait = new Map();
   function analyse(chans, sr, nPeaks) {
     return new Promise((resolve, reject) => {
+      const id = ++analysisId;
       try {
         if (!analysisWorker) {
           const src = 'var L=(' + analysisLib.toString() + ')();' +
-            'self.onmessage=function(e){try{var r=L.analyse(e.data.chans,e.data.sr,e.data.nPeaks);self.postMessage(r,[r.peaks.buffer]);}catch(err){self.postMessage({error:String(err)});}};';
+            'self.onmessage=function(e){var id=e.data.id;try{var r=L.analyse(e.data.chans,e.data.sr,e.data.nPeaks);r.id=id;self.postMessage(r,[r.peaks.buffer]);}catch(err){self.postMessage({id:id,error:String(err)});}};';
           analysisWorker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+          // Chaque réponse retrouve son propre import : deux morceaux rapprochés ne mélangent plus leurs résultats
+          analysisWorker.onmessage = (e) => {
+            const w = analysisWait.get(e.data.id);
+            if (!w) return;
+            analysisWait.delete(e.data.id);
+            if (e.data.error) w.reject(new Error(e.data.error)); else w.resolve(e.data);
+          };
+          analysisWorker.onerror = (e) => {
+            e.preventDefault && e.preventDefault();
+            analysisWorker = null;
+            const all = Array.from(analysisWait.values()); analysisWait.clear();
+            all.forEach((w) => w.fallback());
+          };
         }
-        analysisWorker.onmessage = (e) => (e.data.error ? reject(new Error(e.data.error)) : resolve(e.data));
-        analysisWorker.onerror = (e) => { e.preventDefault && e.preventDefault(); analysisWorker = null; fallback(); };
-        analysisWorker.postMessage({ chans: chans, sr: sr, nPeaks: nPeaks }, chans.map((c) => c.buffer));
+        analysisWait.set(id, { resolve: resolve, reject: reject, fallback: fallback });
+        analysisWorker.postMessage({ id: id, chans: chans, sr: sr, nPeaks: nPeaks }, chans.map((c) => c.buffer));
       } catch (e) {
+        analysisWait.delete(id);
         fallback();
       }
       function fallback() {
@@ -2287,6 +2304,8 @@
     metro.n = n; metro.d = d;
     metro.pattern = defaultPattern(n, d);
     if (metro.beat >= n) metro.beat = 0;
+    // Temps déjà programmés pour l'ancienne mesure : on ne les affiche plus (ils n'ont plus de voyant)
+    metro.queue = metro.queue.filter((q) => q.beat < n);
     buildBeats();
     renderMeter();
     placeRecord();
@@ -2588,7 +2607,7 @@
   function lightBeat(i, st) {
     beats.forEach((d, k) => d.classList.toggle('on', k === i));
     litBeat = i;
-    if (i < 0 || reduceMotion || st === 0) return;
+    if (i < 0 || reduceMotion || st === 0 || !beats[i]) return;
     const lamp = beats[i].querySelector('.lamp');
     if (lamp.animate) lamp.animate([{ transform: 'scale(' + (st === 2 ? 1.16 : 1.09) + ')' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.2,.8,.3,1)' });
   }
@@ -2605,6 +2624,7 @@
     const now = ctx.currentTime - lat;
     while (metro.queue.length && metro.queue[0].t <= now) {
       const ev = metro.queue.shift();
+      if (ev.beat >= beats.length) continue;
       if (ev.isBeat) {
         lightBeat(ev.beat, ev.st);
         sparkBeat(ev, now);
@@ -2619,7 +2639,7 @@
           if (!reduceMotion && taLed.animate) taLed.animate([{ opacity: 1 }, { opacity: 0.45 }], { duration: Math.min(500, 60000 / metro.bpm * 0.8), easing: 'ease-out' });
         }
       }
-      else if (ev.st !== 0 && litBeat >= 0 && !reduceMotion) {
+      else if (ev.st !== 0 && litBeat >= 0 && beats[litBeat] && !reduceMotion) {
         const lamp = beats[litBeat].querySelector('.lamp');
         if (lamp.animate) lamp.animate([{ transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 110, easing: 'ease-out' });
       }
