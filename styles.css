@@ -3028,7 +3028,6 @@ html.intro .hub-mark { opacity: 0; }
 .hc-beats i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .3); }
 .hc-beats i.on { background: #FFB547; }
 .hc-wave { width: 38px; height: 19px; position: relative; flex: none; }
-.hc-rhythm { width: 58px; height: 24px; position: relative; flex: none; }
 
 /* Façade de TSF : tissu tendu, bord doré, haut-parleur voilé derrière la trame */
 .hub-fabric { position: relative; z-index: 0; flex: 1 1 auto; min-height: 150px; margin-top: -35px; overflow: hidden;
@@ -3327,54 +3326,9 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 .guide-alt b { color: #FFD98A; font-weight: 700; }
 
 /* v88 — accueil : l'aiguille du compteur qui passe de temps en temps, les ondes qui s'animent, les rythmes écrits à la main */
-.hc-rhythm { width: 108px; height: 25px; }
 .hc-name { min-width: 0; }
-.hc-rhythm .st, .hc-rhythm .bm { stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; fill: none; }
-.hc-rhythm .bm { stroke-width: 2.4; }
-.hc-rhythm .hd { stroke: none; }
-.hc-rhythm .tr { stroke: none; font: 700 7px/1 var(--f-ui); }
-.hc-rhythm .g1 .st, .hc-rhythm .d1 .st { stroke-width: 1.7; }
 .hc-needle { transform-origin: 32px 32px; }
 .hc-wave rect { transform-box: fill-box; transform-origin: 50% 50%; }
-@media (prefers-reduced-motion: no-preference) {
-  .hc-logo.hc-swing .hc-needle { animation: hcNeedle 3s ease-in-out 1; }
-  @keyframes hcNeedle { 0% { transform: rotate(0); } 22%, 36% { transform: rotate(-80deg); } 62%, 78% { transform: rotate(30deg); } 100% { transform: rotate(0); } }
-  .hc-wave.slow rect { animation: hcBar 1.25s ease-in-out infinite alternate; }
-  .hc-wave.fast rect { animation: hcBar .5s ease-in-out infinite alternate; }
-  .hc-wave rect:nth-child(2n) { animation-delay: -.3s; } .hc-wave rect:nth-child(3n) { animation-delay: -.6s; }
-  @keyframes hcBar { from { transform: scaleY(.45); } to { transform: scaleY(1.35); } }
-}
-
-/* v91 — rythmes : tapis roulant continu (boucle de 10 s, sans remise à zéro visible). Chaque figure s'écrit à droite puis tout glisse d'un cran */
-.hc-rhythm .sc { will-change: transform; }
-@media (prefers-reduced-motion: no-preference) {
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .sc { animation: hcBelt 10s infinite; }
-  @keyframes hcBelt { 0%,6% { transform: translateX(0); animation-timing-function: ease-in-out; } 11%,31% { transform: translateX(-18px); animation-timing-function: ease-in-out; } 36%,56% { transform: translateX(-46px); animation-timing-function: ease-in-out; } 61%,81% { transform: translateX(-82px); animation-timing-function: ease-in-out; } 86%,100% { transform: translateX(-124px); } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .st { animation: hcDs1 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .bm { animation: hcDb1 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .tr { animation: hcDh1 10s linear infinite; }
-  @keyframes hcDs1 { 0%,1% { stroke-dashoffset: 0; } 1.01%,11% { stroke-dashoffset: 1; } 15%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDb1 { 0%,1% { stroke-dashoffset: 0; } 1.01%,14% { stroke-dashoffset: 1; } 18%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDh1 { 0%,1% { opacity: 1; } 1.01%,12% { opacity: 0; } 15%,100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .st { animation: hcDs2 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .bm { animation: hcDb2 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .tr { animation: hcDh2 10s linear infinite; }
-  @keyframes hcDs2 { 0%,1% { stroke-dashoffset: 0; } 1.01%,36% { stroke-dashoffset: 1; } 40%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDb2 { 0%,1% { stroke-dashoffset: 0; } 1.01%,39% { stroke-dashoffset: 1; } 43%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDh2 { 0%,1% { opacity: 1; } 1.01%,37% { opacity: 0; } 40%,100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .st { animation: hcDs3 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .bm { animation: hcDb3 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .tr { animation: hcDh3 10s linear infinite; }
-  @keyframes hcDs3 { 0%,1% { stroke-dashoffset: 0; } 1.01%,61% { stroke-dashoffset: 1; } 65%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDb3 { 0%,1% { stroke-dashoffset: 0; } 1.01%,64% { stroke-dashoffset: 1; } 68%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDh3 { 0%,1% { opacity: 1; } 1.01%,62% { opacity: 0; } 65%,100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .st { animation: hcDs4 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .bm { animation: hcDb4 10s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .tr { animation: hcDh4 10s linear infinite; }
-  @keyframes hcDs4 { 0%,1% { stroke-dashoffset: 0; } 1.01%,86% { stroke-dashoffset: 1; } 90%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDb4 { 0%,1% { stroke-dashoffset: 0; } 1.01%,89% { stroke-dashoffset: 1; } 93%,100% { stroke-dashoffset: 0; } }
-  @keyframes hcDh4 { 0%,1% { opacity: 1; } 1.01%,87% { opacity: 0; } 90%,100% { opacity: 1; } }
-}
 
 /* v92 — le bandeau « installer » ne recouvre plus les ateliers : visible sur l'accueil seulement */
 body:not([data-view="hub"]) .install-bar { visibility: hidden; pointer-events: none; }
@@ -3428,3 +3382,44 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
 /* v97 — la signature sous le boomer, un cran plus grande et plus lumineuse */
 .hub-sign { font-size: 17px; font-weight: 600; color: #F0D08A; opacity: 1; }
 .hub-spk { bottom: 88px; }
+
+/* v98 — le nom de l'auteur se grave en haut du caisson, comme la marque d'un ampli ; le haut-parleur se recentre entre la plaque du haut et les mentions du bas */
+.hub-brand { position: absolute; z-index: 3; top: 15px; left: 0; right: 0; margin: 0; text-align: center; pointer-events: none;
+  font: italic 600 17px/1.2 "EB Garamond", Garamond, serif; letter-spacing: .02em; color: #F0D08A; text-shadow: 0 1px 6px rgba(11, 14, 36, .95); }
+@media (max-width: 370px) { .hub-brand { font-size: 15.5px; } }
+.hub-fabric::before { top: 46px; bottom: 58px; }
+.hub-spk { top: 46px; bottom: 58px; padding: 12px 0; }
+
+/* v98 — accueil : compteur du changeur (− à gauche, + à droite, l'aiguille se balance lentement), vu-mètre toujours en mouvement, rythmes en 16 diodes (samba à 80) */
+.hc-minus, .hc-plus { opacity: .3; }
+.hc-plus { opacity: 1; }
+.hc-needle { transform-origin: 32px 32px; transform: rotate(22deg); }
+.hc-wave rect { transform-box: fill-box; transform-origin: 50% 50%; }
+.hc-wave { transform-origin: 50% 50%; }
+.hc-leds { display: flex; align-items: center; gap: 2px; flex: none; height: 25px; }
+.hc-leds i { position: relative; flex: none; width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .15); }
+.hc-leds i:nth-child(4n+1):not(:first-child) { margin-left: 5px; }
+.hc-leds i.x::before, .hc-leds i.x::after { content: ""; position: absolute; border-radius: 50%; opacity: 0; pointer-events: none; }
+.hc-leds i.x::before { inset: 0; background: #FFFFFF; opacity: .8; }
+.hc-leds i.x::after { inset: -5px; background: radial-gradient(circle, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 70%); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.intro) body[data-view="hub"] .hc-needle { animation: hcNeedle2 8s ease-in-out infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-minus { animation: hcMinus 8s ease-in-out infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-plus { animation: hcPlus 8s ease-in-out infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-wave { animation: hcAmp 8s ease-in-out infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-wave rect { animation: hcBar 1.1s ease-in-out infinite alternate; }
+  .hc-wave rect:nth-child(2n) { animation-delay: -.3s; } .hc-wave rect:nth-child(3n) { animation-delay: -.6s; }
+  @keyframes hcNeedle2 { 0%, 100% { transform: rotate(-84deg); } 50% { transform: rotate(40deg); } }
+  @keyframes hcMinus { 0%, 100% { opacity: 1; } 12% { opacity: 1; } 32%, 68% { opacity: .22; } 88% { opacity: 1; } }
+  @keyframes hcPlus { 0%, 100% { opacity: .22; } 12%, 32% { opacity: .22; } 40%, 60% { opacity: 1; } 68% { opacity: .22; } }
+  @keyframes hcAmp { 0%, 100% { transform: scaleY(.72); } 50% { transform: scaleY(1); } }
+  @keyframes hcBar { from { transform: scaleY(.45); } to { transform: scaleY(1.35); } }
+  html:not(.intro) body[data-view="hub"] .hc-leds i.x::before, html:not(.intro) body[data-view="hub"] .hc-leds i.x::after { animation: hcLed 3s linear infinite; animation-delay: calc(var(--i) * .1875s); }
+  .hc-leds i.x::before, .hc-leds i.x::after { opacity: 0; }
+  @keyframes hcLed { 0%, 4% { opacity: 1; } 8%, 100% { opacity: 0; } }
+}
+@media (max-width: 370px) {
+  .hc-leds { gap: 1.5px; }
+  .hc-leds i { width: 5px; height: 5px; }
+  .hc-leds i:nth-child(4n+1):not(:first-child) { margin-left: 3.5px; }
+}

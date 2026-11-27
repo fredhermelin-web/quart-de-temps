@@ -3214,23 +3214,6 @@
   }
 
 
-  /* ---------- Accueil : l'aiguille du compteur passe de temps en temps, les ondes suivent son rythme ---------- */
-  (function hubLife() {
-    const card = document.querySelector('.hc-speed');
-    if (!card) return;
-    const gauge = card.querySelector('.hc-logo'), wave = card.querySelector('.hc-wave');
-    const still = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-    function swing() {
-      if (document.hidden || document.body.dataset.view !== 'hub' || still.matches) return;
-      gauge.classList.remove('hc-swing'); void gauge.getBoundingClientRect(); gauge.classList.add('hc-swing');
-      setTimeout(() => { wave.classList.add('slow'); }, 300);
-      setTimeout(() => { wave.classList.remove('slow'); wave.classList.add('fast'); }, 1080);
-      setTimeout(() => { wave.classList.remove('fast'); gauge.classList.remove('hc-swing'); }, 2550);
-    }
-    setTimeout(swing, 1800);
-    setInterval(swing, 8000);
-  })();
-
   /* ---------- Démarrage ---------- */
   setSpeed(100);
   setMetroBpm(metro.bpm);

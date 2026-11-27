@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v97';
+const CACHE = 'atelier-v98';
 const SHARE = 'atelier-share';
 // Fichiers indispensables : s'il en manque un, la nouvelle version n'est pas installée (l'ancienne continue de servir).
 const SHELL = [
