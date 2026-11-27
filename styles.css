@@ -3383,3 +3383,7 @@ body:not([data-view="hub"]) .install-bar { visibility: hidden; pointer-events: n
 @media (min-width: 541px) {
   .hub-fabric { width: 500px; max-width: calc(100% - 20px); align-self: center; margin-left: 0; margin-right: 0; }
 }
+
+/* v96 — le bandeau « installer » se pose en bas de l'accueil, sur le tissu : il ne cache plus le titre ni les cartes */
+.install-bar { top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 140%); }
+.install-bar.show { transform: translate(-50%, 0); }
