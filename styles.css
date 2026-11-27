@@ -3333,7 +3333,7 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 .hc-rhythm .bm { stroke-width: 2.4; }
 .hc-rhythm .hd { stroke: none; }
 .hc-rhythm .tr { stroke: none; font: 700 7px/1 var(--f-ui); }
-.hc-rhythm .g1 .st { stroke-width: 1.7; }
+.hc-rhythm .g1 .st, .hc-rhythm .d1 .st { stroke-width: 1.7; }
 .hc-needle { transform-origin: 32px 32px; }
 .hc-wave rect { transform-box: fill-box; transform-origin: 50% 50%; }
 @media (prefers-reduced-motion: no-preference) {
@@ -3343,41 +3343,35 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
   .hc-wave.fast rect { animation: hcBar .5s ease-in-out infinite alternate; }
   .hc-wave rect:nth-child(2n) { animation-delay: -.3s; } .hc-wave rect:nth-child(3n) { animation-delay: -.6s; }
   @keyframes hcBar { from { transform: scaleY(.45); } to { transform: scaleY(1.35); } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm { animation: hcRyFade 9s linear infinite; }
-  @keyframes hcRyFade { 0%, 82% { opacity: 1; } 90%, 100% { opacity: 0; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .st { animation: hcSt1 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .bm { animation: hcBm1 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g1 .tr { animation: hcHd1 9s linear infinite; }
-  @keyframes hcSt1 { 0%, 2% { stroke-dashoffset: 1; } 7%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcBm1 { 0%, 6% { stroke-dashoffset: 1; } 10%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcHd1 { 0%, 5% { opacity: 0; } 8%, 100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .st { animation: hcSt2 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .bm { animation: hcBm2 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g2 .tr { animation: hcHd2 9s linear infinite; }
-  @keyframes hcSt2 { 0%, 17% { stroke-dashoffset: 1; } 22%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcBm2 { 0%, 21% { stroke-dashoffset: 1; } 25%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcHd2 { 0%, 20% { opacity: 0; } 23%, 100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .st { animation: hcSt3 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .bm { animation: hcBm3 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g3 .tr { animation: hcHd3 9s linear infinite; }
-  @keyframes hcSt3 { 0%, 33% { stroke-dashoffset: 1; } 38%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcBm3 { 0%, 37% { stroke-dashoffset: 1; } 41%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcHd3 { 0%, 36% { opacity: 0; } 39%, 100% { opacity: 1; } }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .st { animation: hcSt4 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .bm { animation: hcBm4 9s linear infinite; }
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .g4 .tr { animation: hcHd4 9s linear infinite; }
-  @keyframes hcSt4 { 0%, 52% { stroke-dashoffset: 1; } 57%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcBm4 { 0%, 56% { stroke-dashoffset: 1; } 60%, 100% { stroke-dashoffset: 0; } }
-  @keyframes hcHd4 { 0%, 55% { opacity: 0; } 58%, 100% { opacity: 1; } }
 }
 
-/* v90 — rythmes : la ligne défile, chaque figure s'écrit à droite puis tout glisse d'un cran vers la gauche */
+/* v91 — rythmes : tapis roulant continu (boucle de 10 s, sans remise à zéro visible). Chaque figure s'écrit à droite puis tout glisse d'un cran */
+.hc-rhythm .sc { will-change: transform; }
 @media (prefers-reduced-motion: no-preference) {
-  html:not(.intro) body[data-view="hub"] .hc-rhythm .sc { animation: hcScroll 9s linear infinite; }
-  @keyframes hcScroll {
-    0%, 11% { transform: translateX(106px); animation-timing-function: ease-in-out; }
-    16%, 27% { transform: translateX(78px); animation-timing-function: ease-in-out; }
-    32%, 44% { transform: translateX(42px); animation-timing-function: ease-in-out; }
-    49%, 100% { transform: translateX(0); }
-  }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .sc { animation: hcBelt 10s infinite; }
+  @keyframes hcBelt { 0%,6% { transform: translateX(0); animation-timing-function: ease-in-out; } 11%,31% { transform: translateX(-18px); animation-timing-function: ease-in-out; } 36%,56% { transform: translateX(-46px); animation-timing-function: ease-in-out; } 61%,81% { transform: translateX(-82px); animation-timing-function: ease-in-out; } 86%,100% { transform: translateX(-124px); } }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .st { animation: hcDs1 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .bm { animation: hcDb1 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d1 .tr { animation: hcDh1 10s linear infinite; }
+  @keyframes hcDs1 { 0%,1% { stroke-dashoffset: 0; } 1.01%,11% { stroke-dashoffset: 1; } 15%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDb1 { 0%,1% { stroke-dashoffset: 0; } 1.01%,14% { stroke-dashoffset: 1; } 18%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDh1 { 0%,1% { opacity: 1; } 1.01%,12% { opacity: 0; } 15%,100% { opacity: 1; } }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .st { animation: hcDs2 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .bm { animation: hcDb2 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d2 .tr { animation: hcDh2 10s linear infinite; }
+  @keyframes hcDs2 { 0%,1% { stroke-dashoffset: 0; } 1.01%,36% { stroke-dashoffset: 1; } 40%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDb2 { 0%,1% { stroke-dashoffset: 0; } 1.01%,39% { stroke-dashoffset: 1; } 43%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDh2 { 0%,1% { opacity: 1; } 1.01%,37% { opacity: 0; } 40%,100% { opacity: 1; } }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .st { animation: hcDs3 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .bm { animation: hcDb3 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d3 .tr { animation: hcDh3 10s linear infinite; }
+  @keyframes hcDs3 { 0%,1% { stroke-dashoffset: 0; } 1.01%,61% { stroke-dashoffset: 1; } 65%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDb3 { 0%,1% { stroke-dashoffset: 0; } 1.01%,64% { stroke-dashoffset: 1; } 68%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDh3 { 0%,1% { opacity: 1; } 1.01%,62% { opacity: 0; } 65%,100% { opacity: 1; } }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .st { animation: hcDs4 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .bm { animation: hcDb4 10s linear infinite; }
+  html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .hd, html:not(.intro) body[data-view="hub"] .hc-rhythm .d4 .tr { animation: hcDh4 10s linear infinite; }
+  @keyframes hcDs4 { 0%,1% { stroke-dashoffset: 0; } 1.01%,86% { stroke-dashoffset: 1; } 90%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDb4 { 0%,1% { stroke-dashoffset: 0; } 1.01%,89% { stroke-dashoffset: 1; } 93%,100% { stroke-dashoffset: 0; } }
+  @keyframes hcDh4 { 0%,1% { opacity: 1; } 1.01%,87% { opacity: 0; } 90%,100% { opacity: 1; } }
 }
