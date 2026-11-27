@@ -3378,3 +3378,8 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
 
 /* v92 — le bandeau « installer » ne recouvre plus les ateliers : visible sur l'accueil seulement */
 body:not([data-view="hub"]) .install-bar { visibility: hidden; pointer-events: none; }
+
+/* v95 — accueil sur grand écran : le cadre du haut-parleur reste dans la même colonne que les cartes */
+@media (min-width: 541px) {
+  .hub-fabric { width: 500px; max-width: calc(100% - 20px); align-self: center; margin-left: 0; margin-right: 0; }
+}
