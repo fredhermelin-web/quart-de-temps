@@ -391,7 +391,7 @@
     audio.src = P.url;
     audio.defaultPlaybackRate = audio.playbackRate = P.speed / 100;
     audio.load();
-    P.hasTrack = true; P.A = P.B = null; P.loop = false; P.bpm = null; P.peaks = null; P.pps = 0; P.decodedDur = 0;
+    P.hasTrack = true; P.A = P.B = null; P.loop = false; P.bpm = null; P.bpmAuto = false; P.peaks = null; P.pps = 0; P.decodedDur = 0;
     P.name = cleanName(file.name);
     $('trackTitle').textContent = P.name;
     $('trackTitle').title = P.name;
@@ -424,10 +424,11 @@
       if (token !== P.token) return;
       P.peaks = res.peaks;
       P.pps = res.peaks.length / ab.duration;
-      P.bpm = res.bpm;
+      P.bpm = res.bpm; P.bpmAuto = res.bpm != null;
       if (VIEW.span > maxSpan()) VIEW.span = maxSpan();
       setState('ready');
       if (P.bpm == null) toast('BPM non détecté : touche le grand chiffre BPM pour le saisir.', 3800);
+      else toast('Tempo estimé : vérifie-le, touche le grand chiffre pour le corriger.', 3200);
       // Chaque morceau ouvert : le ralentisseur s'ouvre, la vitesse est directement accessible
       hideSpeedHint();
       setTempoOpen(true);
@@ -1250,12 +1251,13 @@
     inp.placeholder = loading ? '…' : '—';
     const pb = playBpm();
     $('playBpm').textContent = pb ? String(pb) : (loading ? '…' : '—');
+    const eb = $('bpmEyebrow'); if (eb) eb.textContent = P.bpmAuto ? 'Tempo estimé · touche pour corriger' : 'Tempo du morceau';
   }
   function commitOrig() {
     const raw = String($('origBpm').value).replace(',', '.').trim();
     if (raw === '') { renderBpm(); return; }
     const v = parseFloat(raw);
-    if (isFinite(v) && v >= 20 && v <= 300) P.bpm = Math.round(v * 10) / 10;
+    if (isFinite(v) && v >= 20 && v <= 300) { P.bpm = Math.round(v * 10) / 10; P.bpmAuto = false; }
     else toast('Entre un BPM entre 20 et 300.');
     renderBpm();
   }
@@ -2496,12 +2498,12 @@
     ios: { who: 'Sur iPhone', other: 'Je suis sur Android', steps: [
       'Dans WhatsApp, touche le morceau reçu, puis <b>Partager</b> et <b>Enregistrer dans Fichiers</b>.',
       'Ici, touche <b>Importer un morceau</b> et choisis-le dans Fichiers.',
-      'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
+      'Avec la réglette du bas, <b>ralentis ou accélère</b> le morceau.',
       'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'] },
     android: { who: 'Sur Android', other: 'Je suis sur iPhone', steps: [
       'Dans WhatsApp, appuie longuement sur le morceau reçu, puis touche les <b>trois points ⋮</b> en haut à droite et <b>Partager</b>.',
       'Choisis <b>Quart de temps</b> : le morceau s’ouvre directement dans le changeur de vitesse.',
-      'Touche le bouton doré de gauche pour <b>ralentir ou accélérer</b>.',
+      'Avec la réglette du bas, <b>ralentis ou accélère</b> le morceau.',
       'Pose <b>A</b> puis <b>B</b> pour répéter un passage en boucle.'],
       alt: 'Sinon, touche <b>Importer un morceau</b> pour le chercher dans tes fichiers.' }
   };
@@ -3071,8 +3073,9 @@
   document.addEventListener('keydown', (e) => {
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' && e.target.type !== 'range') return;
-    if (e.code === 'Space' && tag !== 'BUTTON') { e.preventDefault(); togglePlay(); }
-    else if (e.key === 'm' || e.key === 'M') toggleMetro();
+    const view = document.body.dataset.view;
+    if (e.code === 'Space' && tag !== 'BUTTON' && view === 'speed') { e.preventDefault(); togglePlay(); }
+    else if ((e.key === 'm' || e.key === 'M') && view === 'metro') toggleMetro();
   });
 
   // Glisser-déposer (ordinateur)

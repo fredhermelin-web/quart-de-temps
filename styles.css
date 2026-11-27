@@ -3375,3 +3375,6 @@ body[data-view="speed"] .player:not([data-state="empty"]) .track-row { margin-to
   @keyframes hcDb4 { 0%,1% { stroke-dashoffset: 0; } 1.01%,89% { stroke-dashoffset: 1; } 93%,100% { stroke-dashoffset: 0; } }
   @keyframes hcDh4 { 0%,1% { opacity: 1; } 1.01%,87% { opacity: 0; } 90%,100% { opacity: 1; } }
 }
+
+/* v92 — le bandeau « installer » ne recouvre plus les ateliers : visible sur l'accueil seulement */
+body:not([data-view="hub"]) .install-bar { visibility: hidden; pointer-events: none; }
