@@ -529,7 +529,7 @@
       const ok = audio.eqReady;
       Object.keys(faders).forEach((k) => { faders[k].disabled = !ok; });
       sheet.classList.toggle('off', !ok);
-      note.textContent = ok ? 'Touche le nom d\u2019une bande pour la remettre à 0.' : (audio.eqFailed ? 'L\u2019égaliseur n\u2019est pas disponible sur cet appareil.' : 'L\u2019égaliseur s\u2019active dès que le morceau est prêt.');
+      note.textContent = ok ? 'Touche deux fois un curseur, ou le nom de la bande, pour la remettre à 0.' : (audio.eqFailed ? 'L\u2019égaliseur n\u2019est pas disponible sur cet appareil.' : 'L\u2019égaliseur s\u2019active dès que le morceau est prêt.');
       paint();
     }
     function open() { sheet.hidden = false; btn.setAttribute('aria-expanded', 'true'); sync(); clearInterval(timer); timer = setInterval(sync, 500); }
@@ -541,6 +541,15 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) close(); });
     Object.keys(faders).forEach((k) => {
       faders[k].addEventListener('input', () => { audio.eqSet(k, faders[k].value); paint(); });
+      // Double-touche sur le curseur : la bande revient à 0
+      let downVal = null, lastTap = 0;
+      faders[k].addEventListener('pointerdown', () => { downVal = faders[k].value; });
+      faders[k].addEventListener('pointerup', () => {
+        const now = Date.now();
+        if (downVal !== null && faders[k].value === downVal) {
+          if (now - lastTap < 350) { audio.eqSet(k, 0); paint(); lastTap = 0; } else lastTap = now;
+        } else lastTap = 0;
+      });
     });
     sheet.querySelectorAll('.eq-name').forEach((b) => b.addEventListener('click', () => { audio.eqSet(b.dataset.band, 0); paint(); }));
     new MutationObserver(sync).observe(player, { attributes: true, attributeFilter: ['data-state'] });
@@ -3112,6 +3121,24 @@
       }).catch(() => {});
     });
   }
+
+
+  /* ---------- Accueil : l'aiguille du compteur passe de temps en temps, les ondes suivent son rythme ---------- */
+  (function hubLife() {
+    const card = document.querySelector('.hc-speed');
+    if (!card) return;
+    const gauge = card.querySelector('.hc-logo'), wave = card.querySelector('.hc-wave');
+    const still = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+    function swing() {
+      if (document.hidden || document.body.dataset.view !== 'hub' || still.matches) return;
+      gauge.classList.remove('hc-swing'); void gauge.getBoundingClientRect(); gauge.classList.add('hc-swing');
+      setTimeout(() => { wave.classList.add('slow'); }, 300);
+      setTimeout(() => { wave.classList.remove('slow'); wave.classList.add('fast'); }, 1080);
+      setTimeout(() => { wave.classList.remove('fast'); gauge.classList.remove('hc-swing'); }, 2550);
+    }
+    setTimeout(swing, 1800);
+    setInterval(swing, 8000);
+  })();
 
   /* ---------- Démarrage ---------- */
   setSpeed(100);
