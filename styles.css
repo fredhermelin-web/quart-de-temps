@@ -3467,7 +3467,7 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
 .hud-empty .rd-spiral { stroke: #F4FAFF; stroke-width: 1.8px; opacity: .05; filter: none; }
 @media (prefers-reduced-motion: no-preference) {
   .hud-empty .rd-spiral { animation: rdBreath 7s ease-in-out infinite; }
-  @keyframes rdBreath { 0%, 100% { opacity: .03; } 50% { opacity: .85; } }
+  @keyframes rdBreath { 0%, 100% { opacity: .03; } 50% { opacity: .6; } }
 }
 @media (prefers-reduced-motion: reduce) { .hud-empty .rd-spiral { opacity: .4; } }
 /* Formats : des allées et venues plus courtes, pour rester dans le cercle */
@@ -3491,11 +3491,16 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
 @keyframes pl-z { from { transform: scale(.7); opacity: .35; } to { transform: scale(1.25); opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
   /* un tour en 2,5 s, qui s'efface doucement sur son dernier quart, puis repos */
-  .rd-sweep2 { animation: rdPass 12s linear infinite; }
-  @keyframes rdPass { 0% { opacity: 0; transform: rotate(-30deg); } 1.5% { opacity: 1; } 16% { opacity: 1; } 21%, 100% { opacity: 0; } 21% { transform: rotate(330deg); } 100% { transform: rotate(330deg); } }
+  .rd-sweep2 { animation: rdPass 20s linear infinite; }
+  @keyframes rdPass { 0% { opacity: 0; transform: rotate(-30deg); } 1% { opacity: .85; } 9.5% { opacity: .85; } 12.5% { opacity: 0; transform: rotate(330deg); } 100% { opacity: 0; transform: rotate(330deg); } }
   .rd-hd { animation: rdHeartA 3.2s ease-in-out infinite alternate; transform-box: view-box; transform-origin: 0 0; }
   .rd-hr { animation: rdHeartB 3.2s ease-in-out infinite alternate; transform-box: view-box; transform-origin: 0 0; }
   @keyframes rdHeartA { from { opacity: .55; transform: scale(.85); } to { opacity: 1; transform: scale(1.15); } }
   @keyframes rdHeartB { from { opacity: .35; transform: scale(.9); } to { opacity: .9; transform: scale(1.12); } }
 }
 @media (prefers-reduced-motion: reduce) { .rd-sweep2 { display: none; } .rd-hd { opacity: .8; } }
+
+/* v101 (retouches) : formats plus fins, plus petits de près ; radar plus rare */
+.pl text { font-weight: 500; font-size: 17px; letter-spacing: .08em; stroke-width: 2.4px; }
+@keyframes pl-z { from { transform: scale(.75); opacity: .35; } to { transform: scale(1.05); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pl-z { opacity: 1; transform: scale(1); } }
