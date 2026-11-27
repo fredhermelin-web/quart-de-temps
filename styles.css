@@ -3483,16 +3483,16 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
 @media (max-width: 370px) { .hc-leds i.x::after { inset: -3px; } }
 
 /* =================== v101 : balayage vert par passages, cœur vert qui pulse, formats jamais tout à fait éteints =================== */
-.rd-wedge path { fill: #9FFFD6; stroke: none; }
-.rd-edge { fill: none; stroke: #DFFFF1; stroke-width: 1.4; stroke-linecap: round; filter: drop-shadow(0 0 3px #9FFFD6); }
+.rd-wedge path { fill: #7DFFC4; stroke: none; }
+.rd-edge { fill: none; stroke: #B8FFE0; stroke-width: 1.9; stroke-linecap: round; filter: drop-shadow(0 0 4px #5CFFB0); }
 .rd-sweep2 { opacity: 0; }
 .rd-hd { fill: url(#rdHeart); }
 .rd-hr { fill: none; stroke: rgba(159, 255, 214, .6); stroke-width: 1; }
 @keyframes pl-z { from { transform: scale(.7); opacity: .35; } to { transform: scale(1.25); opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
-  /* un tour en 4 s, puis le faisceau se repose une dizaine de secondes */
-  .rd-sweep2 { animation: rdPass 14s linear infinite; }
-  @keyframes rdPass { 0% { opacity: 0; transform: rotate(-30deg); } 2% { opacity: 1; } 28% { opacity: 1; transform: rotate(330deg); } 31%, 100% { opacity: 0; transform: rotate(330deg); } }
+  /* un tour en 2,5 s, qui s'efface doucement sur son dernier quart, puis repos */
+  .rd-sweep2 { animation: rdPass 12s linear infinite; }
+  @keyframes rdPass { 0% { opacity: 0; transform: rotate(-30deg); } 1.5% { opacity: 1; } 16% { opacity: 1; } 21%, 100% { opacity: 0; } 21% { transform: rotate(330deg); } 100% { transform: rotate(330deg); } }
   .rd-hd { animation: rdHeartA 3.2s ease-in-out infinite alternate; transform-box: view-box; transform-origin: 0 0; }
   .rd-hr { animation: rdHeartB 3.2s ease-in-out infinite alternate; transform-box: view-box; transform-origin: 0 0; }
   @keyframes rdHeartA { from { opacity: .55; transform: scale(.85); } to { opacity: 1; transform: scale(1.15); } }
