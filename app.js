@@ -428,7 +428,6 @@
       if (VIEW.span > maxSpan()) VIEW.span = maxSpan();
       setState('ready');
       if (P.bpm == null) toast('BPM non détecté : touche le grand chiffre BPM pour le saisir.', 3800);
-      else toast('Tempo estimé : vérifie-le, touche le grand chiffre pour le corriger.', 3200);
       // Chaque morceau ouvert : le ralentisseur s'ouvre, la vitesse est directement accessible
       hideSpeedHint();
       setTempoOpen(true);
@@ -1251,7 +1250,7 @@
     inp.placeholder = loading ? '…' : '—';
     const pb = playBpm();
     $('playBpm').textContent = pb ? String(pb) : (loading ? '…' : '—');
-    const eb = $('bpmEyebrow'); if (eb) eb.textContent = P.bpmAuto ? 'Tempo estimé · touche pour corriger' : 'Tempo du morceau';
+    const eb = $('bpmEyebrow'); if (eb) eb.textContent = P.bpmAuto ? 'Tempo estimé' : 'Tempo du morceau';
   }
   function commitOrig() {
     const raw = String($('origBpm').value).replace(',', '.').trim();
