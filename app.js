@@ -1176,20 +1176,41 @@
   const isIOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let deferredPrompt = null, pillTimer = 0, promptWaiters = [];
   const pill = $('installPill'), installSheet = $('installSheet');
-  const markInstalled = () => { store.set('installed', true); hidePill(); $('installLink').hidden = true; };
+  const markInstalled = () => { store.set('installed', true); hidePill(); undoHide(); };
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     // Le navigateur propose l'installation : l'appli n'est donc pas (ou plus) installée
     if (store.get('installed', false)) store.set('installed', false);
-    if (!isStandalone()) $('installLink').hidden = false;
     promptWaiters.splice(0).forEach((f) => f(e));
   });
   window.addEventListener('appinstalled', () => { markInstalled(); toast('Application installée'); });
   function hidePill() {
     clearTimeout(pillTimer);
     pill.classList.remove('show');
-    setTimeout(() => { pill.hidden = true; }, 450);
+    setTimeout(() => { if (!pill.classList.contains('show')) pill.hidden = true; }, 450);
+  }
+  function showPill() {
+    clearTimeout(pillTimer);
+    pill.hidden = false;
+    void pill.offsetWidth;
+    pill.classList.add('show');
+    pillTimer = setTimeout(hidePill, 120000);       /* sans réaction, il s'efface seul au bout de 2 minutes */
+  }
+  /* Après la croix : un tout petit « Annuler » pendant 3 secondes, au cas où le doigt a glissé trop vite */
+  const undo = $('installUndo');
+  let undoTimer = 0;
+  function undoShow() {
+    clearTimeout(undoTimer);
+    undo.hidden = false;
+    void undo.offsetWidth;
+    undo.classList.add('show');
+    undoTimer = setTimeout(undoHide, 3000);
+  }
+  function undoHide() {
+    clearTimeout(undoTimer);
+    undo.classList.remove('show');
+    setTimeout(() => { if (!undo.classList.contains('show')) undo.hidden = true; }, 300);
   }
   // Instructions de secours, une seule courte liste selon le navigateur
   function installSteps() {
@@ -1229,21 +1250,16 @@
     } catch (e) { openInstallSheet(); }
   }
   $('installBtn').addEventListener('click', doInstall);
-  $('installLink').addEventListener('click', doInstall);
-  $('installClose').addEventListener('click', () => { store.set('installBarOff', Date.now()); hidePill(); });
+  $('installClose').addEventListener('click', () => { hidePill(); undoShow(); });
+  undo.addEventListener('click', () => { undoHide(); showPill(); });
   installSheet.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeInstallSheet(); });
-  if (!isStandalone() && !store.get('installed', false)) {
-    $('installLink').hidden = false;
+  /* Bandeau d'accueil : à chaque ouverture tant que l'appli n'est pas installée (la croix ne le ferme que pour cette visite) */
+  if (!isStandalone()) {
     pill.dataset.os = isIOS ? 'ios' : 'std';
-    // Bandeau d'accueil en haut de l'écran, après l'ouverture animée ; fermé, il ne revient qu'après 14 jours
-    if (Date.now() - store.get('installBarOff', 0) > 14 * 864e5) {
-      setTimeout(() => {
-        if (isStandalone() || store.get('installed', false)) return;
-        pill.hidden = false;
-        void pill.offsetWidth;
-        pill.classList.add('show');
-      }, 3800);
-    }
+    setTimeout(() => {
+      if (isStandalone() || store.get('installed', false)) return;
+      showPill();
+    }, 3800);
   }
   // Android/Chrome : appli déjà installée sur l'appareil ? On masque tout.
   if (!isStandalone() && navigator.getInstalledRelatedApps) {
@@ -2332,6 +2348,43 @@
     $('cusD').textContent = metro.d;
     sleevesBox.querySelectorAll('.sleeve').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.n === metro.n && +b.dataset.d === metro.d)));
   }
+  /* Geste du vinyle : glisser le doigt vers le haut sur une pochette fait sortir le disque ; en lâchant assez haut, la mesure est choisie */
+  let swipeSwallow = 0;
+  (function () {
+    let cur = null, sx = 0, sy = 0, dy = 0, max = 0, id = null, on = false;
+    const need = () => Math.min(28, max * 0.7);
+    sleevesBox.addEventListener('pointerdown', (e) => {
+      const sl = e.target.closest('.sleeve');
+      if (!sl || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      cur = sl; sx = e.clientX; sy = e.clientY; dy = 0; on = false; id = e.pointerId;
+      max = sl.querySelector('.disc').offsetHeight * 0.52;
+    });
+    sleevesBox.addEventListener('pointermove', (e) => {
+      if (!cur || e.pointerId !== id) return;
+      const up = sy - e.clientY, side = Math.abs(e.clientX - sx);
+      if (!on) {
+        if (up < 8 || side > up) return;           /* pas encore un vrai geste vers le haut */
+        on = true;
+        try { cur.setPointerCapture(id); } catch (err) { /* sans importance */ }
+        cur.querySelector('.disc').style.transition = 'none';
+      }
+      dy = Math.max(0, up);
+      const disc = cur.querySelector('.disc');
+      disc.style.transform = 'translateY(-' + Math.min(dy, max).toFixed(1) + 'px) rotate(' + (Math.min(dy, max) / max * 40).toFixed(1) + 'deg)';
+    });
+    function end(e, cancelled) {
+      if (!cur || (e && e.pointerId !== id)) return;
+      const sl = cur, disc = sl.querySelector('.disc'), won = on && !cancelled && dy >= need();
+      cur = null;
+      if (!on) return;                              /* simple tap : le clic habituel s'en charge */
+      on = false;
+      swipeSwallow = performance.now() + 350;
+      disc.style.transition = ''; disc.style.transform = '';
+      if (won) { setMeter(+sl.dataset.n, +sl.dataset.d); renderMeter(); }
+    }
+    sleevesBox.addEventListener('pointerup', (e) => end(e, false));
+    sleevesBox.addEventListener('pointercancel', (e) => end(e, true));
+  })();
   let sheetReturn = null;
   function openSheet() {
     sheetReturn = document.activeElement;
@@ -2346,11 +2399,27 @@
     setTimeout(() => { if (!sheet.classList.contains('open')) sheet.hidden = true; }, reduceMotion ? 0 : 320);
     if (sheetReturn && sheetReturn.focus) sheetReturn.focus({ preventScroll: true });
   }
+  /* Accueil : un tap sur le haut-parleur donne un coup de boomer (un gros, puis de petits rebonds), halo doré, puis tout s'éteint.
+     Pendant le coup, les taps en plus sont ignorés : on voit toujours le geste en entier. */
+  (function () {
+    const fab = document.querySelector('.hub-fabric'), spk = document.querySelector('.hub-spk');
+    if (!fab || !spk) return;
+    let busy = false;
+    fab.addEventListener('click', () => {
+      if (busy) return;
+      busy = true;
+      spk.classList.add('thump');
+      setTimeout(() => { spk.classList.remove('thump'); busy = false; }, reduceMotion ? 900 : 1800);
+    });
+  })();
   $('meterBtn').addEventListener('click', openSheet);
   sheet.addEventListener('click', (e) => {
     if (e.target.closest('[data-close]')) { closeSheet(); return; }
     const sl = e.target.closest('.sleeve');
-    if (sl) { setMeter(+sl.dataset.n, +sl.dataset.d); renderMeter(); return; }
+    if (sl) {
+      if (performance.now() < swipeSwallow) return;   /* le doigt vient de glisser : pas de tap en plus */
+      setMeter(+sl.dataset.n, +sl.dataset.d); renderMeter(); return;
+    }
     const st = e.target.closest('.st-btn');
     if (!st) return;
     const dir = +st.dataset.dir;

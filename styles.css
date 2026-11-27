@@ -3387,3 +3387,44 @@ body:not([data-view="hub"]) .install-bar { visibility: hidden; pointer-events: n
 /* v96 — le bandeau « installer » se pose en bas de l'accueil, sur le tissu : il ne cache plus le titre ni les cartes */
 .install-bar { top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 140%); }
 .install-bar.show { transform: translate(-50%, 0); }
+
+/* v97 — Coup de boomer à l'accueil : la membrane se creuse, rebondit, un halo doré jaillit puis tout s'éteint */
+.hub-fabric { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hub-spk s { display: block; border-radius: 50%; opacity: 0; pointer-events: none; box-shadow: 0 0 22px 8px rgba(255, 181, 71, .85), 0 0 60px 22px rgba(255, 140, 50, .5); }
+.hub-spk s + s { display: none; }
+.hub-spk.thump s { animation: hub-halo 1.7s ease-out 1; }
+.hub-spk.thump b { animation: hub-rim 4.5s ease-in-out infinite, hub-thump 1.7s cubic-bezier(.3, .6, .4, 1) 1; }
+@keyframes hub-thump {
+  0%   { transform: scale(1);     filter: brightness(1); }
+  7%   { transform: scale(.955);  filter: brightness(1.05); }
+  20%  { transform: scale(1.03);  filter: brightness(1.35); }
+  36%  { transform: scale(.985);  filter: brightness(1.1); }
+  48%  { transform: scale(.975);  filter: brightness(1.12); }
+  58%  { transform: scale(1.014); filter: brightness(1.18); }
+  70%  { transform: scale(.992);  filter: brightness(1.05); }
+  80%  { transform: scale(1.007); filter: brightness(1.08); }
+  100% { transform: scale(1);     filter: brightness(1); }
+}
+@keyframes hub-halo { 0% { opacity: 0; } 8% { opacity: .55; } 20% { opacity: 1; } 36% { opacity: .35; } 58% { opacity: .6; } 80% { opacity: .22; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .hub-spk.thump b { animation: none; }
+  .hub-spk.thump s { animation: hub-halo-soft .9s ease-out 1; }
+}
+@keyframes hub-halo-soft { 0% { opacity: 0; } 25% { opacity: .8; } 100% { opacity: 0; } }
+/* v97 — glisser le disque vers le haut : le navigateur ne doit pas faire défiler pendant le geste */
+.sleeve { touch-action: none; }
+/* v97 — ligne de droits d'auteur, discrète, sous le lien des mentions légales */
+.hub-copy { margin: -2px 0 0; font: 500 10px/1.2 var(--f-ui); letter-spacing: .02em; color: rgba(240, 217, 160, .42); text-shadow: 0 1px 6px rgba(11, 14, 36, .95); }
+.hub-spk { bottom: 80px; }
+
+/* v97 — bandeau d'installation : revient à chaque visite ; croix plus franche, puis un tout petit « Annuler » de 3 s */
+.ib-x { width: 44px; height: 44px; top: 4px; right: 4px; color: #D6E2FA; }
+.ib-x svg { width: 20px; height: 20px; }
+.install-undo { position: fixed; left: 50%; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); z-index: 61; transform: translate(-50%, 12px); opacity: 0; transition: transform .3s, opacity .3s;
+  height: 36px; padding: 0 18px; border: 0; border-radius: 999px; background: rgba(24, 28, 60, .92); color: #F0D08A; font: 700 14px/1 var(--f-ui); box-shadow: inset 0 0 0 1px rgba(233, 211, 160, .45), 0 8px 22px rgba(0, 0, 0, .5); }
+.install-undo[hidden] { display: none; }
+.install-undo.show { transform: translate(-50%, 0); opacity: 1; }
+body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: none; }
+/* v97 — la signature sous le boomer, un cran plus grande et plus lumineuse */
+.hub-sign { font-size: 17px; font-weight: 600; color: #F0D08A; opacity: 1; }
+.hub-spk { bottom: 88px; }

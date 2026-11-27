@@ -1,0 +1,22 @@
+Quart de temps
+Copyright (c) 2026 Frédéric Hermelin. Tous droits réservés.
+All rights reserved.
+
+Le code source, le graphisme, les textes, le nom « Quart de temps » et le logo
+(spirale à quatre centres) sont la propriété exclusive de Frédéric Hermelin.
+
+Aucune partie de ce dépôt ne peut être copiée, modifiée, publiée, distribuée
+ni utilisée pour créer une œuvre dérivée sans l'autorisation écrite préalable
+de l'auteur. L'usage de l'application en ligne est libre et gratuit pour ses
+utilisateurs ; il ne confère aucun droit sur le code ni sur le graphisme.
+
+Composants tiers, qui restent soumis à leurs propres licences :
+- Polices Unbounded, Manrope, EB Garamond : SIL Open Font License 1.1.
+- Moteur de ralentissement Signalsmith Stretch (vendor/) :
+  © Geraint Luff / Signalsmith Audio Ltd., licence MIT.
+- Sons de clave, de cloche et de wood-block : Versilian Community Sample
+  Library (VCSL), licence CC0.
+
+This software is proprietary. No licence is granted to copy, modify or
+redistribute it without the prior written permission of the author.
+Third-party components remain under their own licences, listed above.
