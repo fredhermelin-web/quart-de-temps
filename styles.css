@@ -3512,3 +3512,59 @@ body:not([data-view="hub"]) .install-undo { visibility: hidden; pointer-events: 
 /* v106 : petite flèche « ‹ » devant ATELIER (retour), sur tous les écrans */
 .back-atelier.in-deck > span { display: inline-flex; align-items: center; gap: 4px; }
 .back-atelier.in-deck > span::before { content: ""; width: 6px; height: 6px; border-left: 1.8px solid #F0D9A0; border-bottom: 1.8px solid #F0D9A0; transform: rotate(45deg); margin-right: -1px; flex: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+
+/* v107 : écran Rythmes « en préparation » : une petite forge (la masse frappe l'enclume, la note posée dessus prend forme coup après coup) */
+.sol-forge { width: min(66vw, 260px); height: auto; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); }
+.sol-forge .fg-hammer { transform-origin: 176px 53px; transform-box: view-box; animation: fgHit 2.4s cubic-bezier(.45, 0, .55, 1) infinite; }
+.sol-forge .fg-glow { opacity: 0; transform-origin: 106px 68px; animation: fgGlow 2.4s ease-out infinite; }
+.sol-forge .fg-sparks circle { transform-box: fill-box; transform-origin: center; opacity: 0; filter: drop-shadow(0 0 3px #FF9A3A); animation: fgSpark 2.4s ease-out infinite; }
+.sol-forge .fg-note { color: #FFD0C8; opacity: 0; transform-origin: 104px 68px; transform-box: view-box; animation: fgNote 9.6s linear infinite; }
+@keyframes fgHit {
+  0%, 16% { transform: rotate(42deg); }
+  50% { transform: rotate(0deg); }
+  56% { transform: rotate(5deg); }
+  62% { transform: rotate(0deg); }
+  100% { transform: rotate(42deg); }
+}
+@keyframes fgGlow { 0%, 49% { opacity: 0; transform: scale(.6); } 52% { opacity: .9; transform: scale(1); } 80%, 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes fgSpark {
+  0%, 50% { opacity: 0; transform: translate(0, 0) scale(1); }
+  52% { opacity: 1; transform: translate(0, 0) scale(1.5); }
+  70% { opacity: 1; transform: translate(calc(var(--dx) * .8), calc(var(--dy) * .8)) scale(1.1); }
+  84%, 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 6px)) scale(.6); }
+}
+/* 4 coups par tour (9,6 s) : 1) la note est aplatie, 2) tordue, 3) redressée, plus grande et finie, 4) elle brille puis s'efface */
+@keyframes fgNote {
+  0%, 12.4% { opacity: 0; color: #FF9A4A; transform: scale(1.3, .4); }
+  12.6%, 37.3% { opacity: 1; color: #FF9A4A; transform: scale(1.3, .4); }
+  37.7%, 62.3% { opacity: 1; color: #FFB878; transform: rotate(-24deg) skewX(-14deg) scale(1.05, .8); }
+  62.7%, 87.3% { opacity: 1; color: #FFD0C8; transform: scale(1.4); }
+  87.7%, 94% { opacity: 1; color: #FFE9D8; transform: scale(1.4); }
+  100% { opacity: 0; color: #FFD0C8; transform: scale(1.4); }
+}
+.sol-soon { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 4px 0 0; max-width: 100%; font: 600 10.5px/1.3 var(--f-ui); letter-spacing: .16em; text-transform: uppercase; color: #E9CD9C; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+.sol-soon span { text-align: center; }
+.sol-soon i { flex: none; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, #D9B26A); }
+.sol-soon i:last-child { background: linear-gradient(270deg, transparent, #D9B26A); }
+@media (max-width: 370px) { .sol-soon { gap: 7px; letter-spacing: .12em; } .sol-soon i { width: 12px; } }
+.solfege { overflow: hidden; }
+.sol-beam { position: absolute; z-index: -1; top: 0; left: 50%; width: min(86%, 340px); height: 78%; transform: translateX(-50%); pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 226, 170, .2) 0%, rgba(255, 214, 150, .09) 55%, rgba(255, 200, 130, 0) 100%);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); filter: blur(5px); animation: solBeam 6s ease-in-out infinite; }
+.sol-beam i { position: absolute; left: var(--x); top: var(--y); width: 2.4px; height: 2.4px; border-radius: 50%; background: #FFE9C2; opacity: 0; animation: solMote var(--d) ease-in-out var(--t) infinite; }
+@keyframes solBeam { 0%, 100% { opacity: .85; } 50% { opacity: 1; } }
+@keyframes solMote { 0%, 100% { opacity: 0; transform: translate(0, 10px); } 35%, 65% { opacity: .9; } 50% { transform: translate(6px, -16px); } }
+@media (prefers-reduced-motion: reduce) { .sol-beam, .sol-beam i { animation: none; } .sol-beam i { opacity: .6; } }
+.sol-text { margin-top: -6px; font-size: 13px; letter-spacing: .06em; color: #AEB7D6; }
+
+.sol-dots { display: inline-flex; gap: 3px; margin-left: 3px; }
+.sol-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .25; animation: solDot 1.4s ease-in-out infinite; }
+.sol-dots i:nth-child(2) { animation-delay: .2s; }
+.sol-dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes solDot { 0%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .sol-forge .fg-hammer { animation: none; transform: rotate(18deg); }
+  .sol-forge .fg-glow, .sol-forge .fg-sparks circle { animation: none; opacity: 0; }
+  .sol-forge .fg-note { animation: none; opacity: 1; transform: scale(1.4); }
+  .sol-dots i { animation: none; opacity: .7; }
+}

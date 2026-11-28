@@ -96,9 +96,50 @@
     <button type="button" class="back-atelier in-deck" data-open="hub" aria-label="Retour à l'atelier musical (accueil)">
     <svg class="hel" data-act="2" viewBox="0 0 100 100" aria-hidden="true"></svg><span>Atelier</span>
   </button>
+    <!-- Faisceau de projecteur, comme dans une salle de cinéma : un cône de lumière douce avec quelques grains de poussière -->
+    <div class="sol-beam" aria-hidden="true">
+      <i style="--x:38%;--y:70%;--d:7s;--t:0s"></i><i style="--x:52%;--y:55%;--d:9s;--t:-3s"></i><i style="--x:62%;--y:78%;--d:8s;--t:-5s"></i><i style="--x:46%;--y:40%;--d:10s;--t:-2s"></i><i style="--x:57%;--y:30%;--d:11s;--t:-7s"></i><i style="--x:42%;--y:86%;--d:9.5s;--t:-4s"></i><i style="--x:67%;--y:48%;--d:12s;--t:-9s"></i>
+    </div>
     <h2 class="sol-title">Rythmes</h2>
-    <svg class="sol-glyph" viewBox="0 0 72 26" aria-hidden="true" fill="#FFD0C8" stroke="#FFD0C8" stroke-linecap="round"><g stroke-width="1.6"><line x1="8.4" y1="4" x2="8.4" y2="20"/><line x1="20.4" y1="4" x2="20.4" y2="20"/></g><line x1="8.4" y1="5" x2="20.4" y2="5" stroke-width="3"/><ellipse cx="6" cy="21" rx="3" ry="2.2" stroke="none"/><ellipse cx="18" cy="21" rx="3" ry="2.2" stroke="none"/><g stroke-width="1.6"><line x1="38.4" y1="4" x2="38.4" y2="20"/><line x1="47.4" y1="4" x2="47.4" y2="20"/><line x1="56.4" y1="4" x2="56.4" y2="20"/><line x1="65.4" y1="4" x2="65.4" y2="20"/></g><line x1="38.4" y1="5" x2="65.4" y2="5" stroke-width="2.6"/><line x1="38.4" y1="10" x2="65.4" y2="10" stroke-width="2.6"/><ellipse cx="36" cy="21" rx="3" ry="2.2" stroke="none"/><ellipse cx="45" cy="21" rx="3" ry="2.2" stroke="none"/><ellipse cx="54" cy="21" rx="3" ry="2.2" stroke="none"/><ellipse cx="63" cy="21" rx="3" ry="2.2" stroke="none"/></svg>
-    <p class="sol-text">Les rythmes arrivent ici : noires, croches, doubles croches.</p>
+    <!-- Petite forge : à chaque coup de masse, la note posée sur l'enclume prend forme (à plat, tordue, puis finie et plus grande) -->
+    <svg class="sol-forge" viewBox="0 -26 200 156" aria-hidden="true">
+      <defs>
+        <linearGradient id="fgIron" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6B5560"/><stop offset=".45" stop-color="#3A2E48"/><stop offset="1" stop-color="#241C34"/></linearGradient>
+        <linearGradient id="fgHead" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F1DCD2"/><stop offset=".45" stop-color="#A88F98"/><stop offset="1" stop-color="#5E4A58"/></linearGradient>
+        <linearGradient id="fgWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2B27A"/><stop offset="1" stop-color="#8C5C34"/></linearGradient>
+        <radialGradient id="fgGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFB45A" stop-opacity=".8"/><stop offset="1" stop-color="#FF7A6B" stop-opacity="0"/></radialGradient>
+      </defs>
+      <ellipse cx="100" cy="116" rx="52" ry="5" fill="#000" opacity=".35"/>
+      <circle class="fg-glow" cx="106" cy="68" r="26" fill="url(#fgGlow)"/>
+      <!-- enclume -->
+      <path d="M44 72 Q62 68 80 68 H152 V80 H132 Q128 88 124 94 V102 H144 V114 H60 V102 H80 V94 Q76 86 70 80 Q54 80 44 72 Z" fill="url(#fgIron)" stroke="#FFD0C8" stroke-opacity=".5" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M46 72 Q62 68 80 68 H152" fill="none" stroke="#FFE3C4" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+      <!-- la note qu'on forge, posée sur l'enclume : une croche -->
+      <g class="fg-note" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="104" cy="63.4" rx="6.4" ry="4.6" transform="rotate(-20 104 63.4)" fill="currentColor" stroke="none"/>
+        <path d="M109.8 61.6 V34 q1 9.5 9.5 14" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      </g>
+      <!-- étincelles -->
+      <g class="fg-sparks" fill="#FFD84A">
+        <circle style="--dx:-28px;--dy:-24px" cx="104" cy="66" r="2.6"/>
+        <circle style="--dx:-12px;--dy:-36px" cx="104" cy="66" r="2.2" fill="#FF8A2A"/>
+        <circle style="--dx:8px;--dy:-36px" cx="104" cy="66" r="2.4"/>
+        <circle style="--dx:24px;--dy:-24px" cx="104" cy="66" r="2.2" fill="#FF8A2A"/>
+        <circle style="--dx:-36px;--dy:-8px" cx="104" cy="66" r="2"/>
+        <circle style="--dx:34px;--dy:-10px" cx="104" cy="66" r="2"/>
+      </g>
+      <!-- masse : la tête de fer est répartie de chaque côté du manche -->
+      <g class="fg-hammer">
+        <rect x="104" y="49.5" width="72" height="7" rx="3.5" fill="url(#fgWood)"/>
+        <rect x="94" y="36" width="20" height="34" rx="4" fill="url(#fgHead)" stroke="#FFD0C8" stroke-opacity=".55" stroke-width="1"/>
+        <rect x="94" y="36" width="20" height="6" rx="3" fill="#2E2438" opacity=".55"/>
+        <rect x="94" y="64" width="20" height="6" rx="3" fill="#2E2438" opacity=".55"/>
+        <rect x="97" y="43" width="3.2" height="20" rx="1.6" fill="#FFF1E6" opacity=".5"/>
+      </g>
+    </svg>
+    <!-- Carte de titre « comme au cinéma » -->
+    <p class="sol-soon"><i aria-hidden="true"></i><span>Prochainement sur cet écran</span><i aria-hidden="true"></i></p>
+    <p class="sol-text">En préparation<span class="sol-dots" aria-hidden="true"><i></i><i></i><i></i></span></p>
   </section>
 
   <!-- ============ MÉTRONOME ============ -->
