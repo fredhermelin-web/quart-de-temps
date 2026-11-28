@@ -50,6 +50,7 @@
 
   /* --------------------------------------------------------- Contexte audio */
   let ctx = null, metroGain = null, clickBufs = null;
+  let samplesReady = Promise.resolve();   // vrai quand les sons enregistrés sont décodés (ou ont échoué)
   function getCtx() {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -68,7 +69,7 @@
       metroGain.connect(guard);
       guard.connect(ctx.destination);
       clickBufs = makeClicks(ctx);
-      loadSamples(ctx);
+      samplesReady = loadSamples(ctx);
     }
     return ctx;
   }
@@ -97,17 +98,17 @@
     return ab;
   }
   function loadSamples(c) {
-    Object.keys(SAMPLE_FILES).forEach((k) => {
+    return Promise.all(Object.keys(SAMPLE_FILES).map((k) => {
       // D'abord la copie intégrée (sounds.js) : marche aussi en ouverture locale (file://) et hors ligne
       const embedded = window.SOUND_DATA && window.SOUND_DATA[k];
       const source = embedded
         ? Promise.resolve().then(() => b64ToBuffer(embedded))
         : fetch(SAMPLE_FILES[k]).then((r) => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); });
-      source
+      return source
         .then((buf) => new Promise((res, rej) => { const p = c.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); }))
         .then((ab) => { samples[k] = normalize(ab); })
         .catch(() => { /* le clic d'origine sera utilisé */ });
-    });
+    }));
   }
   /* Joue une note du métronome à l'instant t : le 1 plus fort et un peu plus aigu,
      les accents marqués, les subdivisions plus douces */
@@ -1401,6 +1402,9 @@
   async function startMetro() {
     getCtx();
     await unlock();
+    // Premier départ : on laisse les sons enregistrés finir de se décoder (0,5 s au plus), sinon le clic de secours se ferait entendre
+    await Promise.race([samplesReady, new Promise((r) => setTimeout(r, 500))]);
+    if (metro.running) return;
     metro.running = true;
     store.set('started', true); $('mToggle').classList.remove('invite');   // le Play cesse de « respirer » dès le premier départ
     metro.beat = 0;
