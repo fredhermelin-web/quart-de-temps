@@ -1,5 +1,5 @@
 /* Quart de temps — service worker : hors ligne + réception des fichiers partagés. */
-const CACHE = 'atelier-v102';
+const CACHE = 'atelier-v103';
 const SHARE = 'atelier-share';
 // Fichiers indispensables : s'il en manque un, la nouvelle version n'est pas installée (l'ancienne continue de servir).
 const SHELL = [
@@ -25,8 +25,8 @@ const EXTRA = [
   'icons/icon-512.png',
   'icons/icon-512-maskable.png',
   'Sound/Clave.wav',
-  'Sound/Conga.mp3',
-  'Sound/Cowbell.wav',
+    'Sound/Cowbell.wav',
+  'Sound/Stick.wav',
   'Sound/Wood.wav'
 ];
 

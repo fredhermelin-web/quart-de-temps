@@ -75,7 +75,7 @@
 
   /* Sons enregistrés (dossier Sound, fichiers intacts) : chargés une seule fois.
      Si un fichier manque, le clic d'origine prend le relais. */
-  const SAMPLE_FILES = { clave: 'Sound/Clave.wav', cowbell: 'Sound/Cowbell.wav', wood: 'Sound/Wood.wav', conga: 'Sound/Conga.mp3' };
+  const SAMPLE_FILES = { clave: 'Sound/Clave.wav', cowbell: 'Sound/Cowbell.wav', wood: 'Sound/Wood.wav', stick: 'Sound/Stick.wav' };
   const samples = {};
   function b64ToBuffer(b64) {
     const bin = atob(b64), n = bin.length, u = new Uint8Array(n);
@@ -83,7 +83,7 @@
     return u.buffer;
   }
   /* Les sons enregistrés au même volume perçu (attaque des 120 premières ms), sans dépasser 0,95 en crête.
-     La cloche et la conga étaient enregistrées 8 à 9 dB plus bas que la clave. */
+     La cloche était enregistrée 8 à 9 dB plus bas que la clave. */
   function normalize(ab) {
     const d0 = ab.getChannelData(0), n = Math.min(d0.length, Math.floor(ab.sampleRate * 0.12));
     let peak = 0, e = 0;
@@ -96,20 +96,6 @@
     }
     return ab;
   }
-  // Conga : attaque renforcée et résonance raccourcie (plus de claquant, moins de grave qui traîne)
-  function punch(ab) {
-    const sr = ab.sampleRate, nA = Math.floor(sr * 0.012), t0 = Math.floor(sr * 0.09);
-    for (let ch = 0; ch < ab.numberOfChannels; ch++) {
-      const d = ab.getChannelData(ch);
-      for (let i = 0; i < d.length; i++) {
-        let g = 1;
-        if (i < nA) g = 2.2 - 1.2 * (i / nA);
-        else if (i > t0) g = Math.exp(-(i - t0) / (sr * 0.07));
-        d[i] *= g;
-      }
-    }
-    return ab;
-  }
   function loadSamples(c) {
     Object.keys(SAMPLE_FILES).forEach((k) => {
       // D'abord la copie intégrée (sounds.js) : marche aussi en ouverture locale (file://) et hors ligne
@@ -119,7 +105,7 @@
         : fetch(SAMPLE_FILES[k]).then((r) => { if (!r.ok) throw new Error(k); return r.arrayBuffer(); });
       source
         .then((buf) => new Promise((res, rej) => { const p = c.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); }))
-        .then((ab) => { samples[k] = normalize(k === 'conga' ? punch(ab) : ab); })
+        .then((ab) => { samples[k] = normalize(ab); })
         .catch(() => { /* le clic d'origine sera utilisé */ });
     });
   }
@@ -1313,7 +1299,7 @@
   }
   // Réglages de travail : toujours les mêmes à l'ouverture (121 BPM, 4/4, noire, sans accent, arrêté).
   // Seules les préférences personnelles (volume, 33/45 tours, son) sont gardées en mémoire.
-  const SOUNDS = ['cowbell', 'clave', 'wood', 'conga'];
+  const SOUNDS = ['cowbell', 'clave', 'wood', 'stick'];
   const metro = {
     bpm: 121,
     sub: 1,
@@ -1322,7 +1308,7 @@
     d: 4,
     rpm: +store.get('rpm', 33) === 45 ? 45 : 33,
     // Nouvel ordre (Cloche en premier) : une fois pour tous, on repart sur la Cloche
-    sound: (store.get('soundOrder', 0) >= 2 && SOUNDS.indexOf(store.get('sound', 'cowbell')) >= 0) ? store.get('sound', 'cowbell') : 'cowbell',
+    sound: (store.get('soundOrder', 0) >= 2 && SOUNDS.indexOf(store.get('sound', 'cowbell')) >= 0) ? store.get('sound', 'cowbell') : (store.get('sound', '') === 'conga' ? 'stick' : 'cowbell'),
     muted: false, // temporaire : jamais gardé en mémoire
     pattern: defaultPattern(4, 4),
     running: false,
